@@ -8,5 +8,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
  * @notice The HODL Arena contract holds all the information and logic 
  */
 contract HodlArena is Ownable {
-    
+
+
+
 }
