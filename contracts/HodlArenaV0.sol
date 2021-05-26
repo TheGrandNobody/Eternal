@@ -1,3 +1,4 @@
+//SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
@@ -7,8 +8,8 @@ import "@openzeppelin/contracts/access/Ownable.sol";
  * @author Nobody
  * @notice The HODL Arena contract holds all the information and logic 
  */
-contract HodlArena is Ownable {
+contract HodlArenaV0 is Ownable {
 
-
+    
 
 }
