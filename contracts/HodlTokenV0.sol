@@ -14,12 +14,16 @@ import "@pangolindex/exchange-contracts/contracts/pangolin-periphery/interfaces/
  */
 contract HodlTokenV0 is IERC20, IERC20Metadata, Ownable {
 
-    mapping (address => uint256) private balances;
-
     mapping (address => mapping (address => uint256)) private allowances;
+    mapping (address => uint256) private reserveBalances;
+    mapping (address => uint256) private liabilities;
+    mapping (address => bool) private isExcludedFromReflections;
+    mapping (address => bool) private isExcludedFromFee;
 
+    address[] private excluded;
+
+    uint256 private constant MAX = ~uint256(0);
     uint256 private totalTokenSupply;
-
     uint256 private liquefactionRate;
     uint256 private burnRate;
 
@@ -38,7 +42,8 @@ contract HodlTokenV0 is IERC20, IERC20Metadata, Ownable {
         tokenTicker = "HODLS";
         totalTokenSupply = 10**10 * 10**9;
 
-        balances[msg.sender] = totalTokenSupply;
+        reserveBalances[msg.sender] = totalTokenSupply;
+
 
         // Create pair address
         IPangolinRouter _pangolinRouter = IPangolinRouter(0xE54Ca86531e17Ef3616d22Ca28b0D458b6C89106);
@@ -81,7 +86,10 @@ contract HodlTokenV0 is IERC20, IERC20Metadata, Ownable {
      * @param account The address of the user
      */
     function balanceOf(address account) external view override returns (uint256){
-        return balances[account];
+        if (isExcludedFromReflections[account]) {
+            return liabilities[account];
+        }
+        return tokenFromReflection(reserveBalances[account]);
     }
 
     /**
@@ -91,6 +99,14 @@ contract HodlTokenV0 is IERC20, IERC20Metadata, Ownable {
      */
     function allowance(address owner, address spender) external view override returns (uint256){
         return allowances[owner][spender];
+    }
+    
+    /**
+     * @dev Returns whether a given wallet or contract's address is excluded from reflection fees.
+     * @param account The wallet or contract's address
+     */
+    function isExcludedFromReflection(address account) public view returns (bool) {
+        return isExcludedFromReflections[account];
     }
     
     /**
@@ -150,23 +166,6 @@ contract HodlTokenV0 is IERC20, IERC20Metadata, Ownable {
     }
 
     /**
-     * @dev Reduces the total supply by sending a given amount of HODLS from a given address to the 0x address.
-     * @param account The address of whom we are burning HODLS from
-     * @param amount The amount of HODLS to be burned
-     */
-    function _burn(address account, uint256 amount) internal virtual {
-        require(account != address(0), "HodlTokenV0::_burn(): burn from the zero address");
-
-        uint256 accountBalance = balances[account];
-        require(accountBalance >= amount, "HodlTokenV0::_burn(): burn amount exceeds balance");
-
-        balances[account] = accountBalance - amount;
-        totalTokenSupply -= amount;
-
-        emit Transfer(account, address(0), amount);
-    }
-
-    /**
      * @dev Sets the allowance of a given owner address for a given spender address to a given amount.
      * @param owner The adress of whom we are changing the allowance of
      * @param spender The address of whom we are changing the allowance for
@@ -183,6 +182,7 @@ contract HodlTokenV0 is IERC20, IERC20Metadata, Ownable {
 
     /**
      * @dev Transfers a given amount of HODLS from a given sender's address to a given recipient's address.
+     * Bottleneck for what transfer equation to use.
      * @param sender The address of whom the HODLS will be transferred from
      * @param recipient The address of whom the HODLS will be transferred to
      * @param amount The amount of HODLS to be transferred
@@ -192,12 +192,17 @@ contract HodlTokenV0 is IERC20, IERC20Metadata, Ownable {
         require(recipient != address(0), "HodlTokenV0::_transfer(): transfer to the zero address");
         require(amount > 0, "HodlTokenV0::_transfer(): transfer amount must be greater than zero");
 
-        uint256 senderBalance = balances[sender];
-        require(senderBalance >= amount, "HodlTokenV0::_transfer(): transfer amount exceeds balance");
-        balances[sender] = senderBalance - amount;
-        balances[recipient] += amount;
-
-        emit Transfer(sender, recipient, amount);
+        if (isExcludedFromReflections[sender] && !isExcludedFromReflections[recipient]) {
+            _transferFromExcluded(sender, recipient, amount);
+        } else if (!isExcludedFromReflections[sender] && isExcludedFromReflections[recipient]) {
+            _transferToExcluded(sender, recipient, amount);
+        } else if (!isExcludedFromReflections[sender] && !isExcludedFromReflections[recipient]) {
+            _transferStandard(sender, recipient, amount);
+        } else if (isExcludedFromReflections[sender] && isExcludedFromReflections[recipient]) {
+            _transferBothExcluded(sender, recipient, amount);
+        } else {
+            _transferStandard(sender, recipient, amount);
+        }
     }
 
     /**

@@ -17,6 +17,13 @@
   },
   "homepage": "https://github.com/TheGrandNobody/HODLArena#readme",
   "dependencies": {
-    "@openzeppelin/contracts": "^4.1.0"
+    "@ethersproject/contracts": "^5.2.0",
+    "@ethersproject/providers": "^5.2.0",
+    "@ethersproject/solidity": "^5.2.0",
+    "@openzeppelin/contracts": "^4.1.0",
+    "@pangolindex/sdk": "^1.1.0"
+  },
+  "devDependencies": {
+    "hardhat": "^2.3.0"
   }
 }
