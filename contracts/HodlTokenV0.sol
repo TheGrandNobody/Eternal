@@ -17,29 +17,37 @@ contract HodlTokenV0 is Context, IERC20, IERC20Metadata, Ownable {
 
     // Keeps track of how much an address allows any other address to spend on its behalf
     mapping (address => mapping (address => uint256)) private allowances;
-    // The reflected balances used to track dividend-accruing users' total balances
+    // The reflected balances used to track reward-accruing users' total balances
     mapping (address => uint256) private reflectedBalances;
-    // The true balances used to track non-dividend-accruing addresses' total balances
+    // The true balances used to track non-reward-accruing addresses' total balances
     mapping (address => uint256) private trueBalances;
-    // Keeps track of whether an address is excluded from dividends
-    mapping (address => bool) private isExcludedFromReflections;
+    // Keeps track of whether an address is excluded from rewards
+    mapping (address => bool) private isExcludedFromRewards;
     // Keeps track of whether an address is excluded from transfer fees
     mapping (address => bool) private isExcludedFromFees;
 
-    // Keeps track of all dividend-excluded addresses
+    // Keeps track of all reward-excluded addresses
     address[] private excludedAddresses;
 
     // The largest possible number in a 256-bit integer
     uint256 private constant MAX = ~uint256(0);
     // The true total token supply 
-    uint256 private constant totalTokenSupply = 10**10 * 10**9;
+    uint256 private totalTokenSupply = (10**10) * (10**9);
     // The total token supply after taking reflections into account
     uint256 private totalReflectedSupply;
-    uint256 private liquefactionRate;
+    // The percentage of the total fee rate used to auto-lock liquidity
+    uint256 private liquidityRate;
+    // The percentage of the total fee rate stored in the HODLFund
+    uint256 private storageRate;
+    // The percentage of the total fee rate that is burned
     uint256 private burnRate;
+    // The percentage of the total fee rate redistributed to HODLers
+    uint256 private redistributionRate;
 
-    IPangolinRouter public immutable pangolinRouter;
-    address public immutable pangolinPair;
+    // PangolinDex Router interface to swap tokens for WAVAX and add liquidity
+    IPangolinRouter internal immutable pangolinRouter;
+    // The address of the HODLS/WAVAX pair
+    address internal immutable pangolinPair;
 
     /**
      * @dev Sets the token ticker and token name. Mints the total supply to the contract deployer.
@@ -47,7 +55,7 @@ contract HodlTokenV0 is Context, IERC20, IERC20Metadata, Ownable {
     constructor () {
         // Initialize name, ticker symbol and total supply
         totalReflectedSupply = (MAX - (MAX % totalTokenSupply));
-        reflectedBalances[msg.sender] = totalTokenSupply;
+        reflectedBalances[_msgSender()] = totalTokenSupply;
 
         // Create pair address
         IPangolinRouter _pangolinRouter = IPangolinRouter(0xE54Ca86531e17Ef3616d22Ca28b0D458b6C89106);
@@ -55,107 +63,122 @@ contract HodlTokenV0 is Context, IERC20, IERC20Metadata, Ownable {
 
         // Initialize Pangolin Router
         pangolinRouter = _pangolinRouter;
+
+        // Exclude the owner from rewards
+        isExcludedFromRewards[owner()] = true;
+        excludedAddresses.push(owner());
+        // Exclude this contract from rewards
+        isExcludedFromRewards[address(this)] = true;
+        excludedAddresses.push(address(this));
     }
 
     /**
-     * @dev Returns the name of the token. 
+     * @dev The name of the token. 
+     * @return The token name
      */
-    function name() public pure override returns (string memory) {
+    function name() external pure override returns (string memory) {
         return "HODL Token";
     }
 
     /**
-     * @dev Returns the token ticker.
+     * @dev View the token ticker
+     * @return The token symbol
      */
-    function symbol() public pure override returns (string memory) {
+    function symbol() external pure override returns (string memory) {
         return "HODLS";
     }
 
     /**
-     * @dev Returns the number of decimals used to get its user representation.
+     * @dev View the maximum number of decimals for the HODL token
+     * @return The number of decimals
      */
-    function decimals() public pure override returns (uint8) {
+    function decimals() external pure override returns (uint8) {
         return 9;
     }
     
     /**
-     * @dev Returns the total supply of the HODL token.
+     * @dev View the total supply of the HODL token.
+     * @return Returns the total HODLS supply.
      */
     function totalSupply() external view override returns (uint256){
         return totalTokenSupply;
     }
 
     /**
-     * @dev Returns the balance of a given user's address.
+     * @dev View the balance of a given user's address.
      * @param account The address of the user
+     * @return The balance of the account
      */
     function balanceOf(address account) external view override returns (uint256){
-        if (isExcludedFromReflections[account]) {
+        if (isExcludedFromRewards[account]) {
             return trueBalances[account];
         }
         return convertFromReflectedToTrueAmount(reflectedBalances[account]);
     }
 
     /**
-     * @dev Returns the allowance of a given owner address for a given spender address.
+     * @dev View the allowance of a given owner address for a given spender address.
      * @param owner The address of whom we are checking the allowance of
      * @param spender The address of whom we are checking the allowance for
+     * @return The allowance of the owner for the spender
      */
     function allowance(address owner, address spender) external view override returns (uint256){
         return allowances[owner][spender];
     }
     
     /**
-     * @dev Returns whether a given wallet or contract's address is excluded from dividends.
+     * @dev View whether a given wallet or contract's address is excluded from transaction fees.
      * @param account The wallet or contract's address
+     * @return Whether the account is excluded from transaction fees.
      */
     function isExcludedFromFee(address account) public view returns (bool) {
         return isExcludedFromFees[account];
     }
 
     /**
-     * @dev Returns whether a given wallet or contract's address is excluded from transaction fees.
+     * @dev View whether a given wallet or contract's address is excluded from rewards.
      * @param account The wallet or contract's address
+     * @return Whether the account is excluded from rewards.
      */
-    function isExcludedFromReflection(address account) public view returns (bool) {
-        return isExcludedFromReflections[account];
+    function isExcludedFromReward(address account) public view returns (bool) {
+        return isExcludedFromRewards[account];
     }
     
     /**
-     * @dev Excludes a given wallet or contract's address from obtaining dividends. (Owner only)
+     * @dev Excludes a given wallet or contract's address from obtaining rewards. (Owner only)
      * @param account The wallet or contract's address
      *
      * Requirements:
      * – Account must not already be excluded.
      */
-    function excludeFromReward(address account) public onlyOwner() {
-        require(!isExcludedFromReflections[account], "HodlTokenV0::excludeFromReward(): Account is already excluded.");
+    function excludeFromReward(address account) external onlyOwner() {
+        require(!isExcludedFromRewards[account], "HodlTokenV0::excludeFromReward(): Account is already excluded.");
         if(reflectedBalances[account] > 0) {
             // Compute the true token balance and update it in deposit liabilities
-            // since we use deposit liabilities for non-dividend-accruing addresses
+            // since we use deposit liabilities for non-reward-accruing addresses
             trueBalances[account] = convertFromReflectedToTrueAmount(reflectedBalances[account]);
         }
-        isExcludedFromReflections[account] = true;
+        isExcludedFromRewards[account] = true;
         excludedAddresses.push(account);
     }
 
     /**
-     * @dev Includes a given wallet or contract's address into accruing dividends. (Owner only)
+     * @dev Includes a given wallet or contract's address into accruing rewards. (Owner only)
      * @param account The wallet or contract's address
      *
      * Requirements:
      * – Account must not already be included.
      */
     function includeInReward(address account) external onlyOwner() {
-        require(isExcludedFromReflections[account], "HodlTokenV0::IncludeInReward(): Account is already included");
+        require(isExcludedFromRewards[account], "HodlTokenV0::IncludeInReward(): Account is already included");
         for (uint256 i = 0; i < excludedAddresses.length; i++) {
             if (excludedAddresses[i] == account) {
                 // Swap last address with current address we want to include so that we can delete it
                 excludedAddresses[i] = excludedAddresses[excludedAddresses.length - 1];
-                // Set its deposit liabilities to 0 since we use the reserve balance for dividend-accruing addresses
+                // Set its deposit liabilities to 0 since we use the reserve balance for reward-accruing addresses
                 trueBalances[account] = 0;
                 excludedAddresses.pop();
-                isExcludedFromReflections[account] = false;
+                isExcludedFromRewards[account] = false;
                 break;
             }
         }
@@ -165,9 +188,10 @@ contract HodlTokenV0 is Context, IERC20, IERC20Metadata, Ownable {
      * @dev Increases the allowance for a given spender address by a given amount.
      * @param spender The address whom we are increasing the allowance for
      * @param addedValue The amount by which we increase the allowance
+     * @return True if the increase in allowance is successful
      */
     function increaseAllowance(address spender, uint256 addedValue) public virtual returns (bool) {
-        _approve(msg.sender, spender, (allowances[msg.sender][spender] + addedValue));
+        _approve(_msgSender(), spender, (allowances[_msgSender()][spender] + addedValue));
         return true;
     }
     
@@ -175,16 +199,18 @@ contract HodlTokenV0 is Context, IERC20, IERC20Metadata, Ownable {
      * @dev Decreases the allowance for a given spender address by a given amount.
      * @param spender The address whom we are decrease the allowance for
      * @param subtractedValue The amount by which we decrease the allowance
+     * @return True if the decrease in allowance is successful
      */
     function decreaseAllowance(address spender, uint256 subtractedValue) public virtual returns (bool) {
-        _approve(msg.sender, spender, (allowances[_msgSender()][spender] - subtractedValue));
+        _approve(_msgSender(), spender, (allowances[_msgSender()][spender] - subtractedValue));
         return true;
     }
     
     /**
-     * @dev Translates a given amount of tokens into its reflected sum variant (with the transfer fee deducted if specified).
-     * @param trueAmount The specified amount of tokens 
+     * @dev Translates a given amount of HODLS into its reflected sum variant (with the transfer fee deducted if specified).
+     * @param trueAmount The specified amount of HODLS
      * @param deductTransferFee Boolean – True if we deduct the transfer fee from the reflected sum variant. False otherwise.
+     * @return The reflected amount proportional to the given amount of HODLS if False, else the fee-adjusted variant of said reflected amount
      */
     function convertFromTrueToReflectedAmount(uint256 trueAmount, bool deductTransferFee) public view returns(uint256) {
         require(trueAmount <= totalTokenSupply, "HodlTokenV0::convertFromTrueToReflectedAmount(): Amount must be less than total token supply");
@@ -198,8 +224,9 @@ contract HodlTokenV0 is Context, IERC20, IERC20Metadata, Ownable {
     }
 
     /**
-     * @dev Translates a given reflected sum of tokens into the true amount of tokens it represents based on the current reserve rate.
-     * @param reflectedAmount The specified reflected sum of tokens
+     * @dev Translates a given reflected sum of HODLS into the true amount of HODLS it represents based on the current reserve rate.
+     * @param reflectedAmount The specified reflected sum of HODLS
+     * @return The true amount of HODLS representing by its reflected amount
      */
     function convertFromReflectedToTrueAmount(uint256 reflectedAmount) public view returns(uint256) {
         require(reflectedAmount <= totalReflectedSupply, "HodlTokenV0::convertFromReflectedToTrueAmount(): Amount must be less than total reflected supply");
@@ -208,22 +235,78 @@ contract HodlTokenV0 is Context, IERC20, IERC20Metadata, Ownable {
     }
 
     /**
-     * @dev Tranfers a given amount of HODLS to a given receiver address. Returns True if successful.
+     * @dev Compute the reflected and net reflected transferred amounts and the net transferred amount from a given amount of HODLS
+     * @param trueAmount The specified amount of HODLS
+     * @return The reflected amount, the net reflected transfer amount, the given amount, the actual net transfer amount and the net reflected-total ratio
+     */
+    function getValues(uint256 trueAmount) internal view returns (uint256, uint256, uint256, uint256, uint256) {
+
+        // Calculate the total fees and transfered amount after fees
+        uint256 totalFees = (trueAmount * (liquidityRate + burnRate + storageRate + redistributionRate)) / 100;
+        uint256 netTransferAmount = trueAmount - totalFees;
+
+        // Calculate the reflected amount, reflected total fees and reflected amount after fees
+        uint256 currentRate = getRate();
+        uint256 reflectedAmount = trueAmount * currentRate;
+        uint256 reflectedTotalFees = totalFees * currentRate;
+        uint256 netReflectedTransferAmount = reflectedAmount - reflectedTotalFees;
+        
+        return (reflectedAmount, netReflectedTransferAmount, trueAmount, netTransferAmount, currentRate);
+    }
+
+    /**
+     * @dev Computes the current rate used to inter-convert from the mathematically reflected space to the "true" or total space
+     * @return The ratio of net reflected HODLS to net total HODLS
+     */
+    function getRate() internal view returns(uint256) {
+        (uint256 netReflectedSupply, uint256 netTokenSupply) = getNetSupplies();
+        return netReflectedSupply / netTokenSupply;
+    }
+
+    /**
+     * @dev Computes the net reflected and total token supplies (adjusted for non-reward-accruing accounts)
+     * @return The adjusted reflected supply and adjusted total token supply
+     */
+    function getNetSupplies() internal view returns(uint256, uint256) {
+        uint256 netReflectedSupply = totalReflectedSupply;
+        uint256 netTokenSupply = totalTokenSupply;  
+
+        for (uint256 i = 0; i < excludedAddresses.length; i++) {
+            // Failsafe for non-reward-accruing accounts owning too many tokens (highly unlikely; nonetheless possible)
+            if (reflectedBalances[excludedAddresses[i]] > netReflectedSupply || trueBalances[excludedAddresses[i]] > netTokenSupply) {
+                return (totalReflectedSupply, totalTokenSupply);
+            }
+            // Subtracting each excluded account from both supplies yields the adjusted supplies
+            netReflectedSupply -= reflectedBalances[excludedAddresses[i]];
+            netTokenSupply -= trueBalances[excludedAddresses[i]];
+        }
+        // In case there are no tokens left in circulation for reward-accruing accounts
+        if (netTokenSupply == 0 || netReflectedSupply < (totalReflectedSupply / totalTokenSupply)){
+            return (totalReflectedSupply, totalTokenSupply);
+        }
+
+        return (netReflectedSupply, netTokenSupply);
+    }
+
+    /**
+     * @dev Tranfers a given amount of HODLS to a given receiver address.
      * @param recipient The destination to which the HODLS are to be transferred
      * @param amount The amount of HODLS to be transferred
+     * @return True if the transfer is successful.
      */
     function transfer(address recipient, uint256 amount) external override returns (bool){
-        _transfer(msg.sender, recipient, amount);
+        _transfer(_msgSender(), recipient, amount);
         return true;
     }
 
     /**
-     * @dev Sets the allowance for a given address to a given amount. Returns True if successful.
+     * @dev Sets the allowance for a given address to a given amount.
      * @param spender The address of whom we are changing the allowance for
      * @param amount The amount we are changing the allowance to
+     * @return True if the approval is successful.
      */
     function approve(address spender, uint256 amount) external override returns (bool){
-        _approve(msg.sender, spender, amount);
+        _approve(_msgSender(), spender, amount);
         return true;
     }
 
@@ -232,13 +315,14 @@ contract HodlTokenV0 is Context, IERC20, IERC20Metadata, Ownable {
      * @param sender The address whom we withdraw the HODLS from
      * @param recipient The address which shall receive the HODLS
      * @param amount The amount of HODLS which is being transferred
+     * @return True if the transfer and approval are both successful.
      */
     function transferFrom(address sender, address recipient, uint256 amount) external override returns (bool) {
         _transfer(sender, recipient, amount);
 
-        uint256 currentAllowance = allowances[sender][msg.sender];
+        uint256 currentAllowance = allowances[sender][_msgSender()];
         require(currentAllowance >= amount, "HodlTokenV0::transferFrom(): transfer amount exceeds allowance");
-        _approve(sender, msg.sender, currentAllowance - amount);
+        _approve(sender, _msgSender(), currentAllowance - amount);
 
         return true;
     }
@@ -270,11 +354,11 @@ contract HodlTokenV0 is Context, IERC20, IERC20Metadata, Ownable {
         require(recipient != address(0), "HodlTokenV0::_transfer(): transfer to the zero address");
         require(amount > 0, "HodlTokenV0::_transfer(): transfer amount must be greater than zero");
 
-        if (isExcludedFromReflections[sender] && !isExcludedFromReflections[recipient]) {
+        if (isExcludedFromRewards[sender] && !isExcludedFromRewards[recipient]) {
             _transferFromExcluded(sender, recipient, amount);
-        } else if (!isExcludedFromReflections[sender] && isExcludedFromReflections[recipient]) {
+        } else if (!isExcludedFromRewards[sender] && isExcludedFromRewards[recipient]) {
             _transferToExcluded(sender, recipient, amount);
-        } else if (isExcludedFromReflections[sender] && isExcludedFromReflections[recipient]) {
+        } else if (isExcludedFromRewards[sender] && isExcludedFromRewards[recipient]) {
             _transferBothExcluded(sender, recipient, amount);
         } else {
             _transferStandard(sender, recipient, amount);
