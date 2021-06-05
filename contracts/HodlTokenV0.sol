@@ -145,29 +145,29 @@ contract HodlTokenV0 is Context, IERC20, IERC20Metadata, Ownable {
     }
     
     /**
-     * @dev Excludes a given wallet or contract's address from obtaining rewards. (Owner only)
+     * @dev Excludes a given wallet or contract's address from accruing rewards. (Owner only)
      * @param account The wallet or contract's address
      *
      * Requirements:
-     * – Account must not already be excluded.
+     * – Account must not already be excluded from rewards.
      */
     function excludeFromReward(address account) external onlyOwner() {
         require(!isExcludedFromRewards[account], "HodlTokenV0::excludeFromReward(): Account is already excluded.");
         if(reflectedBalances[account] > 0) {
-            // Compute the true token balance and update it in deposit liabilities
-            // since we use deposit liabilities for non-reward-accruing addresses
-            trueBalances[account] = convertFromReflectedToTrueAmount(reflectedBalances[account]);
+            // Compute the true token balance from non-empty reflected balances and update it
+            // since we must use both reflected and true balances to make our reflected-to-total ratio even
+            trueBalances[account] =  convertFromReflectedToTrueAmount(reflectedBalances[account]);
         }
         isExcludedFromRewards[account] = true;
         excludedAddresses.push(account);
     }
 
     /**
-     * @dev Includes a given wallet or contract's address into accruing rewards. (Owner only)
+     * @dev Allows a given wallet or contract's address to accrue rewards. (Owner only)
      * @param account The wallet or contract's address
      *
      * Requirements:
-     * – Account must not already be included.
+     * – Account must not already be accruing rewards.
      */
     function includeInReward(address account) external onlyOwner() {
         require(isExcludedFromRewards[account], "HodlTokenV0::IncludeInReward(): Account is already included");
@@ -208,18 +208,22 @@ contract HodlTokenV0 is Context, IERC20, IERC20Metadata, Ownable {
     
     /**
      * @dev Translates a given amount of HODLS into its reflected sum variant (with the transfer fee deducted if specified).
-     * @param trueAmount The specified amount of HODLS
+     * @param amount The specified amount of HODLS
      * @param deductTransferFee Boolean – True if we deduct the transfer fee from the reflected sum variant. False otherwise.
      * @return The reflected amount proportional to the given amount of HODLS if False, else the fee-adjusted variant of said reflected amount
+     *
+     * Requirements:
+     * 
+     * - Given HODLS amount cannot be greater than the total token supply
      */
-    function convertFromTrueToReflectedAmount(uint256 trueAmount, bool deductTransferFee) public view returns(uint256) {
-        require(trueAmount <= totalTokenSupply, "HodlTokenV0::convertFromTrueToReflectedAmount(): Amount must be less than total token supply");
+    function convertFromTrueToReflectedAmount(uint256 amount, bool deductTransferFee) public view returns(uint256) {
+        require(amount <= totalTokenSupply, "HodlTokenV0::convertFromTrueToReflectedAmount(): Amount must be less than total token supply");
         if (!deductTransferFee) {
-            (uint256 reflectedAmount,,,,) = getValues(trueAmount);
+            (uint256 reflectedAmount,,,) = getValues(amount);
             return reflectedAmount;
         } else {
-            (,uint256 reflectedTransferAmount,,,) = getValues(trueAmount);
-            return reflectedTransferAmount;
+            (,uint256 netReflectedTransferAmount,,) = getValues(amount);
+            return netReflectedTransferAmount;
         }
     }
 
@@ -227,6 +231,9 @@ contract HodlTokenV0 is Context, IERC20, IERC20Metadata, Ownable {
      * @dev Translates a given reflected sum of HODLS into the true amount of HODLS it represents based on the current reserve rate.
      * @param reflectedAmount The specified reflected sum of HODLS
      * @return The true amount of HODLS representing by its reflected amount
+     * Requirements:
+     * 
+     * - Given reflected HODLS amount cannot be greater than the total reflected token supply
      */
     function convertFromReflectedToTrueAmount(uint256 reflectedAmount) public view returns(uint256) {
         require(reflectedAmount <= totalReflectedSupply, "HodlTokenV0::convertFromReflectedToTrueAmount(): Amount must be less than total reflected supply");
@@ -237,9 +244,9 @@ contract HodlTokenV0 is Context, IERC20, IERC20Metadata, Ownable {
     /**
      * @dev Compute the reflected and net reflected transferred amounts and the net transferred amount from a given amount of HODLS
      * @param trueAmount The specified amount of HODLS
-     * @return The reflected amount, the net reflected transfer amount, the given amount, the actual net transfer amount and the net reflected-total ratio
+     * @return The reflected amount, the net reflected transfer amount, the actual net transfer amount, and the total reflected fees
      */
-    function getValues(uint256 trueAmount) internal view returns (uint256, uint256, uint256, uint256, uint256) {
+    function getValues(uint256 trueAmount) internal view returns (uint256, uint256, uint256, uint256) {
 
         // Calculate the total fees and transfered amount after fees
         uint256 totalFees = (trueAmount * (liquidityRate + burnRate + storageRate + redistributionRate)) / 100;
@@ -251,7 +258,7 @@ contract HodlTokenV0 is Context, IERC20, IERC20Metadata, Ownable {
         uint256 reflectedTotalFees = totalFees * currentRate;
         uint256 netReflectedTransferAmount = reflectedAmount - reflectedTotalFees;
         
-        return (reflectedAmount, netReflectedTransferAmount, trueAmount, netTransferAmount, currentRate);
+        return (reflectedAmount, netReflectedTransferAmount, netTransferAmount, totalFees * currentRate);
     }
 
     /**
@@ -316,6 +323,10 @@ contract HodlTokenV0 is Context, IERC20, IERC20Metadata, Ownable {
      * @param recipient The address which shall receive the HODLS
      * @param amount The amount of HODLS which is being transferred
      * @return True if the transfer and approval are both successful.
+     *
+     * Requirements:
+     * 
+     * - The caller must be allowed to spend (at least) the given amount on the sender's behalf
      */
     function transferFrom(address sender, address recipient, uint256 amount) external override returns (bool) {
         _transfer(sender, recipient, amount);
@@ -332,6 +343,10 @@ contract HodlTokenV0 is Context, IERC20, IERC20Metadata, Ownable {
      * @param owner The adress of whom we are changing the allowance of
      * @param spender The address of whom we are changing the allowance for
      * @param amount The amount which we change the allowance to
+     *
+     * Requirements:
+     * 
+     * - Owner and spender cannot be the zero address
      */
     function _approve(address owner, address spender, uint256 amount) internal {
         require(owner != address(0), "HodlTokenV0::_approve(): approve from the zero address");
@@ -348,21 +363,32 @@ contract HodlTokenV0 is Context, IERC20, IERC20Metadata, Ownable {
      * @param sender The address of whom the HODLS will be transferred from
      * @param recipient The address of whom the HODLS will be transferred to
      * @param amount The amount of HODLS to be transferred
+     * 
+     * Requirements:
+     * 
+     * - Sender or recipient cannot be the zero address
+     * - Transferred amount must be greater than zero
      */
     function _transfer(address sender, address recipient, uint256 amount) internal {
         require(sender != address(0), "HodlTokenV0::_transfer(): transfer from the zero address");
         require(recipient != address(0), "HodlTokenV0::_transfer(): transfer to the zero address");
         require(amount > 0, "HodlTokenV0::_transfer(): transfer amount must be greater than zero");
 
-        if (isExcludedFromRewards[sender] && !isExcludedFromRewards[recipient]) {
-            _transferFromExcluded(sender, recipient, amount);
-        } else if (!isExcludedFromRewards[sender] && isExcludedFromRewards[recipient]) {
-            _transferToExcluded(sender, recipient, amount);
-        } else if (isExcludedFromRewards[sender] && isExcludedFromRewards[recipient]) {
-            _transferBothExcluded(sender, recipient, amount);
-        } else {
-            _transferStandard(sender, recipient, amount);
-        }
+        (uint256 reflectedAmount, uint256 netReflectedTransferAmount, uint256 netTransferAmount, uint256 totalReflectedFees) = getValues(amount);
+
+        // Always update the reflected balances of sender and recipient
+        reflectedBalances[sender] -= reflectedAmount;
+        reflectedBalances[recipient] += netReflectedTransferAmount;
+
+        // Update true balances for any non-reward-accruing accounts 
+        trueBalances[sender] = isExcludedFromRewards[sender] ? (trueBalances[sender] - amount) : trueBalances[sender]; 
+        trueBalances[recipient] = isExcludedFromRewards[recipient] ? (trueBalances[recipient] + netTransferAmount) : trueBalances[recipient]; 
+
+        // Adjust the total reflected supply for the new fees
+        // If the sender or recipient are excluded from fees, we ignore the fee altogether
+        totalReflectedSupply = (isExcludedFromFees[sender] || isExcludedFromFees[recipient]) ? (totalReflectedSupply - totalReflectedFees) : totalReflectedSupply;
+
+        emit Transfer(sender, recipient, netTransferAmount);
     }
 
     /**
