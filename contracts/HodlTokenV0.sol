@@ -109,7 +109,7 @@ contract HodlTokenV0 is Context, IERC20, IERC20Metadata, Ownable {
      * @param account The address of the user
      * @return The balance of the account
      */
-    function balanceOf(address account) external view override returns (uint256){
+    function balanceOf(address account) public view override returns (uint256){
         if (isExcludedFromRewards[account]) {
             return trueBalances[account];
         }
@@ -170,7 +170,7 @@ contract HodlTokenV0 is Context, IERC20, IERC20Metadata, Ownable {
      * – Account must not already be accruing rewards.
      */
     function includeInReward(address account) external onlyOwner() {
-        require(isExcludedFromRewards[account], "HodlTokenV0::IncludeInReward(): Account is already included");
+        require(isExcludedFromRewards[account], "HodlTokenV0::includeInReward(): Account is already included");
         for (uint256 i = 0; i < excludedAddresses.length; i++) {
             if (excludedAddresses[i] == account) {
                 // Swap last address with current address we want to include so that we can delete it
@@ -386,9 +386,54 @@ contract HodlTokenV0 is Context, IERC20, IERC20Metadata, Ownable {
 
         // Adjust the total reflected supply for the new fees
         // If the sender or recipient are excluded from fees, we ignore the fee altogether
-        totalReflectedSupply = (isExcludedFromFees[sender] || isExcludedFromFees[recipient]) ? (totalReflectedSupply - totalReflectedFees) : totalReflectedSupply;
+        if (!isExcludedFromFees[sender] && !isExcludedFromFees[recipient]) {
+            _burn(address(this), amount, reflectedAmount);
+            _redistribute(reflectedAmount);
+            _store(amount, reflectedAmount);
+            _provideLiquidity(amount, reflectedAmount);
+        }
 
         emit Transfer(sender, recipient, netTransferAmount);
+    }
+    
+    /**
+     * @dev Burns a given amount of HODLS
+     * @param amount The amount of HODLS being burned
+     * @return True if the burn is successful
+     */
+    function burn(uint256 amount) external returns (bool) {
+
+        address sender = _msgSender();
+        require(sender != address(0), "HodlTokenV0::burn(): burn from the zero address");
+
+        uint256 balance = balanceOf(sender);
+        require(balance >= amount, "HodlTokenV0::burn(): burn amount exceeds balance");
+
+        // Subtract the amounts from the sender before so we can reuse _burn elsewhere
+        uint256 reflectedAmount = convertFromTrueToReflectedAmount(amount, false);
+        reflectedBalances[sender] -= reflectedAmount;
+        trueBalances[sender] = isExcludedFromRewards[sender] ? (trueBalances[sender] - amount) : trueBalances[sender];
+
+        _burn(sender, amount, reflectedAmount);
+        return true;
+    }
+    
+    /**
+     * @dev Burns the specified amount of HODLS for a given sender by sending them to the 0x0 address
+     * @param sender The specified address burning HODLS
+     * @param amount The amount of HODLS being burned
+     * @param reflectedAmount The reflected equivalent of HODLS being burned
+     */
+    function _burn(address sender, uint256 amount, uint256 reflectedAmount) internal {
+        // Send tokens to the 0x0 address
+        reflectedBalances[address(0)] += reflectedAmount;
+        trueBalances[address(0)] += amount;
+
+        // Update supplies accordingly
+        totalReflectedSupply -= reflectedAmount;
+        totalTokenSupply -= amount;
+
+        emit Transfer(sender, address(0), amount);
     }
 
     /**
