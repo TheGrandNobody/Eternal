@@ -5,15 +5,16 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
+import "./interfaces/IEternalTokenV0.sol";
 import "@pangolindex/exchange-contracts/contracts/pangolin-core/interfaces/IPangolinFactory.sol";
 import "@pangolindex/exchange-contracts/contracts/pangolin-periphery/interfaces/IPangolinRouter.sol";
 
 /**
  * @title Contract for the Eternal Token (ETRNL)
  * @author Nobody (credits to OpenZeppelin for the IERC20 and IERC20Metadata interfaces)
- * @notice The Eternal Token contract holds 
+ * @notice The Eternal Token contract holds all the deflationary, burn, reflect, funding and auto-liquidity provision mechanics
  */
-contract EternalTokenV0 is Context, IERC20, IERC20Metadata, Ownable {
+contract EternalTokenV0 is Context, IERC20, IERC20Metadata, IEternalTokenV0, Ownable {
 
     // Keeps track of how much an address allows any other address to spend on its behalf
     mapping (address => mapping (address => uint256)) private allowances;
@@ -29,20 +30,18 @@ contract EternalTokenV0 is Context, IERC20, IERC20Metadata, Ownable {
     // Keeps track of all reward-excluded addresses
     address[] private excludedAddresses;
 
-    // The largest possible number in a 256-bit integer
-    uint256 private constant MAX = ~uint256(0);
-    // The true total token supply 
-    uint256 private totalTokenSupply = (10**10) * (10**9);
     // The total token supply after taking reflections into account
     uint256 private totalReflectedSupply;
+    // The true total token supply 
+    uint64 private totalTokenSupply = (10**10) * (10**9);
     // The percentage of the total fee rate used to auto-lock liquidity
-    uint256 private liquidityRate;
+    uint8 private liquidityProvisionRate;
     // The percentage of the total fee rate stored in the EternalFund
-    uint256 private storageRate;
+    uint8 private fundingRate;
     // The percentage of the total fee rate that is burned
-    uint256 private burnRate;
+    uint8 private burnRate;
     // The percentage of the total fee rate redistributed to holders
-    uint256 private redistributionRate;
+    uint8 private redistributionRate;
 
     // PangolinDex Router interface to swap tokens for WAVAX and add liquidity
     IPangolinRouter internal immutable pangolinRouter;
@@ -53,8 +52,12 @@ contract EternalTokenV0 is Context, IERC20, IERC20Metadata, Ownable {
      * @dev Sets the token ticker and token name. Mints the total supply to the contract deployer.
      */
     constructor () {
+
+        // The largest possible number in a 256-bit integer
+        uint256 max = ~uint256(0);
+
         // Initialize name, ticker symbol and total supply
-        totalReflectedSupply = (MAX - (MAX % totalTokenSupply));
+        totalReflectedSupply = (max - (max % totalTokenSupply));
         reflectedBalances[_msgSender()] = totalTokenSupply;
 
         // Create pair address
@@ -64,12 +67,17 @@ contract EternalTokenV0 is Context, IERC20, IERC20Metadata, Ownable {
         // Initialize Pangolin Router
         pangolinRouter = _pangolinRouter;
 
-        // Exclude the owner from rewards
-        isExcludedFromRewards[owner()] = true;
-        excludedAddresses.push(owner());
-        // Exclude this contract from rewards
+        // Exclude the owner from rewards and fees
+        excludeFromReward(owner());
+        isExcludedFromFees[owner()] = true;
+
+        // Exclude this contract from rewards and fees
         isExcludedFromRewards[address(this)] = true;
+        isExcludedFromFees[owner()] = true;
         excludedAddresses.push(address(this));
+
+        // Exclude the burn address from rewards
+        isExcludedFromRewards[address(0)];
     }
 
     /**
@@ -102,6 +110,30 @@ contract EternalTokenV0 is Context, IERC20, IERC20Metadata, Ownable {
      */
     function totalSupply() external view override returns (uint256){
         return totalTokenSupply;
+    }
+
+    function setRate(uint8 newRate, Rate rate) external onlyOwner {
+        require((uint(rate) >= 0 && uint(rate) <= 3), "EternalTokenV0::setRate(): Invalid rate type");
+        require(newRate >= 0, "EternalTokenV0::setRate(): The new rate must be positive.");
+        require((newRate + fundingRate + redistributionRate + burnRate) < 25, "EternalTokenV0::setRate(): Total rate exceeds 25%");
+
+        uint8 oldRate;
+
+        if (rate == Rate.Liquidity) {
+            oldRate = liquidityProvisionRate;
+            liquidityProvisionRate = newRate;
+        } else if (rate == Rate.Funding) {
+            oldRate = fundingRate;
+            fundingRate = newRate;
+        } else if (rate == Rate.Redistribution) {
+            oldRate = redistributionRate;
+            redistributionRate = newRate;
+        } else {
+            oldRate = burnRate;
+            burnRate = newRate;
+        }
+
+        emit UpdateRate(oldRate, newRate, rate);
     }
 
     /**
@@ -151,8 +183,8 @@ contract EternalTokenV0 is Context, IERC20, IERC20Metadata, Ownable {
      * Requirements:
      * – Account must not already be excluded from rewards.
      */
-    function excludeFromReward(address account) external onlyOwner() {
-        require(!isExcludedFromRewards[account], "HodlTokenV0::excludeFromReward(): Account is already excluded.");
+    function excludeFromReward(address account) public onlyOwner() {
+        require(!isExcludedFromRewards[account], "EternalTokenV0::excludeFromReward(): Account is already excluded");
         if(reflectedBalances[account] > 0) {
             // Compute the true token balance from non-empty reflected balances and update it
             // since we must use both reflected and true balances to make our reflected-to-total ratio even
@@ -170,7 +202,7 @@ contract EternalTokenV0 is Context, IERC20, IERC20Metadata, Ownable {
      * – Account must not already be accruing rewards.
      */
     function includeInReward(address account) external onlyOwner() {
-        require(isExcludedFromRewards[account], "HodlTokenV0::includeInReward(): Account is already included");
+        require(isExcludedFromRewards[account], "EternalTokenV0::includeInReward(): Account is already included");
         for (uint256 i = 0; i < excludedAddresses.length; i++) {
             if (excludedAddresses[i] == account) {
                 // Swap last address with current address we want to include so that we can delete it
@@ -217,7 +249,7 @@ contract EternalTokenV0 is Context, IERC20, IERC20Metadata, Ownable {
      * - Given ETRNL amount cannot be greater than the total token supply
      */
     function convertFromTrueToReflectedAmount(uint256 amount, bool deductTransferFee) public view returns(uint256) {
-        require(amount <= totalTokenSupply, "HodlTokenV0::convertFromTrueToReflectedAmount(): Amount must be less than total token supply");
+        require(amount <= totalTokenSupply, "EternalTokenV0::convertFromTrueToReflectedAmount(): Amount must be less than total token supply");
         if (!deductTransferFee) {
             (uint256 reflectedAmount,,,) = getValues(amount);
             return reflectedAmount;
@@ -236,7 +268,7 @@ contract EternalTokenV0 is Context, IERC20, IERC20Metadata, Ownable {
      * - Given reflected ETRNL amount cannot be greater than the total reflected token supply
      */
     function convertFromReflectedToTrueAmount(uint256 reflectedAmount) public view returns(uint256) {
-        require(reflectedAmount <= totalReflectedSupply, "HodlTokenV0::convertFromReflectedToTrueAmount(): Amount must be less than total reflected supply");
+        require(reflectedAmount <= totalReflectedSupply, "EternalTokenV0::convertFromReflectedToTrueAmount(): Amount must be less than total reflected supply");
         uint256 currentRate =  getRate();
         return reflectedAmount / currentRate;
     }
@@ -249,7 +281,7 @@ contract EternalTokenV0 is Context, IERC20, IERC20Metadata, Ownable {
     function getValues(uint256 trueAmount) private view returns (uint256, uint256, uint256, uint256) {
 
         // Calculate the total fees and transfered amount after fees
-        uint256 totalFees = (trueAmount * (liquidityRate + burnRate + storageRate + redistributionRate)) / 100;
+        uint256 totalFees = (trueAmount * (liquidityProvisionRate + burnRate + fundingRate + redistributionRate)) / 100;
         uint256 netTransferAmount = trueAmount - totalFees;
 
         // Calculate the reflected amount, reflected total fees and reflected amount after fees
@@ -332,7 +364,7 @@ contract EternalTokenV0 is Context, IERC20, IERC20Metadata, Ownable {
         _transfer(sender, recipient, amount);
 
         uint256 currentAllowance = allowances[sender][_msgSender()];
-        require(currentAllowance >= amount, "HodlTokenV0::transferFrom(): transfer amount exceeds allowance");
+        require(currentAllowance >= amount, "EternalTokenV0::transferFrom(): transfer amount exceeds allowance");
         _approve(sender, _msgSender(), currentAllowance - amount);
 
         return true;
@@ -349,8 +381,8 @@ contract EternalTokenV0 is Context, IERC20, IERC20Metadata, Ownable {
      * - Owner and spender cannot be the zero address
      */
     function _approve(address owner, address spender, uint256 amount) private {
-        require(owner != address(0), "HodlTokenV0::_approve(): approve from the zero address");
-        require(spender != address(0), "HodlTokenV0::_approve(): approve to the zero address");
+        require(owner != address(0), "EternalTokenV0::_approve(): approve from the zero address");
+        require(spender != address(0), "EternalTokenV0::_approve(): approve to the zero address");
 
         allowances[owner][spender] = amount;
 
@@ -370,9 +402,9 @@ contract EternalTokenV0 is Context, IERC20, IERC20Metadata, Ownable {
      * - Transferred amount must be greater than zero
      */
     function _transfer(address sender, address recipient, uint256 amount) private {
-        require(sender != address(0), "HodlTokenV0::_transfer(): transfer from the zero address");
-        require(recipient != address(0), "HodlTokenV0::_transfer(): transfer to the zero address");
-        require(amount > 0, "HodlTokenV0::_transfer(): transfer amount must be greater than zero");
+        require(sender != address(0), "EternalTokenV0::_transfer(): transfer from the zero address");
+        require(recipient != address(0), "EternalTokenV0::_transfer(): transfer to the zero address");
+        require(amount > 0, "EternalTokenV0::_transfer(): transfer amount must be greater than zero");
 
         (uint256 reflectedAmount, uint256 netReflectedTransferAmount, uint256 netTransferAmount, uint256 totalReflectedFees) = getValues(amount);
 
@@ -387,17 +419,25 @@ contract EternalTokenV0 is Context, IERC20, IERC20Metadata, Ownable {
         // Adjust the total reflected supply for the new fees
         // If the sender or recipient are excluded from fees, we ignore the fee altogether
         if (!isExcludedFromFees[sender] && !isExcludedFromFees[recipient]) {
+            // Perform a burn based on the burn rate 
             _burn(address(this), amount * burnRate / 100, reflectedAmount * burnRate / 100) ;
-            redistribute(reflectedAmount * redistributionRate / 100);
-            store(amount, reflectedAmount);
-            provideLiquidity(amount, reflectedAmount);
+            // Redistribute based on the redistribution rate 
+            totalReflectedSupply -= reflectedAmount * redistributionRate / 100;
+            // Store ETRNL away in the EternalFund based on the funding rate
+            _store(reflectedAmount * fundingRate / 100);
+            // Provide liqudity to the ETRNL/WAVAX pair on Pangolin based on the liquidity provision rate
+            provideLiquidity(amount * liquidityProvisionRate / 100, reflectedAmount * liquidityProvisionRate / 100);
         }
 
         emit Transfer(sender, recipient, netTransferAmount);
     }
 
-    function redistribute(uint256 reflectedAmount) private {
-        
+    /**
+     * @dev Sends a given amount of ETRNL to the Eternal Fund.
+     * @param amount
+     */
+    function _store(uint256 amount, uint256 reflectedAmount) private {
+        totalReflectedSupply -= reflectedAmount;
     }
     
     /**
@@ -408,10 +448,10 @@ contract EternalTokenV0 is Context, IERC20, IERC20Metadata, Ownable {
     function burn(uint256 amount) external returns (bool) {
 
         address sender = _msgSender();
-        require(sender != address(0), "HodlTokenV0::burn(): burn from the zero address");
+        require(sender != address(0), "EternalTokenV0::burn(): burn from the zero address");
 
         uint256 balance = balanceOf(sender);
-        require(balance >= amount, "HodlTokenV0::burn(): burn amount exceeds balance");
+        require(balance >= amount, "EternalTokenV0::burn(): burn amount exceeds balance");
 
         // Subtract the amounts from the sender before so we can reuse _burn elsewhere
         uint256 reflectedAmount = convertFromTrueToReflectedAmount(amount, false);
