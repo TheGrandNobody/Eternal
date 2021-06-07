@@ -9,11 +9,11 @@ import "@pangolindex/exchange-contracts/contracts/pangolin-core/interfaces/IPang
 import "@pangolindex/exchange-contracts/contracts/pangolin-periphery/interfaces/IPangolinRouter.sol";
 
 /**
- * @title Contract for the HODL Token (HODLS)
+ * @title Contract for the Eternal Token (ETRNL)
  * @author Nobody (credits to OpenZeppelin for the IERC20 and IERC20Metadata interfaces)
- * @notice The HODL Token contract holds 
+ * @notice The Eternal Token contract holds 
  */
-contract HodlTokenV0 is Context, IERC20, IERC20Metadata, Ownable {
+contract EternalTokenV0 is Context, IERC20, IERC20Metadata, Ownable {
 
     // Keeps track of how much an address allows any other address to spend on its behalf
     mapping (address => mapping (address => uint256)) private allowances;
@@ -37,16 +37,16 @@ contract HodlTokenV0 is Context, IERC20, IERC20Metadata, Ownable {
     uint256 private totalReflectedSupply;
     // The percentage of the total fee rate used to auto-lock liquidity
     uint256 private liquidityRate;
-    // The percentage of the total fee rate stored in the HODLFund
+    // The percentage of the total fee rate stored in the EternalFund
     uint256 private storageRate;
     // The percentage of the total fee rate that is burned
     uint256 private burnRate;
-    // The percentage of the total fee rate redistributed to HODLers
+    // The percentage of the total fee rate redistributed to holders
     uint256 private redistributionRate;
 
     // PangolinDex Router interface to swap tokens for WAVAX and add liquidity
     IPangolinRouter internal immutable pangolinRouter;
-    // The address of the HODLS/WAVAX pair
+    // The address of the ETRNL/WAVAX pair
     address internal immutable pangolinPair;
 
     /**
@@ -77,7 +77,7 @@ contract HodlTokenV0 is Context, IERC20, IERC20Metadata, Ownable {
      * @return The token name
      */
     function name() external pure override returns (string memory) {
-        return "HODL Token";
+        return "Eternal Token";
     }
 
     /**
@@ -85,11 +85,11 @@ contract HodlTokenV0 is Context, IERC20, IERC20Metadata, Ownable {
      * @return The token symbol
      */
     function symbol() external pure override returns (string memory) {
-        return "HODLS";
+        return "ETRNL";
     }
 
     /**
-     * @dev View the maximum number of decimals for the HODL token
+     * @dev View the maximum number of decimals for the Eternal token
      * @return The number of decimals
      */
     function decimals() external pure override returns (uint8) {
@@ -97,8 +97,8 @@ contract HodlTokenV0 is Context, IERC20, IERC20Metadata, Ownable {
     }
     
     /**
-     * @dev View the total supply of the HODL token.
-     * @return Returns the total HODLS supply.
+     * @dev View the total supply of the Eternal token.
+     * @return Returns the total ETRNL supply.
      */
     function totalSupply() external view override returns (uint256){
         return totalTokenSupply;
@@ -131,7 +131,7 @@ contract HodlTokenV0 is Context, IERC20, IERC20Metadata, Ownable {
      * @param account The wallet or contract's address
      * @return Whether the account is excluded from transaction fees.
      */
-    function isExcludedFromFee(address account) public view returns (bool) {
+    function isExcludedFromFee(address account) external view returns (bool) {
         return isExcludedFromFees[account];
     }
 
@@ -140,7 +140,7 @@ contract HodlTokenV0 is Context, IERC20, IERC20Metadata, Ownable {
      * @param account The wallet or contract's address
      * @return Whether the account is excluded from rewards.
      */
-    function isExcludedFromReward(address account) public view returns (bool) {
+    function isExcludedFromReward(address account) external view returns (bool) {
         return isExcludedFromRewards[account];
     }
     
@@ -190,7 +190,7 @@ contract HodlTokenV0 is Context, IERC20, IERC20Metadata, Ownable {
      * @param addedValue The amount by which we increase the allowance
      * @return True if the increase in allowance is successful
      */
-    function increaseAllowance(address spender, uint256 addedValue) public virtual returns (bool) {
+    function increaseAllowance(address spender, uint256 addedValue) external virtual returns (bool) {
         _approve(_msgSender(), spender, (allowances[_msgSender()][spender] + addedValue));
         return true;
     }
@@ -201,20 +201,20 @@ contract HodlTokenV0 is Context, IERC20, IERC20Metadata, Ownable {
      * @param subtractedValue The amount by which we decrease the allowance
      * @return True if the decrease in allowance is successful
      */
-    function decreaseAllowance(address spender, uint256 subtractedValue) public virtual returns (bool) {
+    function decreaseAllowance(address spender, uint256 subtractedValue) external virtual returns (bool) {
         _approve(_msgSender(), spender, (allowances[_msgSender()][spender] - subtractedValue));
         return true;
     }
     
     /**
-     * @dev Translates a given amount of HODLS into its reflected sum variant (with the transfer fee deducted if specified).
-     * @param amount The specified amount of HODLS
+     * @dev Translates a given amount of ETRNL into its reflected sum variant (with the transfer fee deducted if specified).
+     * @param amount The specified amount of ETRNL
      * @param deductTransferFee Boolean – True if we deduct the transfer fee from the reflected sum variant. False otherwise.
-     * @return The reflected amount proportional to the given amount of HODLS if False, else the fee-adjusted variant of said reflected amount
+     * @return The reflected amount proportional to the given amount of ETRNL if False, else the fee-adjusted variant of said reflected amount
      *
      * Requirements:
      * 
-     * - Given HODLS amount cannot be greater than the total token supply
+     * - Given ETRNL amount cannot be greater than the total token supply
      */
     function convertFromTrueToReflectedAmount(uint256 amount, bool deductTransferFee) public view returns(uint256) {
         require(amount <= totalTokenSupply, "HodlTokenV0::convertFromTrueToReflectedAmount(): Amount must be less than total token supply");
@@ -228,12 +228,12 @@ contract HodlTokenV0 is Context, IERC20, IERC20Metadata, Ownable {
     }
 
     /**
-     * @dev Translates a given reflected sum of HODLS into the true amount of HODLS it represents based on the current reserve rate.
-     * @param reflectedAmount The specified reflected sum of HODLS
-     * @return The true amount of HODLS representing by its reflected amount
+     * @dev Translates a given reflected sum of ETRNL into the true amount of ETRNL it represents based on the current reserve rate.
+     * @param reflectedAmount The specified reflected sum of ETRNL
+     * @return The true amount of ETRNL representing by its reflected amount
      * Requirements:
      * 
-     * - Given reflected HODLS amount cannot be greater than the total reflected token supply
+     * - Given reflected ETRNL amount cannot be greater than the total reflected token supply
      */
     function convertFromReflectedToTrueAmount(uint256 reflectedAmount) public view returns(uint256) {
         require(reflectedAmount <= totalReflectedSupply, "HodlTokenV0::convertFromReflectedToTrueAmount(): Amount must be less than total reflected supply");
@@ -242,11 +242,11 @@ contract HodlTokenV0 is Context, IERC20, IERC20Metadata, Ownable {
     }
 
     /**
-     * @dev Compute the reflected and net reflected transferred amounts and the net transferred amount from a given amount of HODLS
-     * @param trueAmount The specified amount of HODLS
+     * @dev Compute the reflected and net reflected transferred amounts and the net transferred amount from a given amount of ETRNL
+     * @param trueAmount The specified amount of ETRNL
      * @return The reflected amount, the net reflected transfer amount, the actual net transfer amount, and the total reflected fees
      */
-    function getValues(uint256 trueAmount) internal view returns (uint256, uint256, uint256, uint256) {
+    function getValues(uint256 trueAmount) private view returns (uint256, uint256, uint256, uint256) {
 
         // Calculate the total fees and transfered amount after fees
         uint256 totalFees = (trueAmount * (liquidityRate + burnRate + storageRate + redistributionRate)) / 100;
@@ -263,9 +263,9 @@ contract HodlTokenV0 is Context, IERC20, IERC20Metadata, Ownable {
 
     /**
      * @dev Computes the current rate used to inter-convert from the mathematically reflected space to the "true" or total space
-     * @return The ratio of net reflected HODLS to net total HODLS
+     * @return The ratio of net reflected ETRNL to net total ETRNL
      */
-    function getRate() internal view returns(uint256) {
+    function getRate() private view returns(uint256) {
         (uint256 netReflectedSupply, uint256 netTokenSupply) = getNetSupplies();
         return netReflectedSupply / netTokenSupply;
     }
@@ -274,7 +274,7 @@ contract HodlTokenV0 is Context, IERC20, IERC20Metadata, Ownable {
      * @dev Computes the net reflected and total token supplies (adjusted for non-reward-accruing accounts)
      * @return The adjusted reflected supply and adjusted total token supply
      */
-    function getNetSupplies() internal view returns(uint256, uint256) {
+    function getNetSupplies() private view returns(uint256, uint256) {
         uint256 netReflectedSupply = totalReflectedSupply;
         uint256 netTokenSupply = totalTokenSupply;  
 
@@ -296,9 +296,9 @@ contract HodlTokenV0 is Context, IERC20, IERC20Metadata, Ownable {
     }
 
     /**
-     * @dev Tranfers a given amount of HODLS to a given receiver address.
-     * @param recipient The destination to which the HODLS are to be transferred
-     * @param amount The amount of HODLS to be transferred
+     * @dev Tranfers a given amount of ETRNL to a given receiver address.
+     * @param recipient The destination to which the ETRNL are to be transferred
+     * @param amount The amount of ETRNL to be transferred
      * @return True if the transfer is successful.
      */
     function transfer(address recipient, uint256 amount) external override returns (bool){
@@ -318,10 +318,10 @@ contract HodlTokenV0 is Context, IERC20, IERC20Metadata, Ownable {
     }
 
     /**
-     * @dev Transfers a given amount of HODLS for a given sender address to a given recipient address.
-     * @param sender The address whom we withdraw the HODLS from
-     * @param recipient The address which shall receive the HODLS
-     * @param amount The amount of HODLS which is being transferred
+     * @dev Transfers a given amount of ETRNL for a given sender address to a given recipient address.
+     * @param sender The address whom we withdraw the ETRNL from
+     * @param recipient The address which shall receive the ETRNL
+     * @param amount The amount of ETRNL which is being transferred
      * @return True if the transfer and approval are both successful.
      *
      * Requirements:
@@ -348,7 +348,7 @@ contract HodlTokenV0 is Context, IERC20, IERC20Metadata, Ownable {
      * 
      * - Owner and spender cannot be the zero address
      */
-    function _approve(address owner, address spender, uint256 amount) internal {
+    function _approve(address owner, address spender, uint256 amount) private {
         require(owner != address(0), "HodlTokenV0::_approve(): approve from the zero address");
         require(spender != address(0), "HodlTokenV0::_approve(): approve to the zero address");
 
@@ -358,18 +358,18 @@ contract HodlTokenV0 is Context, IERC20, IERC20Metadata, Ownable {
     }
 
     /**
-     * @dev Transfers a given amount of HODLS from a given sender's address to a given recipient's address.
+     * @dev Transfers a given amount of ETRNL from a given sender's address to a given recipient's address.
      * Bottleneck for what transfer equation to use.
-     * @param sender The address of whom the HODLS will be transferred from
-     * @param recipient The address of whom the HODLS will be transferred to
-     * @param amount The amount of HODLS to be transferred
+     * @param sender The address of whom the ETRNL will be transferred from
+     * @param recipient The address of whom the ETRNL will be transferred to
+     * @param amount The amount of ETRNL to be transferred
      * 
      * Requirements:
      * 
      * - Sender or recipient cannot be the zero address
      * - Transferred amount must be greater than zero
      */
-    function _transfer(address sender, address recipient, uint256 amount) internal {
+    function _transfer(address sender, address recipient, uint256 amount) private {
         require(sender != address(0), "HodlTokenV0::_transfer(): transfer from the zero address");
         require(recipient != address(0), "HodlTokenV0::_transfer(): transfer to the zero address");
         require(amount > 0, "HodlTokenV0::_transfer(): transfer amount must be greater than zero");
@@ -387,18 +387,22 @@ contract HodlTokenV0 is Context, IERC20, IERC20Metadata, Ownable {
         // Adjust the total reflected supply for the new fees
         // If the sender or recipient are excluded from fees, we ignore the fee altogether
         if (!isExcludedFromFees[sender] && !isExcludedFromFees[recipient]) {
-            _burn(address(this), amount, reflectedAmount);
-            _redistribute(reflectedAmount);
-            _store(amount, reflectedAmount);
-            _provideLiquidity(amount, reflectedAmount);
+            _burn(address(this), amount * burnRate / 100, reflectedAmount * burnRate / 100) ;
+            redistribute(reflectedAmount * redistributionRate / 100);
+            store(amount, reflectedAmount);
+            provideLiquidity(amount, reflectedAmount);
         }
 
         emit Transfer(sender, recipient, netTransferAmount);
     }
+
+    function redistribute(uint256 reflectedAmount) private {
+        
+    }
     
     /**
-     * @dev Burns a given amount of HODLS
-     * @param amount The amount of HODLS being burned
+     * @dev Burns a given amount of ETRNL
+     * @param amount The amount of ETRNL being burned
      * @return True if the burn is successful
      */
     function burn(uint256 amount) external returns (bool) {
@@ -419,12 +423,12 @@ contract HodlTokenV0 is Context, IERC20, IERC20Metadata, Ownable {
     }
     
     /**
-     * @dev Burns the specified amount of HODLS for a given sender by sending them to the 0x0 address
-     * @param sender The specified address burning HODLS
-     * @param amount The amount of HODLS being burned
-     * @param reflectedAmount The reflected equivalent of HODLS being burned
+     * @dev Burns the specified amount of ETRNL for a given sender by sending them to the 0x0 address
+     * @param sender The specified address burning ETRNL
+     * @param amount The amount of ETRNL being burned
+     * @param reflectedAmount The reflected equivalent of ETRNL being burned
      */
-    function _burn(address sender, uint256 amount, uint256 reflectedAmount) internal {
+    function _burn(address sender, uint256 amount, uint256 reflectedAmount) private {
         // Send tokens to the 0x0 address
         reflectedBalances[address(0)] += reflectedAmount;
         trueBalances[address(0)] += amount;
@@ -437,8 +441,8 @@ contract HodlTokenV0 is Context, IERC20, IERC20Metadata, Ownable {
     }
 
     /**
-     * @dev Swaps a given amount of HODLS for AVAX using PangolinDEX. (Used for auto-liquidity swaps)
-     * @param amount The amount of HODLS to be swapped for AVAX
+     * @dev Swaps a given amount of ETRNL for AVAX using PangolinDEX. (Used for auto-liquidity swaps)
+     * @param amount The amount of ETRNL to be swapped for AVAX
      */
     function swapTokensForAVAX(uint256 amount) private {
         address[] memory path = new address[](2);
