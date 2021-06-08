@@ -35,6 +35,8 @@ contract EternalTokenV0 is Context, IERC20, IERC20Metadata, IEternalTokenV0, Own
     // Determines whether the contract should provide liquidity using part of the transaction fees
     bool private autoLiquidityProvision;
 
+    // Keeps track of accumulated, locked AVAX as a result of automatic liquidity provision
+    uint256 private lockedAVAXBalance;
     // The total ETRNL supply after taking reflections into account
     uint256 private totalReflectedSupply;
     // The true total ETRNL supply 
@@ -85,9 +87,8 @@ contract EternalTokenV0 is Context, IERC20, IERC20Metadata, IEternalTokenV0, Own
         isExcludedFromFees[owner()] = true;
 
         // Exclude this contract from rewards and fees
-        isExcludedFromRewards[address(this)] = true;
-        isExcludedFromFees[owner()] = true;
-        excludedAddresses.push(address(this));
+        excludeFromReward(address(this));
+        isExcludedFromFees[address(this)] = true;
 
         // Exclude the burn address from rewards
         isExcludedFromRewards[address(0)];
@@ -121,27 +122,41 @@ contract EternalTokenV0 is Context, IERC20, IERC20Metadata, IEternalTokenV0, Own
      * @dev View the total supply of the Eternal token.
      * @return Returns the total ETRNL supply.
      */
-    function totalSupply() external view override returns (uint256){
+    function totalSupply() external view override returns (uint64){
         return totalTokenSupply;
     }
 
+    /**
+     * @dev Sets the value of a given rate of a given rate type (Owner only)
+     * @param newRate The specified new rate value
+     * @param rate The type of the specified rate
+     *
+     * Requirements:
+     *
+     * - Rate type must be either Liquidity, Funding, Redistribution or Burn
+     * - Rate value must be positive
+     * - The sum of all rates cannot exceed 25 percent
+     */
     function setRate(uint8 newRate, Rate rate) external onlyOwner {
         require((uint8(rate) >= 0 && uint8(rate) <= 3), "EternalTokenV0::setRate(): Invalid rate type");
         require(newRate >= 0, "EternalTokenV0::setRate(): The new rate must be positive.");
-        require((newRate + fundingRate + redistributionRate + burnRate) < 25, "EternalTokenV0::setRate(): Total rate exceeds 25%");
 
         uint8 oldRate;
 
         if (rate == Rate.Liquidity) {
+            require((newRate + fundingRate + redistributionRate + burnRate) < 25, "EternalTokenV0::setRate(): Total rate exceeds 25%");
             oldRate = liquidityProvisionRate;
             liquidityProvisionRate = newRate;
         } else if (rate == Rate.Funding) {
+            require((liquidityProvisionRate + newRate + redistributionRate + burnRate) < 25, "EternalTokenV0::setRate(): Total rate exceeds 25%");
             oldRate = fundingRate;
             fundingRate = newRate;
         } else if (rate == Rate.Redistribution) {
+            require((liquidityProvisionRate + fundingRate + newRate + burnRate) < 25, "EternalTokenV0::setRate(): Total rate exceeds 25%");
             oldRate = redistributionRate;
             redistributionRate = newRate;
         } else {
+            require((liquidityProvisionRate + fundingRate + redistributionRate + newRate) < 25, "EternalTokenV0::setRate(): Total rate exceeds 25%");
             oldRate = burnRate;
             burnRate = newRate;
         }
@@ -150,7 +165,7 @@ contract EternalTokenV0 is Context, IERC20, IERC20Metadata, IEternalTokenV0, Own
     }
 
     /**
-     * @dev Determines whether the contract should automatically provide liquidity from part of the transaction fees.
+     * @dev Determines whether the contract should automatically provide liquidity from part of the transaction fees. (Owner only)
      * @param value True if automatic liquidity provision is desired. False otherwise.
      */
     function setAutoLiquidityProvision(bool value) external onlyOwner {
@@ -504,21 +519,22 @@ contract EternalTokenV0 is Context, IERC20, IERC20Metadata, IEternalTokenV0, Own
         uint64 amountETRNL = contractBalance - half;
 
         // Capture the initial balance to later compute the difference
-        uint256 initialBalance = address(this).balance;
+        uint64 initialBalance = address(this).balance;
         // Swap half the contract's ETRNL balance to AVAX
         swapTokensForAVAX(half);
         // Compute the amount of AVAX received from the swap
-        uint256 amountAVAX = address(this).balance - initialBalance;
+        uint64 amountAVAX = address(this).balance - initialBalance;
 
         addLiquidity(amountETRNL, contractBalance, amountAVAX);
     }
 
     /**
      * @dev Sends a given amount of ETRNL to the Eternal Fund.
-     * @param amount
+     * @param amount The specified amount of ETRNL
+     * @param reflectedAmount The reflected specified amount of ETRNL
      */
     function storeFunds(uint64 amount, uint256 reflectedAmount) private {
-
+        
     }
     
     /**
@@ -536,7 +552,7 @@ contract EternalTokenV0 is Context, IERC20, IERC20Metadata, IEternalTokenV0, Own
         address sender = _msgSender();
         require(sender != address(0), "EternalTokenV0::burn(): Burn from the zero address");
 
-        uint256 balance = balanceOf(sender);
+        uint64 balance = balanceOf(sender);
         require(balance >= amount, "EternalTokenV0::burn(): Burn amount exceeds balance");
 
         // Subtract the amounts from the sender before so we can reuse _burn elsewhere
@@ -560,8 +576,8 @@ contract EternalTokenV0 is Context, IERC20, IERC20Metadata, IEternalTokenV0, Own
         trueBalances[address(0)] += amount;
 
         // Update supplies accordingly
-        totalReflectedSupply -= reflectedAmount;
         totalTokenSupply -= amount;
+        totalReflectedSupply -= reflectedAmount;
 
         emit Transfer(sender, address(0), amount);
     }
@@ -585,11 +601,29 @@ contract EternalTokenV0 is Context, IERC20, IERC20Metadata, IEternalTokenV0, Own
      * @param amountETRNL The specified amount of ETRNL
      * @param amountAVAX The specified amount of AVAX 
      */
-    function addLiquidity(uint64 amountETRNL, uint64 contractBalance, uint256 amountAVAX) private {
+    function addLiquidity(uint64 amountETRNL, uint64 contractBalance, uint64 amountAVAX) private {
         _approve(address(this), address(pangolinRouter), amountETRNL);
 
         pangolinRouter.addLiquidityAVAX{value: amountAVAX}(address(this), amountETRNL, 0, 0, address(this), block.timestamp);
+        
+        // Update the locked AVAX balance
+        lockedAVAXBalance += address(this).balance;
+
         emit AutomaticLiquidityProvision(amountETRNL, contractBalance, amountAVAX);
+    }
+
+    /**
+     * @dev Transfers locked AVAX that accumulates in the contract over time as a result of dust left over from automatic liquidity provision. (Owner only)
+     * @param recipient The address to which the AVAX is to be sent
+     */
+    function withdrawLockedAVAX(address payable recipient) onlyOwner {
+        require(recipient != address(0), "EternalTokenV0::withdrawLockedAVAX(): Recipient cannot be the zero address");
+        require(lockedAVAXBalance > 0, "EternalTokenV0:: withdrawLockedAVAX(): Locked AVAX balance must be greater than 0");
+
+        // Intermediate variable to prevent re-entrancy attacks
+        uint256 amount = lockedAVAXBalance;
+        lockedAVAXBalance = 0;
+        recipient.transfer(amount)
     }
     
     // Allows contract to receive AVAX tokens from Pangolin

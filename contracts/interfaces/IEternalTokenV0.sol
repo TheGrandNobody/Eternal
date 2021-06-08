@@ -22,6 +22,9 @@ interface IEternalTokenV0 {
     // Enables/Disables automatic liquidity provision
     function setAutoLiquidityProvision(bool value) external;
 
+    // Allows the withdrawal of AVAX locked in the contract over time
+    function withdrawLockedAVAX(address payable recipient) external;
+
     // Signals a change of value of a given rate in the Eternal Token contract
     event UpdateRate(uint8 oldRate, uint8 newRate, Rate rate);
     // Signals a disabling/enabling of the automatic liquidity provision
