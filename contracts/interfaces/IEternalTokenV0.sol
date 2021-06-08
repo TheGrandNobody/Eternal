@@ -19,7 +19,14 @@ interface IEternalTokenV0 {
     // Sets the value of any given rate
     function setRate(uint8 newRate, Rate rate) external;
 
+    // Enables/Disables automatic liquidity provision
+    function setAutoLiquidityProvision(bool value) external;
+
     // Signals a change of value of a given rate in the Eternal Token contract
     event UpdateRate(uint8 oldRate, uint8 newRate, Rate rate);
+    // Signals a disabling/enabling of the automatic liquidity provision
+    event AutoLiquidityProvisionUpdated(bool value);
+    // Signals that liquidity has been added to the ETRNL/WAVAX pair 
+    event AutomaticLiquidityProvision(uint64 amountETRNL, uint64 totalSwappedETRNL, uint256 amountAVAX,);
 
 }
