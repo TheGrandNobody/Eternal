@@ -43,31 +43,36 @@ contract EternalToken is IERC20, IERC20Metadata, IEternalToken, OwnableEnhanced 
     uint256 private totalReflectedSupply;
     // The true total ETRNL supply 
     uint64 private totalTokenSupply;
-    // Threshold at which the contract swaps its ETRNL balance to provide liquidity
+    // Threshold at which the contract swaps its ETRNL balance to provide liquidity (0.1% of total supply by default)
     uint64 private tokenLiquidityThreshold;
-    // The percentage of the total fee rate used to auto-lock liquidity
+    // The percentage of the fee taken at each transaction, that is used to auto-lock liquidity
     uint8 private liquidityProvisionRate;
-    // The percentage of the total fee rate stored in the EternalFund
+    // The percentage of the fee, taken at each transaction, that is stored in the EternalFund
     uint8 private fundingRate;
-    // The percentage of the total fee rate that is burned
+    // The percentage of the fee, taken at each transaction, that is burned
     uint8 private burnRate;
-    // The percentage of the total fee rate redistributed to holders
+    // The percentage of the fee, taken at each transaction, that is redistributed to holders
     uint8 private redistributionRate;
 
     // Determines whether an auto-liquidity provision process is undergoing
     bool private undergoingSwap;
-    // Determines whether the contract should provide liquidity using part of the transaction fees
+    // Determines whether the contract is tasked with providing liquidity using part of the transaction fees
     bool private autoLiquidityProvision;
 
-
-    modifier haltLiquidityProvision {
+    /**
+     * Ensures the contract doesn't swap when it's already swapping (prevents it from getting caught in a circular liquidity event)
+     */
+    modifier haltsLiquidityProvision {
         undergoingSwap = true;
         _;
         undergoingSwap = false;
     }
 
+    // Allows contract to receive AVAX tokens from Pangolin
+    receive() external payable {}
+
     /**
-     * @dev Sets the token ticker and token name. Mints the total supply to the contract deployer.
+     * @dev Initialize supplies and routers and create a pair. Mints total supply to the contract deployer. Exclude some addresses from fees and/or rewards.
      */
     constructor () {
 
@@ -99,8 +104,10 @@ contract EternalToken is IERC20, IERC20Metadata, IEternalToken, OwnableEnhanced 
         isExcludedFromRewards[address(0)];
     }
 
+/////–––««« Variable state-inspection functions »»»––––\\\\\
+
     /**
-     * @dev The name of the token. 
+     * @dev View the name of the token. 
      * @return The token name
      */
     function name() external pure override returns (string memory) {
@@ -109,7 +116,7 @@ contract EternalToken is IERC20, IERC20Metadata, IEternalToken, OwnableEnhanced 
 
     /**
      * @dev View the token ticker
-     * @return The token symbol
+     * @return The token ticker
      */
     function symbol() external pure override returns (string memory) {
         return "ETRNL";
@@ -129,53 +136,6 @@ contract EternalToken is IERC20, IERC20Metadata, IEternalToken, OwnableEnhanced 
      */
     function totalSupply() external view override returns (uint64){
         return totalTokenSupply;
-    }
-
-    /**
-     * @dev Sets the value of a given rate of a given rate type (Owner only)
-     * @param newRate The specified new rate value
-     * @param rate The type of the specified rate
-     *
-     * Requirements:
-     *
-     * - Rate type must be either Liquidity, Funding, Redistribution or Burn
-     * - Rate value must be positive
-     * - The sum of all rates cannot exceed 25 percent
-     */
-    function setRate(uint256 newRate, Rate rate) external onlyOwnerAndFund {
-        require((uint(rate) >= 0 && uint(rate) <= 3), "EternalTokenV0::setRate(): Invalid rate type");
-        require(newRate >= 0, "EternalTokenV0::setRate(): The new rate must be positive.");
-
-        uint256 oldRate;
-
-        if (rate == Rate.Liquidity) {
-            require((newRate + fundingRate + redistributionRate + burnRate) < 25, "EternalTokenV0::setRate(): Total rate exceeds 25%");
-            oldRate = liquidityProvisionRate;
-            liquidityProvisionRate = newRate;
-        } else if (rate == Rate.Funding) {
-            require((liquidityProvisionRate + newRate + redistributionRate + burnRate) < 25, "EternalTokenV0::setRate(): Total rate exceeds 25%");
-            oldRate = fundingRate;
-            fundingRate = newRate;
-        } else if (rate == Rate.Redistribution) {
-            require((liquidityProvisionRate + fundingRate + newRate + burnRate) < 25, "EternalTokenV0::setRate(): Total rate exceeds 25%");
-            oldRate = redistributionRate;
-            redistributionRate = newRate;
-        } else {
-            require((liquidityProvisionRate + fundingRate + redistributionRate + newRate) < 25, "EternalTokenV0::setRate(): Total rate exceeds 25%");
-            oldRate = burnRate;
-            burnRate = newRate;
-        }
-
-        emit UpdateRate(oldRate, newRate, rate);
-    }
-
-    /**
-     * @dev Determines whether the contract should automatically provide liquidity from part of the transaction fees. (Owner only)
-     * @param value True if automatic liquidity provision is desired. False otherwise.
-     */
-    function setAutoLiquidityProvision(bool value) external onlyOwnerAndFund {
-        autoLiquidityProvision = value;
-        emit AutoLiquidityProvisionUpdated(value);
     }
 
     /**
@@ -217,46 +177,8 @@ contract EternalToken is IERC20, IERC20Metadata, IEternalToken, OwnableEnhanced 
     function isExcludedFromReward(address account) external view returns (bool) {
         return isExcludedFromRewards[account];
     }
-    
-    /**
-     * @dev Excludes a given wallet or contract's address from accruing rewards. (Owner only)
-     * @param account The wallet or contract's address
-     *
-     * Requirements:
-     * – Account must not already be excluded from rewards.
-     */
-    function excludeFromReward(address account) public onlyOwner() {
-        require(!isExcludedFromRewards[account], "EternalTokenV0::excludeFromReward(): Account is already excluded");
-        if(reflectedBalances[account] > 0) {
-            // Compute the true token balance from non-empty reflected balances and update it
-            // since we must use both reflected and true balances to make our reflected-to-total ratio even
-            trueBalances[account] =  convertFromReflectedToTrueAmount(reflectedBalances[account]);
-        }
-        isExcludedFromRewards[account] = true;
-        excludedAddresses.push(account);
-    }
 
-    /**
-     * @dev Allows a given wallet or contract's address to accrue rewards. (Owner only)
-     * @param account The wallet or contract's address
-     *
-     * Requirements:
-     * – Account must not already be accruing rewards.
-     */
-    function includeInReward(address account) external onlyOwner() {
-        require(isExcludedFromRewards[account], "EternalTokenV0::includeInReward(): Account is already included");
-        for (uint32 i = 0; i < excludedAddresses.length; i++) {
-            if (excludedAddresses[i] == account) {
-                // Swap last address with current address we want to include so that we can delete it
-                excludedAddresses[i] = excludedAddresses[excludedAddresses.length - 1];
-                // Set its deposit liabilities to 0 since we use the reserve balance for reward-accruing addresses
-                trueBalances[account] = 0;
-                excludedAddresses.pop();
-                isExcludedFromRewards[account] = false;
-                break;
-            }
-        }
-    }
+/////–––««« IERC20/ERC20 functions »»»––––\\\\\
     
     /**
      * @dev Increases the allowance for a given spender address by a given amount.
@@ -279,7 +201,160 @@ contract EternalToken is IERC20, IERC20Metadata, IEternalToken, OwnableEnhanced 
         _approve(_msgSender(), spender, (allowances[_msgSender()][spender] - subtractedValue));
         return true;
     }
+
+    /**
+     * @dev Tranfers a given amount of ETRNL to a given receiver address.
+     * @param recipient The destination to which the ETRNL are to be transferred
+     * @param amount The amount of ETRNL to be transferred
+     * @return True if the transfer is successful.
+     */
+    function transfer(address recipient, uint256 amount) external override returns (bool){
+        _transfer(_msgSender(), recipient, amount);
+        return true;
+    }
+
+    /**
+     * @dev Sets the allowance for a given address to a given amount.
+     * @param spender The address of whom we are changing the allowance for
+     * @param amount The amount we are changing the allowance to
+     * @return True if the approval is successful.
+     */
+    function approve(address spender, uint256 amount) external override returns (bool){
+        _approve(_msgSender(), spender, amount);
+        return true;
+    }
+
+    /**
+     * @dev Transfers a given amount of ETRNL for a given sender address to a given recipient address.
+     * @param sender The address whom we withdraw the ETRNL from
+     * @param recipient The address which shall receive the ETRNL
+     * @param amount The amount of ETRNL which is being transferred
+     * @return True if the transfer and approval are both successful.
+     *
+     * Requirements:
+     * 
+     * - The caller must be allowed to spend (at least) the given amount on the sender's behalf
+     */
+    function transferFrom(address sender, address recipient, uint256 amount) external override returns (bool) {
+        _transfer(sender, recipient, amount);
+
+        uint256 currentAllowance = allowances[sender][_msgSender()];
+        require(currentAllowance >= amount, "Not enough allowance");
+        _approve(sender, _msgSender(), currentAllowance - amount);
+
+        return true;
+    }
+
+    /**
+     * @dev Sets the allowance of a given owner address for a given spender address to a given amount.
+     * @param owner The adress of whom we are changing the allowance of
+     * @param spender The address of whom we are changing the allowance for
+     * @param amount The amount which we change the allowance to
+     *
+     * Requirements:
+     * 
+     * - Approve amount must be less than or equal to the actual total token supply
+     * - Owner and spender cannot be the zero address
+     */
+    function _approve(address owner, address spender, uint256 amount) private {
+        require(owner != address(0), "Approve from the zero address");
+        require(spender != address(0), "Approve to the zero address");
+
+        allowances[owner][spender] = amount;
+
+        emit Approval(owner, spender, amount);
+    }
+
+    /**
+     * @dev Transfers a given amount of ETRNL from a given sender's address to a given recipient's address.
+     * Bottleneck for what transfer equation to use.
+     * @param sender The address of whom the ETRNL will be transferred from
+     * @param recipient The address of whom the ETRNL will be transferred to
+     * @param amount The amount of ETRNL to be transferred
+     * 
+     * Requirements:
+     * 
+     * - Sender or recipient cannot be the zero address
+     * - Transferred amount must be greater than zero
+     */
+    function _transfer(address sender, address recipient, uint256 amount) private {
+        require(sender != address(0), "Transfer from the zero address");
+        require(recipient != address(0), "Transfer to the zero address");
+        require(amount > 0, "Transfer amount must exceed zero");
+
+        (uint256 reflectedAmount, uint256 netReflectedTransferAmount, uint256 netTransferAmount) = getValues(amount);
+
+        // Always update the reflected balances of sender and recipient
+        reflectedBalances[sender] -= reflectedAmount;
+        reflectedBalances[recipient] += netReflectedTransferAmount;
+
+        // Update true balances for any non-reward-accruing accounts 
+        trueBalances[sender] = isExcludedFromRewards[sender] ? (trueBalances[sender] - amount) : trueBalances[sender]; 
+        trueBalances[recipient] = isExcludedFromRewards[recipient] ? (trueBalances[recipient] + netTransferAmount) : trueBalances[recipient]; 
+
+        // Adjust the total reflected supply for the new fees
+        // If the sender or recipient are excluded from fees, we ignore the fee altogether
+        if (!isExcludedFromFees[sender] && !isExcludedFromFees[recipient]) {
+            // Perform a burn based on the burn rate 
+            _burn(address(this), amount * burnRate / 100, reflectedAmount * burnRate / 100);
+            // Redistribute based on the redistribution rate 
+            totalReflectedSupply -= reflectedAmount * redistributionRate / 100;
+            // Store ETRNL away in the EternalFund based on the funding rate
+            reflectedBalances[eternalFund] += reflectedAmount * fundingRate / 100;
+            // Provide liqudity to the ETRNL/AVAX pair on Pangolin based on the liquidity provision rate
+            storeLiquidityFunds(amount * liquidityProvisionRate / 100, reflectedAmount * liquidityProvisionRate / 100);
+        }
+
+        emit Transfer(sender, recipient, netTransferAmount);
+    }
+
+        /**
+     * @dev Burns a given amount of ETRNL.
+     * @param amount The amount of ETRNL being burned
+     * @return True if the burn is successful
+     *
+     * Requirements:
+     * 
+     * - Cannot burn from the burn address
+     * - Burn amount cannot be greater than the msgSender's balance
+     */
+    function burn(uint256 amount) external returns (bool) {
+
+        address sender = _msgSender();
+        require(sender != address(0), "Burn from the zero address");
+
+        uint256 balance = balanceOf(sender);
+        require(balance >= amount, "Burn amount exceeds balance");
+
+        // Subtract the amounts from the sender before so we can reuse _burn elsewhere
+        uint256 reflectedAmount = convertFromTrueToReflectedAmount(amount, false);
+        reflectedBalances[sender] -= reflectedAmount;
+        trueBalances[sender] = isExcludedFromRewards[sender] ? (trueBalances[sender] - amount) : trueBalances[sender];
+
+        _burn(sender, amount, reflectedAmount);
+        return true;
+    }
     
+    /**
+     * @dev Burns the specified amount of ETRNL for a given sender by sending them to the 0x0 address.
+     * @param sender The specified address burning ETRNL
+     * @param amount The amount of ETRNL being burned
+     * @param reflectedAmount The reflected equivalent of ETRNL being burned
+     */
+    function _burn(address sender, uint256 amount, uint256 reflectedAmount) private {
+        // Send tokens to the 0x0 address
+        reflectedBalances[address(0)] += reflectedAmount;
+        trueBalances[address(0)] += amount;
+
+        // Update supplies accordingly
+        totalTokenSupply -= amount;
+        totalReflectedSupply -= reflectedAmount;
+
+        emit Transfer(sender, address(0), amount);
+    }
+
+/////–––««« Reward-redistribution functions »»»––––\\\\\
+
     /**
      * @dev Translates a given amount of ETRNL into its reflected sum variant (with the transfer fee deducted if specified).
      * @param amount The specified amount of ETRNL
@@ -291,7 +366,7 @@ contract EternalToken is IERC20, IERC20Metadata, IEternalToken, OwnableEnhanced 
      * - Given ETRNL amount cannot be greater than the total token supply
      */
     function convertFromTrueToReflectedAmount(uint256 amount, bool deductTransferFee) public view returns(uint256) {
-        require(amount <= totalTokenSupply, "EternalTokenV0::convertFromTrueToReflectedAmount(): Amount must be less than total token supply");
+        require(amount <= totalTokenSupply, "Amount exceeds total supply");
         if (!deductTransferFee) {
             (uint256 reflectedAmount,,,) = getValues(amount);
             return reflectedAmount;
@@ -310,7 +385,7 @@ contract EternalToken is IERC20, IERC20Metadata, IEternalToken, OwnableEnhanced 
      * - Given reflected ETRNL amount cannot be greater than the total reflected token supply
      */
     function convertFromReflectedToTrueAmount(uint256 reflectedAmount) public view returns(uint256) {
-        require(reflectedAmount <= totalReflectedSupply, "EternalTokenV0::convertFromReflectedToTrueAmount(): Amount must be less than total reflected supply");
+        require(reflectedAmount <= totalReflectedSupply, "Amount exceeds reflected supply");
         uint256 currentRate =  getReflectionRate();
         return reflectedAmount / currentRate;
     }
@@ -369,110 +444,36 @@ contract EternalToken is IERC20, IERC20Metadata, IEternalToken, OwnableEnhanced 
         return (netReflectedSupply, netTokenSupply);
     }
 
+/////–––««« Automatic liquidity provision functions »»»––––\\\\\
+
     /**
-     * @dev Tranfers a given amount of ETRNL to a given receiver address.
-     * @param recipient The destination to which the ETRNL are to be transferred
-     * @param amount The amount of ETRNL to be transferred
-     * @return True if the transfer is successful.
+     * @dev Adds liquidity to the ETRNL/AVAX pair for a given amount of ETRNL and AVAX tokens.
+     * @param amountETRNL The specified amount of ETRNL
+     * @param amountAVAX The specified amount of AVAX 
      */
-    function transfer(address recipient, uint256 amount) external override returns (bool){
-        _transfer(_msgSender(), recipient, amount);
-        return true;
+    function addLiquidity(uint256 amountETRNL, uint256 contractBalance, uint256 amountAVAX) private {
+        _approve(address(this), address(pangolinRouter), amountETRNL);
+
+        pangolinRouter.addLiquidityAVAX{value: amountAVAX}(address(this), amountETRNL, 0, 0, address(this), block.timestamp);
+        
+        // Update the locked AVAX balance
+        lockedAVAXBalance += address(this).balance;
+
+        emit AutomaticLiquidityProvision(amountETRNL, contractBalance, amountAVAX);
     }
 
     /**
-     * @dev Sets the allowance for a given address to a given amount.
-     * @param spender The address of whom we are changing the allowance for
-     * @param amount The amount we are changing the allowance to
-     * @return True if the approval is successful.
+     * @dev Swaps a given amount of ETRNL for AVAX using PangolinDEX. (Used for auto-liquidity swaps)
+     * @param amount The amount of ETRNL to be swapped for AVAX
      */
-    function approve(address spender, uint256 amount) external override returns (bool){
-        _approve(_msgSender(), spender, amount);
-        return true;
-    }
+    function swapTokensForAVAX(uint256 amount) private {
+        address[] memory path = new address[](2);
+        path[0] = address(this);
+        path[1] = pangolinRouter.WAVAX();
 
-    /**
-     * @dev Transfers a given amount of ETRNL for a given sender address to a given recipient address.
-     * @param sender The address whom we withdraw the ETRNL from
-     * @param recipient The address which shall receive the ETRNL
-     * @param amount The amount of ETRNL which is being transferred
-     * @return True if the transfer and approval are both successful.
-     *
-     * Requirements:
-     * 
-     * - The caller must be allowed to spend (at least) the given amount on the sender's behalf
-     */
-    function transferFrom(address sender, address recipient, uint256 amount) external override returns (bool) {
-        _transfer(sender, recipient, amount);
+        _approve(address(this), address(pangolinRouter), amount);
 
-        uint256 currentAllowance = allowances[sender][_msgSender()];
-        require(currentAllowance >= amount, "EternalTokenV0::transferFrom(): Transfer amount exceeds allowance");
-        _approve(sender, _msgSender(), currentAllowance - amount);
-
-        return true;
-    }
-
-    /**
-     * @dev Sets the allowance of a given owner address for a given spender address to a given amount.
-     * @param owner The adress of whom we are changing the allowance of
-     * @param spender The address of whom we are changing the allowance for
-     * @param amount The amount which we change the allowance to
-     *
-     * Requirements:
-     * 
-     * - Approve amount must be less than or equal to the actual total token supply
-     * - Owner and spender cannot be the zero address
-     */
-    function _approve(address owner, address spender, uint256 amount) private {
-        require(owner != address(0), "EternalTokenV0::_approve(): Approve from the zero address");
-        require(spender != address(0), "EternalTokenV0::_approve(): Approve to the zero address");
-
-        allowances[owner][spender] = amount;
-
-        emit Approval(owner, spender, amount);
-    }
-
-    /**
-     * @dev Transfers a given amount of ETRNL from a given sender's address to a given recipient's address.
-     * Bottleneck for what transfer equation to use.
-     * @param sender The address of whom the ETRNL will be transferred from
-     * @param recipient The address of whom the ETRNL will be transferred to
-     * @param amount The amount of ETRNL to be transferred
-     * 
-     * Requirements:
-     * 
-     * - Sender or recipient cannot be the zero address
-     * - Transferred amount must be greater than zero
-     */
-    function _transfer(address sender, address recipient, uint256 amount) private {
-        require(sender != address(0), "EternalTokenV0::_transfer(): Transfer from the zero address");
-        require(recipient != address(0), "EternalTokenV0::_transfer(): Transfer to the zero address");
-        require(amount > 0, "EternalTokenV0::_transfer(): Transfer amount must be greater than zero");
-
-        (uint256 reflectedAmount, uint256 netReflectedTransferAmount, uint256 netTransferAmount) = getValues(amount);
-
-        // Always update the reflected balances of sender and recipient
-        reflectedBalances[sender] -= reflectedAmount;
-        reflectedBalances[recipient] += netReflectedTransferAmount;
-
-        // Update true balances for any non-reward-accruing accounts 
-        trueBalances[sender] = isExcludedFromRewards[sender] ? (trueBalances[sender] - amount) : trueBalances[sender]; 
-        trueBalances[recipient] = isExcludedFromRewards[recipient] ? (trueBalances[recipient] + netTransferAmount) : trueBalances[recipient]; 
-
-        // Adjust the total reflected supply for the new fees
-        // If the sender or recipient are excluded from fees, we ignore the fee altogether
-        if (!isExcludedFromFees[sender] && !isExcludedFromFees[recipient]) {
-            // Perform a burn based on the burn rate 
-            _burn(address(this), amount * burnRate / 100, reflectedAmount * burnRate / 100);
-            // Redistribute based on the redistribution rate 
-            totalReflectedSupply -= reflectedAmount * redistributionRate / 100;
-            // Store ETRNL away in the EternalFund based on the funding rate
-            reflectedBalances[eternalFund] += reflectedAmount * fundingRate / 100;
-            // Provide liqudity to the ETRNL/AVAX pair on Pangolin based on the liquidity provision rate
-            storeLiquidityFunds(amount * liquidityProvisionRate / 100, reflectedAmount * liquidityProvisionRate / 100);
-        }
-
-        emit Transfer(sender, recipient, netTransferAmount);
+        pangolinRouter.swapExactTokensForAVAXSupportingFeeOnTransferTokens(amount, 0, path, address(this), block.timestamp);
     }
 
     /**
@@ -506,9 +507,9 @@ contract EternalToken is IERC20, IERC20Metadata, IEternalToken, OwnableEnhanced 
      * - The sender address cannot be the ETRNL/AVAX pangolin pair address
      */
     function provideLiquidity(address sender, uint256 contractBalance) private {
-        require(autoLiquidityProvision, "EternalTokenV0::provideLiquidity(): Automatic liquidity provision is disabled");
-        require(!undergoingSwap, "EternalTokenV0::provideLiquidity(): A liquidity swap is already in progress");
-        require(sender != pangolinPair, "EternalTokenV0::provideLiquidity(): Sender cannot be the pair address");
+        require(autoLiquidityProvision, "Auto-liquidity is disabled");
+        require(!undergoingSwap, "A liquidity swap is in progress");
+        require(sender != pangolinPair, "Sender can't be the pair address");
 
         _provideLiquidity(contractBalance);
     }
@@ -517,7 +518,7 @@ contract EternalToken is IERC20, IERC20Metadata, IEternalToken, OwnableEnhanced 
      * @dev Converts half the contract's balance to AVAX and adds liquidity to the ETRNL/AVAX pair.
      * @param contractBalance The contract's ETRNL balance
      */
-    function _provideLiquidity(uint256 contractBalance) private haltLiquidityProvision {
+    function _provideLiquidity(uint256 contractBalance) private haltsLiquidityProvision {
         // Split the contract's balance into two halves
         uint256 half = contractBalance / 2;
         uint256 amountETRNL = contractBalance - half;
@@ -531,89 +532,103 @@ contract EternalToken is IERC20, IERC20Metadata, IEternalToken, OwnableEnhanced 
 
         addLiquidity(amountETRNL, contractBalance, amountAVAX);
     }
-    
+
+/////–––««« Owner/Fund-only functions »»»––––\\\\\
+
     /**
-     * @dev Burns a given amount of ETRNL.
-     * @param amount The amount of ETRNL being burned
-     * @return True if the burn is successful
+     * @dev Excludes a given wallet or contract's address from accruing rewards. (Owner only)
+     * @param account The wallet or contract's address
      *
      * Requirements:
-     * 
-     * - Cannot burn from the burn address
-     * - Burn amount cannot be greater than the msgSender's balance
+     * – Account must not already be excluded from rewards.
      */
-    function burn(uint256 amount) external returns (bool) {
-
-        address sender = _msgSender();
-        require(sender != address(0), "EternalTokenV0::burn(): Burn from the zero address");
-
-        uint256 balance = balanceOf(sender);
-        require(balance >= amount, "EternalTokenV0::burn(): Burn amount exceeds balance");
-
-        // Subtract the amounts from the sender before so we can reuse _burn elsewhere
-        uint256 reflectedAmount = convertFromTrueToReflectedAmount(amount, false);
-        reflectedBalances[sender] -= reflectedAmount;
-        trueBalances[sender] = isExcludedFromRewards[sender] ? (trueBalances[sender] - amount) : trueBalances[sender];
-
-        _burn(sender, amount, reflectedAmount);
-        return true;
-    }
-    
-    /**
-     * @dev Burns the specified amount of ETRNL for a given sender by sending them to the 0x0 address.
-     * @param sender The specified address burning ETRNL
-     * @param amount The amount of ETRNL being burned
-     * @param reflectedAmount The reflected equivalent of ETRNL being burned
-     */
-    function _burn(address sender, uint256 amount, uint256 reflectedAmount) private {
-        // Send tokens to the 0x0 address
-        reflectedBalances[address(0)] += reflectedAmount;
-        trueBalances[address(0)] += amount;
-
-        // Update supplies accordingly
-        totalTokenSupply -= amount;
-        totalReflectedSupply -= reflectedAmount;
-
-        emit Transfer(sender, address(0), amount);
+    function excludeFromReward(address account) public onlyOwner() {
+        require(!isExcludedFromRewards[account], "Account is already excluded");
+        if(reflectedBalances[account] > 0) {
+            // Compute the true token balance from non-empty reflected balances and update it
+            // since we must use both reflected and true balances to make our reflected-to-total ratio even
+            trueBalances[account] =  convertFromReflectedToTrueAmount(reflectedBalances[account]);
+        }
+        isExcludedFromRewards[account] = true;
+        excludedAddresses.push(account);
     }
 
     /**
-     * @dev Swaps a given amount of ETRNL for AVAX using PangolinDEX. (Used for auto-liquidity swaps)
-     * @param amount The amount of ETRNL to be swapped for AVAX
+     * @dev Allows a given wallet or contract's address to accrue rewards. (Owner only)
+     * @param account The wallet or contract's address
+     *
+     * Requirements:
+     * – Account must not already be accruing rewards.
      */
-    function swapTokensForAVAX(uint256 amount) private {
-        address[] memory path = new address[](2);
-        path[0] = address(this);
-        path[1] = pangolinRouter.WAVAX();
-
-        _approve(address(this), address(pangolinRouter), amount);
-
-        pangolinRouter.swapExactTokensForAVAXSupportingFeeOnTransferTokens(amount, 0, path, address(this), block.timestamp);
-    }
-    
-    /**
-     * @dev Adds liquidity to the ETRNL/AVAX pair for a given amount of ETRNL and AVAX tokens.
-     * @param amountETRNL The specified amount of ETRNL
-     * @param amountAVAX The specified amount of AVAX 
-     */
-    function addLiquidity(uint256 amountETRNL, uint256 contractBalance, uint256 amountAVAX) private {
-        _approve(address(this), address(pangolinRouter), amountETRNL);
-
-        pangolinRouter.addLiquidityAVAX{value: amountAVAX}(address(this), amountETRNL, 0, 0, address(this), block.timestamp);
-        
-        // Update the locked AVAX balance
-        lockedAVAXBalance += address(this).balance;
-
-        emit AutomaticLiquidityProvision(amountETRNL, contractBalance, amountAVAX);
+    function includeInReward(address account) external onlyOwner() {
+        require(isExcludedFromRewards[account], "Account is already included");
+        for (uint32 i = 0; i < excludedAddresses.length; i++) {
+            if (excludedAddresses[i] == account) {
+                // Swap last address with current address we want to include so that we can delete it
+                excludedAddresses[i] = excludedAddresses[excludedAddresses.length - 1];
+                // Set its deposit liabilities to 0 since we use the reserve balance for reward-accruing addresses
+                trueBalances[account] = 0;
+                excludedAddresses.pop();
+                isExcludedFromRewards[account] = false;
+                break;
+            }
+        }
     }
 
     /**
-     * @dev Transfers locked AVAX that accumulates in the contract over time as a result of dust left over from automatic liquidity provision. (Owner only)
+     * @dev Sets the value of a given rate to a given rate type (Owner and Fund only)
+     * @param newRate The specified new rate value
+     * @param rate The type of the specified rate
+     *
+     * Requirements:
+     *
+     * - Rate type must be either Liquidity, Funding, Redistribution or Burn
+     * - Rate value must be positive
+     * - The sum of all rates cannot exceed 25 percent
+     */
+    function setRate(uint256 newRate, Rate rate) external onlyOwnerAndFund {
+        require((uint(rate) >= 0 && uint(rate) <= 3), "Invalid rate type");
+        require(newRate >= 0, "The new rate must be positive");
+
+        uint256 oldRate;
+
+        if (rate == Rate.Liquidity) {
+            require((newRate + fundingRate + redistributionRate + burnRate) < 25, "Total rate exceeds 25%");
+            oldRate = liquidityProvisionRate;
+            liquidityProvisionRate = newRate;
+        } else if (rate == Rate.Funding) {
+            require((liquidityProvisionRate + newRate + redistributionRate + burnRate) < 25, "Total rate exceeds 25%");
+            oldRate = fundingRate;
+            fundingRate = newRate;
+        } else if (rate == Rate.Redistribution) {
+            require((liquidityProvisionRate + fundingRate + newRate + burnRate) < 25, "Total rate exceeds 25%");
+            oldRate = redistributionRate;
+            redistributionRate = newRate;
+        } else {
+            require((liquidityProvisionRate + fundingRate + redistributionRate + newRate) < 25, "Total rate exceeds 25%");
+            oldRate = burnRate;
+            burnRate = newRate;
+        }
+
+        emit UpdateRate(oldRate, newRate, rate);
+    }
+
+    /**
+     * @dev Determines whether the contract should automatically provide liquidity from part of the transaction fees. (Owner and Fund only)
+     * @param value True if automatic liquidity provision is desired. False otherwise.
+     */
+    function setAutoLiquidityProvision(bool value) external onlyOwnerAndFund {
+        autoLiquidityProvision = value;
+        emit AutoLiquidityProvisionUpdated(value);
+    }
+
+    /**
+     * @dev Transfers locked AVAX that accumulates in the contract over time as a result of dust left over from automatic liquidity provision. (Owner and Fund only)
      * @param recipient The address to which the AVAX is to be sent
      */
     function withdrawLockedAVAX(address payable recipient) external onlyOwnerAndFund {
-        require(recipient != address(0), "EternalTokenV0::withdrawLockedAVAX(): Recipient cannot be the zero address");
-        require(lockedAVAXBalance > 0, "EternalTokenV0:: withdrawLockedAVAX(): Locked AVAX balance must be greater than 0");
+        require(recipient != address(0), "Recipient is the zero address");
+        require(lockedAVAXBalance > 0, " Locked AVAX balance is 0");
 
         // Intermediate variable to prevent re-entrancy attacks
         uint256 amount = lockedAVAXBalance;
@@ -622,14 +637,12 @@ contract EternalToken is IERC20, IERC20Metadata, IEternalToken, OwnableEnhanced 
     }
 
     /**
-     * Attributes a given address to the Eternal Fund variable in this contract.
+     * Attributes a given address to the Eternal Fund variable in this contract. (Owner and Fund only)
      * @param fund The specified address of the designated fund
      */
     function designateFund(address fund) external onlyOwnerAndFund {
         eternalFund = fund;
+        isExcludedFromFees[fund] = true;
         attributeFundRights(fund);
     }
-    
-    // Allows contract to receive AVAX tokens from Pangolin
-    receive() external payable {}
 }
