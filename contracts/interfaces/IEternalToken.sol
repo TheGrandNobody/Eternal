@@ -1,12 +1,15 @@
 //SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+
 /**
  * @dev Eternal Token V0 interface
  * @author Nobody
  * @notice Methods are used for the DAO-governed section of Eternal
  */
-interface IEternalTokenV0 {
+interface IEternalTokenV0 is IERC20, IERC20Metadata {
 
     // Holds all the different types of rates
     enum Rate {
@@ -30,6 +33,6 @@ interface IEternalTokenV0 {
     // Signals a disabling/enabling of the automatic liquidity provision
     event AutoLiquidityProvisionUpdated(bool value);
     // Signals that liquidity has been added to the ETRNL/WAVAX pair 
-    event AutomaticLiquidityProvision(uint64 amountETRNL, uint64 totalSwappedETRNL, uint256 amountAVAX,);
+    event AutomaticLiquidityProvision(uint64 amountETRNL, uint64 totalSwappedETRNL, uint256 amountAVAX);
 
 }

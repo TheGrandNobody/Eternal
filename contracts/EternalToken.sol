@@ -1,8 +1,6 @@
 //SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "@pangolindex/exchange-contracts/contracts/pangolin-core/interfaces/IPangolinFactory.sol";
 import "@pangolindex/exchange-contracts/contracts/pangolin-periphery/interfaces/IPangolinRouter.sol";
 import "./interfaces/IEternalToken.sol";
@@ -14,7 +12,7 @@ import "./governance/OwnableEnhanced.sol";
  * (credits to OpenZeppelin for initial framework and RFI for figuring out by far the most efficient way of implementing reward-distributing tokens)
  * @notice The Eternal Token contract holds all the deflationary, burn, reflect, funding and auto-liquidity provision mechanics
  */
-contract EternalToken is IERC20, IERC20Metadata, IEternalToken, OwnableEnhanced {
+contract EternalToken is IEternalToken, OwnableEnhanced {
 
     // The reflected balances used to track reward-accruing users' total balances
     mapping (address => uint256) private reflectedBalances;
