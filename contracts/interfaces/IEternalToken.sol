@@ -9,7 +9,7 @@ import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
  * @author Nobody
  * @notice Methods are used for the DAO-governed section of Eternal
  */
-interface IEternalTokenV0 is IERC20, IERC20Metadata {
+interface IEternalToken is IERC20, IERC20Metadata {
 
     // Holds all the different types of rates
     enum Rate {
@@ -29,10 +29,10 @@ interface IEternalTokenV0 is IERC20, IERC20Metadata {
     function withdrawLockedAVAX(address payable recipient) external;
 
     // Signals a change of value of a given rate in the Eternal Token contract
-    event UpdateRate(uint8 oldRate, uint8 newRate, Rate rate);
+    event UpdateRate(uint256 oldRate, uint256 newRate, Rate rate);
     // Signals a disabling/enabling of the automatic liquidity provision
     event AutoLiquidityProvisionUpdated(bool value);
     // Signals that liquidity has been added to the ETRNL/WAVAX pair 
-    event AutomaticLiquidityProvision(uint64 amountETRNL, uint64 totalSwappedETRNL, uint256 amountAVAX);
+    event AutomaticLiquidityProvision(uint256 amountETRNL, uint256 totalSwappedETRNL, uint256 amountAVAX);
 
 }

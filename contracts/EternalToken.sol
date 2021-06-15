@@ -17,9 +17,9 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
     // The reflected balances used to track reward-accruing users' total balances
     mapping (address => uint256) private reflectedBalances;
     // The true balances used to track non-reward-accruing addresses' total balances
-    mapping (address => uint64) private trueBalances;
+    mapping (address => uint256) private trueBalances;
     // Keeps track of how much an address allows any other address to spend on its behalf
-    mapping (address => mapping (address => uint64)) private allowances;
+    mapping (address => mapping (address => uint256)) private allowances;
     // Keeps track of whether an address is excluded from rewards
     mapping (address => bool) private isExcludedFromRewards;
     // Keeps track of whether an address is excluded from transfer fees
@@ -132,7 +132,7 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
      * @dev View the total supply of the Eternal token.
      * @return Returns the total ETRNL supply.
      */
-    function totalSupply() external view override returns (uint64){
+    function totalSupply() external view override returns (uint256){
         return totalTokenSupply;
     }
 
@@ -154,7 +154,7 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
      * @param spender The address of whom we are checking the allowance for
      * @return The allowance of the owner for the spender
      */
-    function allowance(address owner, address spender) external view override returns (uint64){
+    function allowance(address owner, address spender) external view override returns (uint256){
         return allowances[owner][spender];
     }
     
@@ -207,7 +207,7 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
      * @return True if the transfer is successful.
      */
     function transfer(address recipient, uint256 amount) external override returns (bool){
-        _transfer(_msgSender(), recipient, amount);
+        _transfer(_msgSender(), recipient, uint64(amount));
         return true;
     }
 
@@ -234,7 +234,7 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
      * - The caller must be allowed to spend (at least) the given amount on the sender's behalf
      */
     function transferFrom(address sender, address recipient, uint256 amount) external override returns (bool) {
-        _transfer(sender, recipient, amount);
+        _transfer(sender, recipient, uint64(amount));
 
         uint256 currentAllowance = allowances[sender][_msgSender()];
         require(currentAllowance >= amount, "Not enough allowance");
@@ -276,6 +276,8 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
      * - Transferred amount must be greater than zero
      */
     function _transfer(address sender, address recipient, uint256 amount) private {
+        uint256 balance = balanceOf(sender);
+        require(balance >= amount, "Transfer amount exceeds balance");
         require(sender != address(0), "Transfer from the zero address");
         require(recipient != address(0), "Transfer to the zero address");
         require(amount > 0, "Transfer amount must exceed zero");
@@ -294,13 +296,13 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
         // If the sender or recipient are excluded from fees, we ignore the fee altogether
         if (!isExcludedFromFees[sender] && !isExcludedFromFees[recipient]) {
             // Perform a burn based on the burn rate 
-            _burn(address(this), amount * burnRate / 100, reflectedAmount * burnRate / 100);
+            _burn(address(this), uint64(amount) * burnRate / 100, reflectedAmount * burnRate / 100);
             // Redistribute based on the redistribution rate 
             totalReflectedSupply -= reflectedAmount * redistributionRate / 100;
             // Store ETRNL away in the EternalFund based on the funding rate
             reflectedBalances[eternalFund] += reflectedAmount * fundingRate / 100;
             // Provide liqudity to the ETRNL/AVAX pair on Pangolin based on the liquidity provision rate
-            storeLiquidityFunds(amount * liquidityProvisionRate / 100, reflectedAmount * liquidityProvisionRate / 100);
+            storeLiquidityFunds(sender, amount * liquidityProvisionRate / 100, reflectedAmount * liquidityProvisionRate / 100);
         }
 
         emit Transfer(sender, recipient, netTransferAmount);
@@ -316,11 +318,9 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
      * - Cannot burn from the burn address
      * - Burn amount cannot be greater than the msgSender's balance
      */
-    function burn(uint256 amount) external returns (bool) {
-
+    function burn(uint64 amount) external returns (bool) {
         address sender = _msgSender();
         require(sender != address(0), "Burn from the zero address");
-
         uint256 balance = balanceOf(sender);
         require(balance >= amount, "Burn amount exceeds balance");
 
@@ -339,7 +339,7 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
      * @param amount The amount of ETRNL being burned
      * @param reflectedAmount The reflected equivalent of ETRNL being burned
      */
-    function _burn(address sender, uint256 amount, uint256 reflectedAmount) private {
+    function _burn(address sender, uint64 amount, uint256 reflectedAmount) private {
         // Send tokens to the 0x0 address
         reflectedBalances[address(0)] += reflectedAmount;
         trueBalances[address(0)] += amount;
@@ -366,10 +366,10 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
     function convertFromTrueToReflectedAmount(uint256 amount, bool deductTransferFee) public view returns(uint256) {
         require(amount <= totalTokenSupply, "Amount exceeds total supply");
         if (!deductTransferFee) {
-            (uint256 reflectedAmount,,,) = getValues(amount);
+            (uint256 reflectedAmount,,) = getValues(amount);
             return reflectedAmount;
         } else {
-            (,uint256 netReflectedTransferAmount,,) = getValues(amount);
+            (,uint256 netReflectedTransferAmount,) = getValues(amount);
             return netReflectedTransferAmount;
         }
     }
@@ -584,7 +584,7 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
      * - Rate value must be positive
      * - The sum of all rates cannot exceed 25 percent
      */
-    function setRate(uint256 newRate, Rate rate) external onlyOwnerAndFund {
+    function setRate(uint8 newRate, Rate rate) external override onlyOwnerAndFund {
         require((uint(rate) >= 0 && uint(rate) <= 3), "Invalid rate type");
         require(newRate >= 0, "The new rate must be positive");
 
@@ -615,7 +615,7 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
      * @dev Determines whether the contract should automatically provide liquidity from part of the transaction fees. (Owner and Fund only)
      * @param value True if automatic liquidity provision is desired. False otherwise.
      */
-    function setAutoLiquidityProvision(bool value) external onlyOwnerAndFund {
+    function setAutoLiquidityProvision(bool value) external override onlyOwnerAndFund {
         autoLiquidityProvision = value;
         emit AutoLiquidityProvisionUpdated(value);
     }
@@ -624,7 +624,7 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
      * @dev Transfers locked AVAX that accumulates in the contract over time as a result of dust left over from automatic liquidity provision. (Owner and Fund only)
      * @param recipient The address to which the AVAX is to be sent
      */
-    function withdrawLockedAVAX(address payable recipient) external onlyOwnerAndFund {
+    function withdrawLockedAVAX(address payable recipient) external override onlyOwnerAndFund {
         require(recipient != address(0), "Recipient is the zero address");
         require(lockedAVAXBalance > 0, " Locked AVAX balance is 0");
 
