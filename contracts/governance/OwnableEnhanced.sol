@@ -65,7 +65,7 @@ abstract contract OwnableEnhanced is Context {
      * @dev Throws if called by any account other than the owner.
      */
     modifier onlyOwnerAndFund() {
-        require(((owner() == _msgSender()) || (fund() == _msgSender())), "Ownable: caller is not the owner or the Eternal Fund");
+        require((owner() == _msgSender()) || (fund() == _msgSender()), "Ownable: caller is not the owner or the Eternal Fund");
         _;
     }
 

@@ -8,7 +8,7 @@ import "./governance/OwnableEnhanced.sol";
 
 /**
  * @title Contract for the Eternal Token (ETRNL)
- * @author Nobody 
+ * @author Nobody (me)
  * (credits to OpenZeppelin for initial framework and RFI for figuring out by far the most efficient way of implementing reward-distributing tokens)
  * @notice The Eternal Token contract holds all the deflationary, burn, reflect, funding and auto-liquidity provision mechanics
  */
