@@ -25,6 +25,8 @@ abstract contract OwnableEnhanced is Context {
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
     event FundRightsAttributed(address indexed newFund);
 
+    
+
     /**
      * @dev Initializes the contract setting the deployer as the initial owner.
      */
@@ -97,5 +99,9 @@ abstract contract OwnableEnhanced is Context {
         require(newOwner != address(0), "Ownable: new owner is the zero address");
         emit OwnershipTransferred(_owner, newOwner);
         _owner = newOwner;
+    }
+
+    function lock (uint256 timePeriod) {
+
     }
 }
