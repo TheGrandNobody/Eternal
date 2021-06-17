@@ -5,9 +5,9 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
 /**
- * @dev Eternal Token V0 interface
- * @author Nobody
- * @notice Methods are used for the DAO-governed section of Eternal
+ * @dev ETRNL interface
+ * @author Nobody (me)
+ * @notice Methods are used for the DAO-governed section of Eternal and the gaging platform
  */
 interface IEternalToken is IERC20, IERC20Metadata {
 
@@ -21,10 +21,8 @@ interface IEternalToken is IERC20, IERC20Metadata {
 
     // Sets the value of any given rate
     function setRate(uint8 newRate, Rate rate) external;
-
     // Enables/Disables automatic liquidity provision
     function setAutoLiquidityProvision(bool value) external;
-
     // Allows the withdrawal of AVAX locked in the contract over time
     function withdrawLockedAVAX(address payable recipient) external;
 
