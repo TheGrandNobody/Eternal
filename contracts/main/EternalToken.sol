@@ -3,8 +3,9 @@ pragma solidity ^0.8.0;
 
 import "@pangolindex/exchange-contracts/contracts/pangolin-core/interfaces/IPangolinFactory.sol";
 import "@pangolindex/exchange-contracts/contracts/pangolin-periphery/interfaces/IPangolinRouter.sol";
-import "./interfaces/IEternalToken.sol";
-import "./governance/OwnableEnhanced.sol";
+import "../interfaces/IStakingRewards.sol";
+import "../interfaces/IEternalToken.sol";
+import "../governance/OwnableEnhanced.sol";
 
 /**
  * @title Contract for the Eternal Token (ETRNL)
@@ -28,13 +29,6 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
     // Keeps track of all reward-excluded addresses
     address[] private excludedAddresses;
 
-    // PangolinDex Router interface to swap tokens for AVAX and add liquidity
-    IPangolinRouter private immutable pangolinRouter;
-    // The address of the ETRNL/AVAX pair
-    address private immutable pangolinPair;
-    // The address of the Eternal Fund
-    address private eternalFund;
-
     // Keeps track of accumulated, locked AVAX as a result of automatic liquidity provision
     uint256 private lockedAVAXBalance;
     // The total ETRNL supply after taking reflections into account
@@ -56,6 +50,19 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
     bool private undergoingSwap;
     // Determines whether the contract is tasked with providing liquidity using part of the transaction fees
     bool private autoLiquidityProvision;
+
+    // PangolinDex Router interface to swap tokens for AVAX and add liquidity
+    IPangolinRouter public pangolinRouter;
+    // Staking rewards interface for staking LP tokens and claiming liquidity rewards
+    IStakingRewards public pangolinStaking;
+    // The pangolin reward token
+    IERC20 public png;
+    // The pangolin liquidity token
+    IERC20 public pgl;
+    // The address of the ETRNL/AVAX pair
+    address public pangolinPair;
+    // The address of the Eternal Fund
+    address public eternalFund;
 
     /**
      * Ensures the contract doesn't swap when it's already swapping (prevents it from getting caught in a circular liquidity event)
@@ -83,12 +90,16 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
         tokenLiquidityThreshold = totalTokenSupply / 1000;
         reflectedBalances[_msgSender()] = totalReflectedSupply;
 
+        // Initialize router
+        pangolinRouter = IPangolinRouter(0xE54Ca86531e17Ef3616d22Ca28b0D458b6C89106);
         // Create pair address
-        IPangolinRouter _pangolinRouter = IPangolinRouter(0xE54Ca86531e17Ef3616d22Ca28b0D458b6C89106);
-        pangolinPair = IPangolinFactory(_pangolinRouter.factory()).createPair(address(this), _pangolinRouter.WAVAX());
-
-        // Initialize Pangolin Router
-        pangolinRouter = _pangolinRouter;
+        pangolinPair = IPangolinFactory(pangolinRouter.factory()).createPair(address(this), pangolinRouter.WAVAX());
+        // Initialize Pangolin Staking Rewards
+        pangolinStaking = IStakingRewards(0x701e03fAD691799a8905043C0d18d2213BbCf2c7);
+        // Inititalize pangolin lp token
+        pgl = IERC20(0x17a2E8275792b4616bEFb02EB9AE699aa0DCb94b);
+        // Initialize pangolin reward token
+        png = IERC20(0x60781C2586D68229fde47564546784ab3fACA982);
 
         // Exclude the owner from rewards and fees
         excludeFromReward(owner());
@@ -445,22 +456,6 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
 /////–––««« Automatic liquidity provision functions »»»––––\\\\\
 
     /**
-     * @dev Adds liquidity to the ETRNL/AVAX pair for a given amount of ETRNL and AVAX tokens.
-     * @param amountETRNL The specified amount of ETRNL
-     * @param amountAVAX The specified amount of AVAX 
-     */
-    function addLiquidity(uint256 amountETRNL, uint256 contractBalance, uint256 amountAVAX) private {
-        _approve(address(this), address(pangolinRouter), amountETRNL);
-
-        pangolinRouter.addLiquidityAVAX{value: amountAVAX}(address(this), amountETRNL, 0, 0, address(this), block.timestamp);
-        
-        // Update the locked AVAX balance
-        lockedAVAXBalance += address(this).balance;
-
-        emit AutomaticLiquidityProvision(amountETRNL, contractBalance, amountAVAX);
-    }
-
-    /**
      * @dev Swaps a given amount of ETRNL for AVAX using PangolinDEX. (Used for auto-liquidity swaps)
      * @param amount The amount of ETRNL to be swapped for AVAX
      */
@@ -528,7 +523,18 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
         // Compute the amount of AVAX received from the swap
         uint256 amountAVAX = address(this).balance - initialBalance;
 
-        addLiquidity(amountETRNL, contractBalance, amountAVAX);
+        // Add liquidity to the ETRNL/AVAX pair
+        _approve(address(this), address(pangolinRouter), amountETRNL);
+        pangolinRouter.addLiquidityAVAX{value: amountAVAX}(address(this), amountETRNL, 0, 0, address(this), block.timestamp);
+        // Update the locked AVAX balance
+        lockedAVAXBalance += address(this).balance;
+
+        emit AutomaticLiquidityProvision(amountETRNL, contractBalance, amountAVAX);
+
+        // Stake the LP tokens received
+        uint256 amountPGL = pgl.balanceOf(address(this));
+        pgl.approve(address(pangolinStaking), amountPGL);
+        pangolinStaking.stake(amountPGL);
     }
 
 /////–––««« Owner/Fund-only functions »»»––––\\\\\
