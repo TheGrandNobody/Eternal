@@ -16,7 +16,7 @@ import "@openzeppelin/contracts/utils/Context.sol";
  * the owner.
  *
  * @notice This is a modified version of Openzeppelin's Ownable.sol, made to add certain functionalities
- * such as different modifiers (onlyFund and onlyOwnerAndFund)
+ * such as different modifiers (onlyFund and onlyOwnerAndFund) and locking/unlocking
  */
 abstract contract OwnableEnhanced is Context {
     address private _owner;
