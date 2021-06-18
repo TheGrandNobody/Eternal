@@ -1,8 +1,8 @@
 //SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "./governance/OwnableEnhanced.sol";
-import "./interfaces/IEternalToken.sol";
+import "../governance/OwnableEnhanced.sol";
+import "../interfaces/IEternalToken.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
 
 /**
