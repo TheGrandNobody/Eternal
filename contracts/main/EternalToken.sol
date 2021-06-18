@@ -29,6 +29,21 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
     // Keeps track of all reward-excluded addresses
     address[] private excludedAddresses;
 
+    // PangolinDex Router interface to swap tokens for AVAX and add liquidity
+    IPangolinRouter public pangolinRouter;
+    // Staking rewards interface for staking LP tokens and claiming liquidity rewards
+    IStakingRewards public pangolinStaking;
+    // The pangolin reward token
+    IERC20 public png;
+    // The pangolin liquidity token
+    IERC20 public pgl;
+    // The address of the ETRNL/AVAX pair
+    address public pangolinPair;
+    // The address of the Eternal Fund
+    address public eternalFund;
+
+    // Keeps track of staked lp tokens 
+    uint256 private totalStakedPGL;
     // Keeps track of accumulated, locked AVAX as a result of automatic liquidity provision
     uint256 private lockedAVAXBalance;
     // The total ETRNL supply after taking reflections into account
@@ -50,19 +65,6 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
     bool private undergoingSwap;
     // Determines whether the contract is tasked with providing liquidity using part of the transaction fees
     bool private autoLiquidityProvision;
-
-    // PangolinDex Router interface to swap tokens for AVAX and add liquidity
-    IPangolinRouter public pangolinRouter;
-    // Staking rewards interface for staking LP tokens and claiming liquidity rewards
-    IStakingRewards public pangolinStaking;
-    // The pangolin reward token
-    IERC20 public png;
-    // The pangolin liquidity token
-    IERC20 public pgl;
-    // The address of the ETRNL/AVAX pair
-    address public pangolinPair;
-    // The address of the Eternal Fund
-    address public eternalFund;
 
     /**
      * Ensures the contract doesn't swap when it's already swapping (prevents it from getting caught in a circular liquidity event)
@@ -97,7 +99,7 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
         // Initialize Pangolin Staking Rewards
         pangolinStaking = IStakingRewards(0x701e03fAD691799a8905043C0d18d2213BbCf2c7);
         // Inititalize pangolin lp token
-        pgl = IERC20(0x17a2E8275792b4616bEFb02EB9AE699aa0DCb94b);
+        pgl = IERC20(pangolinPair);
         // Initialize pangolin reward token
         png = IERC20(0x60781C2586D68229fde47564546784ab3fACA982);
 
@@ -535,6 +537,7 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
         uint256 amountPGL = pgl.balanceOf(address(this));
         pgl.approve(address(pangolinStaking), amountPGL);
         pangolinStaking.stake(amountPGL);
+        totalStakedPGL += amountPGL;
     }
 
 /////–––««« Owner/Fund-only functions »»»––––\\\\\
@@ -566,7 +569,7 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
      */
     function includeInReward(address account) external onlyOwner() {
         require(isExcludedFromRewards[account], "Account is already included");
-        for (uint32 i = 0; i < excludedAddresses.length; i++) {
+        for (uint i = 0; i < excludedAddresses.length; i++) {
             if (excludedAddresses[i] == account) {
                 // Swap last address with current address we want to include so that we can delete it
                 excludedAddresses[i] = excludedAddresses[excludedAddresses.length - 1];
@@ -623,14 +626,73 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
      */
     function setAutoLiquidityProvision(bool value) external override onlyOwnerAndFund {
         autoLiquidityProvision = value;
+
         emit AutoLiquidityProvisionUpdated(value);
+    }
+
+    /**
+     * Attributes a given address to the Eternal Fund variable in this contract. (Owner and Fund only)
+     * @param fund The specified address of the designated fund
+     */
+    function designateFund(address fund) external override onlyOwnerAndFund {
+        isExcludedFromFees[eternalFund] = false;
+        eternalFund = fund;
+        isExcludedFromFees[fund] = true;
+        attributeFundRights(fund);
+    }
+
+    /**
+     * @dev Claims the PNG earned as a reward for staking lp tokens 
+     */
+    function claimPNG() external override onlyFund {
+        uint256 pngBefore = png.balanceOf(address(this));
+        pangolinStaking.getReward();
+        uint256 pngAfter = png.balanceOf(address(this));
+
+        emit LPRewardsClaimed(pngAfter - pngBefore);
+    }
+
+    /**
+     * @dev Transfers a given amount of PNG earned as lp-staking reward to a given address
+     * @param amount The specified amount of PNG to be sent
+     * @param recipient The specified address to send the PNG to
+     *
+     * Requirements
+     *
+     * - Amount cannot exceed the contract's total PNG balance
+     */
+    function withdrawClaimedPNG(uint256 amount, address recipient) external override onlyFund {
+        uint256 pngBalance = png.balanceOf(address(this));
+        require(amount <= pngBalance, "Amount exceeds PNG balance");
+
+        png.transfer(recipient, amount);
+
+        emit LPRewardsTransferred(amount, recipient);
+    }
+
+    /**
+     * @dev Unstakes and transfers a given amount of staked PGL to a given address
+     * @param amount The amount of PGL to be unstaked and withdrawn
+     * @param recipient The destination to send the PGL to
+     *
+     * Requirements:
+     *
+     * - Amount cannot exceed the contract's total staked PGL balance
+     */
+    function withdrawStakedPGL(uint256 amount, address recipient) external override onlyFund {
+        require(amount <= totalStakedPGL, "Amount exceeds staked balance");
+
+        pangolinStaking.withdraw(amount);
+        totalStakedPGL -= amount;
+
+        emit LPTokensUnstakedAndTransferred(amount, recipient);
     }
 
     /**
      * @dev Transfers locked AVAX that accumulates in the contract over time as a result of dust left over from automatic liquidity provision. (Owner and Fund only)
      * @param recipient The address to which the AVAX is to be sent
      */
-    function withdrawLockedAVAX(address payable recipient) external override onlyOwnerAndFund {
+    function withdrawLockedAVAX(address payable recipient) external override onlyFund {
         require(recipient != address(0), "Recipient is the zero address");
         require(lockedAVAXBalance > 0, " Locked AVAX balance is 0");
 
@@ -638,15 +700,7 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
         uint256 amount = lockedAVAXBalance;
         lockedAVAXBalance = 0;
         recipient.transfer(amount);
-    }
 
-    /**
-     * Attributes a given address to the Eternal Fund variable in this contract. (Owner and Fund only)
-     * @param fund The specified address of the designated fund
-     */
-    function designateFund(address fund) external onlyOwnerAndFund {
-        eternalFund = fund;
-        isExcludedFromFees[fund] = true;
-        attributeFundRights(fund);
+        emit LockedAVAXTransferred(amount, recipient);
     }
 }
