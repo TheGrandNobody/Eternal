@@ -1,5 +1,3 @@
-import chai from "chai";
-import { solidity } from "ethereum-waffle";
 const { expect } = require("chai");
 
 describe("Token contract", function() {

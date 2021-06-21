@@ -1,7 +1,6 @@
 //SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "../governance/OwnableEnhanced.sol";
 import "../interfaces/IEternalToken.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
 
@@ -10,7 +9,7 @@ import "@openzeppelin/contracts/utils/Context.sol";
  * @author Nobody (me)
  * @notice The Eternal contract holds all user-data and gage logic.
  */
-contract Eternal is OwnableEnhanced {
+contract Eternal is Context {
 
     constructor (address eternalToken) {
         // Initialize the ETRNL interface
