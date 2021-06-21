@@ -1,11 +1,9 @@
 //SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "@pangolindex/exchange-contracts/contracts/pangolin-core/interfaces/IPangolinFactory.sol";
-import "@pangolindex/exchange-contracts/contracts/pangolin-periphery/interfaces/IPangolinRouter.sol";
-import "../interfaces/IStakingRewards.sol";
 import "../interfaces/IEternalToken.sol";
-import "../governance/OwnableEnhanced.sol";
+import "../interfaces/IEternalFundV0.sol";
+import "../inheritances/OwnableEnhanced.sol";
 
 /**
  * @title Contract for the Eternal Token (ETRNL)
@@ -15,65 +13,37 @@ import "../governance/OwnableEnhanced.sol";
  */
 contract EternalToken is IEternalToken, OwnableEnhanced {
 
+    // Keeps track of all reward-excluded addresses
+    address[] private excludedAddresses;
+
     // The reflected balances used to track reward-accruing users' total balances
     mapping (address => uint256) private reflectedBalances;
     // The true balances used to track non-reward-accruing addresses' total balances
     mapping (address => uint256) private trueBalances;
-    // Keeps track of how much an address allows any other address to spend on its behalf
-    mapping (address => mapping (address => uint256)) private allowances;
     // Keeps track of whether an address is excluded from rewards
     mapping (address => bool) private isExcludedFromRewards;
     // Keeps track of whether an address is excluded from transfer fees
     mapping (address => bool) private isExcludedFromFees;
+    // Keeps track of how much an address allows any other address to spend on its behalf
+    mapping (address => mapping (address => uint256)) private allowances;
+    // The Eternal Fund interface
+    IEternalFundV0 eternalFund;
 
-    // Keeps track of all reward-excluded addresses
-    address[] private excludedAddresses;
-
-    // PangolinDex Router interface to swap tokens for AVAX and add liquidity
-    IPangolinRouter public pangolinRouter;
-    // Staking rewards interface for staking LP tokens and claiming liquidity rewards
-    IStakingRewards public pangolinStaking;
-    // The pangolin reward token
-    IERC20 public png;
-    // The pangolin liquidity token
-    IERC20 public pgl;
-    // The address of the ETRNL/AVAX pair
-    address public pangolinPair;
-    // The address of the Eternal Fund
-    address public eternalFund;
-
-    // Keeps track of staked lp tokens 
-    uint256 private totalStakedPGL;
-    // Keeps track of accumulated, locked AVAX as a result of automatic liquidity provision
-    uint256 private lockedAVAXBalance;
     // The total ETRNL supply after taking reflections into account
     uint256 private totalReflectedSupply;
-    // The true total ETRNL supply 
-    uint64 private totalTokenSupply;
     // Threshold at which the contract swaps its ETRNL balance to provide liquidity (0.1% of total supply by default)
     uint64 private tokenLiquidityThreshold;
-    // The percentage of the fee taken at each transaction, that is used to auto-lock liquidity
-    uint8 private liquidityProvisionRate;
+    // The true total ETRNL supply 
+    uint64 private totalTokenSupply;
+
     // The percentage of the fee, taken at each transaction, that is stored in the EternalFund
     uint8 private fundingRate;
     // The percentage of the fee, taken at each transaction, that is burned
     uint8 private burnRate;
     // The percentage of the fee, taken at each transaction, that is redistributed to holders
     uint8 private redistributionRate;
-
-    // Determines whether an auto-liquidity provision process is undergoing
-    bool private undergoingSwap;
-    // Determines whether the contract is tasked with providing liquidity using part of the transaction fees
-    bool private autoLiquidityProvision;
-
-    /**
-     * Ensures the contract doesn't swap when it's already swapping (prevents it from getting caught in a circular liquidity event)
-     */
-    modifier haltsLiquidityProvision {
-        undergoingSwap = true;
-        _;
-        undergoingSwap = false;
-    }
+    // The percentage of the fee taken at each transaction, that is used to auto-lock liquidity
+    uint8 private liquidityProvisionRate;
 
     // Allows contract to receive AVAX tokens from Pangolin
     receive() external payable {}
@@ -86,22 +56,11 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
         // The largest possible number in a 256-bit integer
         uint256 max = ~uint256(0);
 
-        // Initialize total supplies and liquidity threshold, transfer total supply to the owner
+        // Initialize total supplies, liquidity threshold and transfer total supply to the owner
         totalTokenSupply = (10**10) * (10**9);
         totalReflectedSupply = (max - (max % totalTokenSupply));
         tokenLiquidityThreshold = totalTokenSupply / 1000;
         reflectedBalances[_msgSender()] = totalReflectedSupply;
-
-        // Initialize router
-        pangolinRouter = IPangolinRouter(0xE54Ca86531e17Ef3616d22Ca28b0D458b6C89106);
-        // Create pair address
-        pangolinPair = IPangolinFactory(pangolinRouter.factory()).createPair(address(this), pangolinRouter.WAVAX());
-        // Initialize Pangolin Staking Rewards
-        pangolinStaking = IStakingRewards(0x701e03fAD691799a8905043C0d18d2213BbCf2c7);
-        // Inititalize pangolin lp token
-        pgl = IERC20(pangolinPair);
-        // Initialize pangolin reward token
-        png = IERC20(0x60781C2586D68229fde47564546784ab3fACA982);
 
         // Exclude the owner from rewards and fees
         excludeFromReward(owner());
@@ -113,6 +72,7 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
 
         // Exclude the burn address from rewards
         isExcludedFromRewards[address(0)];
+
     }
 
 /////–––««« Variable state-inspection functions »»»––––\\\\\
@@ -170,7 +130,7 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
     function allowance(address owner, address spender) external view override returns (uint256){
         return allowances[owner][spender];
     }
-    
+
     /**
      * @dev View whether a given wallet or contract's address is excluded from transaction fees.
      * @param account The wallet or contract's address
@@ -313,7 +273,7 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
             // Redistribute based on the redistribution rate 
             totalReflectedSupply -= reflectedAmount * redistributionRate / 100;
             // Store ETRNL away in the EternalFund based on the funding rate
-            reflectedBalances[eternalFund] += reflectedAmount * fundingRate / 100;
+            reflectedBalances[fund()] += reflectedAmount * fundingRate / 100;
             // Provide liqudity to the ETRNL/AVAX pair on Pangolin based on the liquidity provision rate
             storeLiquidityFunds(sender, amount * liquidityProvisionRate / 100, reflectedAmount * liquidityProvisionRate / 100);
         }
@@ -321,7 +281,7 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
         emit Transfer(sender, recipient, netTransferAmount);
     }
 
-        /**
+    /**
      * @dev Burns a given amount of ETRNL.
      * @param amount The amount of ETRNL being burned
      * @return True if the burn is successful
@@ -455,133 +415,6 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
         return (netReflectedSupply, netTokenSupply);
     }
 
-/////–––««« Automatic liquidity provision functions »»»––––\\\\\
-
-    /**
-     * @dev Swaps a given amount of ETRNL for AVAX using PangolinDEX. (Used for auto-liquidity swaps)
-     * @param amount The amount of ETRNL to be swapped for AVAX
-     */
-    function swapTokensForAVAX(uint256 amount) private {
-        address[] memory path = new address[](2);
-        path[0] = address(this);
-        path[1] = pangolinRouter.WAVAX();
-
-        _approve(address(this), address(pangolinRouter), amount);
-
-        pangolinRouter.swapExactTokensForAVAXSupportingFeeOnTransferTokens(amount, 0, path, address(this), block.timestamp);
-    }
-
-    /**
-     * @dev Updates the contract's balance regarding the liquidity provision fee for a given transaction's amount.
-     * If the contract's balance threshold is reached, also initiates automatic liquidity provision.
-     * @param sender The address of whom the ETRNL is being transferred from
-     * @param amount The amount of ETRNL being transferred
-     * @param reflectedAmount The reflected amount of ETRNL being transferred
-     */
-    function storeLiquidityFunds(address sender, uint256 amount, uint256 reflectedAmount) private {
-        // Update the contract's balance to account for the liquidity provision fee
-        reflectedBalances[address(this)] += reflectedAmount;
-        trueBalances[address(this)] += amount;
-        
-        // Check whether the contract's balance threshold is reached; if so, initiate a liquidity swap
-        uint256 contractBalance = balanceOf(address(this));
-        if (contractBalance >= tokenLiquidityThreshold) {
-            provideLiquidity(sender, contractBalance);
-        }
-    }
-
-    /**
-     * @dev Provides liquidity to the ETRNL/AVAX pair on pangolin.
-     * @param sender The address of the account transferring ETRNL for the specific transaction where this method was called
-     * @param contractBalance The contract's ETRNL balance
-     *
-     * Requirements:
-     * 
-     * - Automatic liquidity provision must be enabled
-     * - There cannot already be a liquidity swap in progress
-     * - The sender address cannot be the ETRNL/AVAX pangolin pair address
-     */
-    function provideLiquidity(address sender, uint256 contractBalance) private {
-        require(autoLiquidityProvision, "Auto-liquidity is disabled");
-        require(!undergoingSwap, "A liquidity swap is in progress");
-        require(sender != pangolinPair, "Sender can't be the pair address");
-
-        _provideLiquidity(contractBalance);
-    }
-
-    /**
-     * @dev Converts half the contract's balance to AVAX and adds liquidity to the ETRNL/AVAX pair.
-     * @param contractBalance The contract's ETRNL balance
-     */
-    function _provideLiquidity(uint256 contractBalance) private haltsLiquidityProvision {
-        // Split the contract's balance into two halves
-        uint256 half = contractBalance / 2;
-        uint256 amountETRNL = contractBalance - half;
-
-        // Capture the initial balance to later compute the difference
-        uint256 initialBalance = address(this).balance;
-        // Swap half the contract's ETRNL balance to AVAX
-        swapTokensForAVAX(half);
-        // Compute the amount of AVAX received from the swap
-        uint256 amountAVAX = address(this).balance - initialBalance;
-
-        // Add liquidity to the ETRNL/AVAX pair
-        _approve(address(this), address(pangolinRouter), amountETRNL);
-        pangolinRouter.addLiquidityAVAX{value: amountAVAX}(address(this), amountETRNL, 0, 0, address(this), block.timestamp);
-        // Update the locked AVAX balance
-        lockedAVAXBalance += address(this).balance;
-
-        emit AutomaticLiquidityProvision(amountETRNL, contractBalance, amountAVAX);
-
-        // Stake the LP tokens received
-        uint256 amountPGL = pgl.balanceOf(address(this));
-        pgl.approve(address(pangolinStaking), amountPGL);
-        pangolinStaking.stake(amountPGL);
-        totalStakedPGL += amountPGL;
-    }
-
-/////–––««« Owner/Fund-only functions »»»––––\\\\\
-
-    /**
-     * @dev Excludes a given wallet or contract's address from accruing rewards. (Owner only)
-     * @param account The wallet or contract's address
-     *
-     * Requirements:
-     * – Account must not already be excluded from rewards.
-     */
-    function excludeFromReward(address account) public onlyOwner() {
-        require(!isExcludedFromRewards[account], "Account is already excluded");
-        if(reflectedBalances[account] > 0) {
-            // Compute the true token balance from non-empty reflected balances and update it
-            // since we must use both reflected and true balances to make our reflected-to-total ratio even
-            trueBalances[account] =  convertFromReflectedToTrueAmount(reflectedBalances[account]);
-        }
-        isExcludedFromRewards[account] = true;
-        excludedAddresses.push(account);
-    }
-
-    /**
-     * @dev Allows a given wallet or contract's address to accrue rewards. (Owner only)
-     * @param account The wallet or contract's address
-     *
-     * Requirements:
-     * – Account must not already be accruing rewards.
-     */
-    function includeInReward(address account) external onlyOwner() {
-        require(isExcludedFromRewards[account], "Account is already included");
-        for (uint i = 0; i < excludedAddresses.length; i++) {
-            if (excludedAddresses[i] == account) {
-                // Swap last address with current address we want to include so that we can delete it
-                excludedAddresses[i] = excludedAddresses[excludedAddresses.length - 1];
-                // Set its deposit liabilities to 0 since we use the reserve balance for reward-accruing addresses
-                trueBalances[account] = 0;
-                excludedAddresses.pop();
-                isExcludedFromRewards[account] = false;
-                break;
-            }
-        }
-    }
-
     /**
      * @dev Sets the value of a given rate to a given rate type (Owner and Fund only)
      * @param newRate The specified new rate value
@@ -593,7 +426,7 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
      * - Rate value must be positive
      * - The sum of all rates cannot exceed 25 percent
      */
-    function setRate(uint8 newRate, Rate rate) external override onlyOwnerAndFund {
+    function setRate(uint8 newRate, Rate rate) external override onlyOwnerAndFund() {
         require((uint(rate) >= 0 && uint(rate) <= 3), "Invalid rate type");
         require(newRate >= 0, "The new rate must be positive");
 
@@ -621,86 +454,75 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
     }
 
     /**
-     * @dev Determines whether the contract should automatically provide liquidity from part of the transaction fees. (Owner and Fund only)
-     * @param value True if automatic liquidity provision is desired. False otherwise.
+     * @dev Excludes a given wallet or contract's address from accruing rewards. (Owner only)
+     * @param account The wallet or contract's address
+     *
+     * Requirements:
+     * – Account must not already be excluded from rewards.
      */
-    function setAutoLiquidityProvision(bool value) external override onlyOwnerAndFund {
-        autoLiquidityProvision = value;
-
-        emit AutoLiquidityProvisionUpdated(value);
+    function excludeFromReward(address account) public onlyOwnerAndFund() {
+        require(!isExcludedFromRewards[account], "Account is already excluded");
+        if(reflectedBalances[account] > 0) {
+            // Compute the true token balance from non-empty reflected balances and update it
+            // since we must use both reflected and true balances to make our reflected-to-total ratio even
+            trueBalances[account] =  convertFromReflectedToTrueAmount(reflectedBalances[account]);
+        }
+        isExcludedFromRewards[account] = true;
+        excludedAddresses.push(account);
     }
+
+    /**
+     * @dev Allows a given wallet or contract's address to accrue rewards. (Owner only)
+     * @param account The wallet or contract's address
+     *
+     * Requirements:
+     * – Account must not already be accruing rewards.
+     */
+    function includeInReward(address account) external onlyOwnerAndFund() {
+        require(isExcludedFromRewards[account], "Account is already included");
+        for (uint i = 0; i < excludedAddresses.length; i++) {
+            if (excludedAddresses[i] == account) {
+                // Swap last address with current address we want to include so that we can delete it
+                excludedAddresses[i] = excludedAddresses[excludedAddresses.length - 1];
+                // Set its deposit liabilities to 0 since we use the reserve balance for reward-accruing addresses
+                trueBalances[account] = 0;
+                excludedAddresses.pop();
+                isExcludedFromRewards[account] = false;
+                break;
+            }
+        }
+    }
+
+    /**
+     * @dev Updates the contract's balance regarding the liquidity provision fee for a given transaction's amount.
+     * If the contract's balance threshold is reached, also initiates automatic liquidity provision.
+     * @param sender The address of whom the ETRNL is being transferred from
+     * @param amount The amount of ETRNL being transferred
+     * @param reflectedAmount The reflected amount of ETRNL being transferred
+     */
+    function storeLiquidityFunds(address sender, uint256 amount, uint256 reflectedAmount) private {
+        // Update the contract's balance to account for the liquidity provision fee
+        reflectedBalances[address(this)] += reflectedAmount;
+        trueBalances[address(this)] += amount;
+        
+        // Check whether the contract's balance threshold is reached; if so, initiate a liquidity swap
+        uint256 contractBalance = balanceOf(address(this));
+        if ((contractBalance >= tokenLiquidityThreshold) && (sender != eternalFund.viewPair())) {
+            _transfer(address(this), fund(), contractBalance);
+            eternalFund.provideLiquidity(contractBalance);
+        }
+    }
+
+/////–––««« Owner/Fund-only functions »»»––––\\\\\
 
     /**
      * Attributes a given address to the Eternal Fund variable in this contract. (Owner and Fund only)
-     * @param fund The specified address of the designated fund
+     * @param _fund The specified address of the designated fund
      */
-    function designateFund(address fund) external override onlyOwnerAndFund {
-        isExcludedFromFees[eternalFund] = false;
-        eternalFund = fund;
-        isExcludedFromFees[fund] = true;
-        attributeFundRights(fund);
-    }
-
-    /**
-     * @dev Claims the PNG earned as a reward for staking lp tokens 
-     */
-    function claimPNG() external override onlyFund {
-        uint256 pngBefore = png.balanceOf(address(this));
-        pangolinStaking.getReward();
-        uint256 pngAfter = png.balanceOf(address(this));
-
-        emit LPRewardsClaimed(pngAfter - pngBefore);
-    }
-
-    /**
-     * @dev Transfers a given amount of PNG earned as lp-staking reward to a given address
-     * @param amount The specified amount of PNG to be sent
-     * @param recipient The specified address to send the PNG to
-     *
-     * Requirements
-     *
-     * - Amount cannot exceed the contract's total PNG balance
-     */
-    function withdrawClaimedPNG(uint256 amount, address recipient) external override onlyFund {
-        uint256 pngBalance = png.balanceOf(address(this));
-        require(amount <= pngBalance, "Amount exceeds PNG balance");
-
-        png.transfer(recipient, amount);
-
-        emit LPRewardsTransferred(amount, recipient);
-    }
-
-    /**
-     * @dev Unstakes and transfers a given amount of staked PGL to a given address
-     * @param amount The amount of PGL to be unstaked and withdrawn
-     * @param recipient The destination to send the PGL to
-     *
-     * Requirements:
-     *
-     * - Amount cannot exceed the contract's total staked PGL balance
-     */
-    function withdrawStakedPGL(uint256 amount, address recipient) external override onlyFund {
-        require(amount <= totalStakedPGL, "Amount exceeds staked balance");
-
-        pangolinStaking.withdraw(amount);
-        totalStakedPGL -= amount;
-
-        emit LPTokensUnstakedAndTransferred(amount, recipient);
-    }
-
-    /**
-     * @dev Transfers locked AVAX that accumulates in the contract over time as a result of dust left over from automatic liquidity provision. (Owner and Fund only)
-     * @param recipient The address to which the AVAX is to be sent
-     */
-    function withdrawLockedAVAX(address payable recipient) external override onlyFund {
-        require(recipient != address(0), "Recipient is the zero address");
-        require(lockedAVAXBalance > 0, " Locked AVAX balance is 0");
-
-        // Intermediate variable to prevent re-entrancy attacks
-        uint256 amount = lockedAVAXBalance;
-        lockedAVAXBalance = 0;
-        recipient.transfer(amount);
-
-        emit LockedAVAXTransferred(amount, recipient);
+    function designateFund(address _fund) external override onlyOwnerAndFund() {
+        isExcludedFromFees[fund()] = false;
+        eternalFund = IEternalFundV0(_fund);
+        isExcludedFromFees[_fund] = true;
+        attributeFundRights(_fund);
     }
 }
