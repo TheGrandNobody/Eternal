@@ -1,1 +1,1 @@
-# HODLArena
+# Eternal
