@@ -73,6 +73,11 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
         // Exclude the burn address from rewards
         isExcludedFromRewards[address(0)];
 
+        fundingRate = 1;
+        burnRate = 1;
+        redistributionRate = 5;
+        liquidityProvisionRate = 3;
+
     }
 
 /////–––««« Variable state-inspection functions »»»––––\\\\\
@@ -255,7 +260,10 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
         require(recipient != address(0), "Transfer to the zero address");
         require(amount > 0, "Transfer amount must exceed zero");
 
-        (uint256 reflectedAmount, uint256 netReflectedTransferAmount, uint256 netTransferAmount) = getValues(amount);
+        // We only take fees if both the sender and recipient are susceptible to fees
+        bool takeFee = (!isExcludedFromFees[sender] && !isExcludedFromFees[recipient]);
+
+        (uint256 reflectedAmount, uint256 netReflectedTransferAmount, uint256 netTransferAmount) = getValues(amount, takeFee);
 
         // Always update the reflected balances of sender and recipient
         reflectedBalances[sender] -= reflectedAmount;
@@ -267,7 +275,7 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
 
         // Adjust the total reflected supply for the new fees
         // If the sender or recipient are excluded from fees, we ignore the fee altogether
-        if (!isExcludedFromFees[sender] && !isExcludedFromFees[recipient]) {
+        if (takeFee) {
             // Perform a burn based on the burn rate 
             _burn(address(this), uint64(amount) * burnRate / 100, reflectedAmount * burnRate / 100);
             // Redistribute based on the redistribution rate 
@@ -298,7 +306,8 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
         require(balance >= amount, "Burn amount exceeds balance");
 
         // Subtract the amounts from the sender before so we can reuse _burn elsewhere
-        uint256 reflectedAmount = convertFromTrueToReflectedAmount(amount, false);
+        uint256 reflectedAmount;
+        (,reflectedAmount,) = getValues(amount, !isExcludedFromFees[sender]);
         reflectedBalances[sender] -= reflectedAmount;
         trueBalances[sender] = isExcludedFromRewards[sender] ? (trueBalances[sender] - amount) : trueBalances[sender];
 
@@ -327,36 +336,11 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
 /////–––««« Reward-redistribution functions »»»––––\\\\\
 
     /**
-     * @dev Translates a given amount of ETRNL into its reflected sum variant (with the transfer fee deducted if specified).
-     * @param amount The specified amount of ETRNL
-     * @param deductTransferFee Boolean – True if we deduct the transfer fee from the reflected sum variant. False otherwise.
-     * @return The reflected amount proportional to the given amount of ETRNL if False, else the fee-adjusted variant of said reflected amount
-     *
-     * Requirements:
-     * 
-     * - Given ETRNL amount cannot be greater than the total token supply
-     */
-    function convertFromTrueToReflectedAmount(uint256 amount, bool deductTransferFee) public view returns(uint256) {
-        require(amount <= totalTokenSupply, "Amount exceeds total supply");
-        if (!deductTransferFee) {
-            (uint256 reflectedAmount,,) = getValues(amount);
-            return reflectedAmount;
-        } else {
-            (,uint256 netReflectedTransferAmount,) = getValues(amount);
-            return netReflectedTransferAmount;
-        }
-    }
-
-    /**
      * @dev Translates a given reflected sum of ETRNL into the true amount of ETRNL it represents based on the current reserve rate.
      * @param reflectedAmount The specified reflected sum of ETRNL
      * @return The true amount of ETRNL representing by its reflected amount
-     * Requirements:
-     * 
-     * - Given reflected ETRNL amount cannot be greater than the total reflected token supply
      */
-    function convertFromReflectedToTrueAmount(uint256 reflectedAmount) public view returns(uint256) {
-        require(reflectedAmount <= totalReflectedSupply, "Amount exceeds reflected supply");
+    function convertFromReflectedToTrueAmount(uint256 reflectedAmount) private view returns(uint256) {
         uint256 currentRate =  getReflectionRate();
         return reflectedAmount / currentRate;
     }
@@ -366,10 +350,12 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
      * @param trueAmount The specified amount of ETRNL
      * @return The reflected amount, the net reflected transfer amount, the actual net transfer amount, and the total reflected fees
      */
-    function getValues(uint256 trueAmount) private view returns (uint256, uint256, uint256) {
+    function getValues(uint256 trueAmount, bool takeFee) private view returns (uint256, uint256, uint256) {
+
+        uint256 feeRate = takeFee ? (liquidityProvisionRate + burnRate + fundingRate + redistributionRate) : 0;
 
         // Calculate the total fees and transfered amount after fees
-        uint256 totalFees = (trueAmount * (liquidityProvisionRate + burnRate + fundingRate + redistributionRate)) / 100;
+        uint256 totalFees = (trueAmount * feeRate) / 100;
         uint256 netTransferAmount = trueAmount - totalFees;
 
         // Calculate the reflected amount, reflected total fees and reflected amount after fees
@@ -417,8 +403,8 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
 
     /**
      * @dev Sets the value of a given rate to a given rate type (Owner and Fund only)
-     * @param newRate The specified new rate value
      * @param rate The type of the specified rate
+     * @param newRate The specified new rate value
      *
      * Requirements:
      *
@@ -426,7 +412,7 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
      * - Rate value must be positive
      * - The sum of all rates cannot exceed 25 percent
      */
-    function setRate(uint8 newRate, Rate rate) external override onlyOwnerAndFund() {
+    function setRate(Rate rate, uint8 newRate) external override onlyOwnerAndFund() {
         require((uint(rate) >= 0 && uint(rate) <= 3), "Invalid rate type");
         require(newRate >= 0, "The new rate must be positive");
 

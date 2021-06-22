@@ -36,8 +36,8 @@
       ]
     },
     "/Users/lumonne/Eternal/contracts/main/EternalToken.sol": {
-      "lastModificationDate": 1624266772574,
-      "contentHash": "82816d088a003f5b6dc992a5a4b29aee",
+      "lastModificationDate": 1624373161309,
+      "contentHash": "eb95efcc51267709e6e38b05e57eb3bd",
       "sourceName": "contracts/main/EternalToken.sol",
       "solcConfig": {
         "version": "0.8.0",
@@ -176,8 +176,8 @@
       ]
     },
     "/Users/lumonne/Eternal/contracts/interfaces/IEternalToken.sol": {
-      "lastModificationDate": 1624261985115,
-      "contentHash": "040519340dd2571abaa820c6304cc4a1",
+      "lastModificationDate": 1624349140056,
+      "contentHash": "37fe2a9842be4398302f79f471dd427b",
       "sourceName": "contracts/interfaces/IEternalToken.sol",
       "solcConfig": {
         "version": "0.8.0",
@@ -283,7 +283,7 @@
       ]
     },
     "/Users/lumonne/Eternal/contracts/main/Eternal.sol": {
-      "lastModificationDate": 1624266976593,
+      "lastModificationDate": 1624271571895,
       "contentHash": "ddeddeeeda1088527f55fce1a94ef527",
       "sourceName": "contracts/main/Eternal.sol",
       "solcConfig": {
@@ -424,7 +424,7 @@
       ]
     },
     "/Users/lumonne/Eternal/contracts/main/EternalFundV0.sol": {
-      "lastModificationDate": 1624266611748,
+      "lastModificationDate": 1624271571895,
       "contentHash": "1ddb0d33d4237f8a00fc78a14d832a4b",
       "sourceName": "contracts/main/EternalFundV0.sol",
       "solcConfig": {
