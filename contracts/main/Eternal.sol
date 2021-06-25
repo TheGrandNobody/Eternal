@@ -16,7 +16,7 @@ contract Eternal is Context {
         eternal = IEternalToken(_eternal);
 
         // The gage with ID 0 must have status closed for this contract to function
-        Gage storage gage =  gages[0];
+        Gage storage gage = gages[0];
         gage.status = Status.Closed;
     }
 
@@ -153,7 +153,7 @@ contract Eternal is Context {
         // Compute any rewards accrued during the gage
         uint256 rewards = computeAccruedRewards(gage.amount, user, id);
         // Calculate the gage reward and add it to the redistribution reward (total reward)
-        uint256 totalReward = rewards + (gage.amount * 9 * gage.risk / 100);
+        uint256 totalReward = rewards + (9 * gage.amount * gage.risk / 100);
         eternal.transfer(user, totalReward);
 
         emit UserRemoved(id, user);
