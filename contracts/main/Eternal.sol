@@ -79,7 +79,7 @@ contract Eternal is Context {
             lastGage[amount][risk] = id;
             // Save the gage parameters
             gage = gages[id];
-            gage.amount = amount;
+            gage.amount = amount * (10**9);
             gage.risk = risk;
             gage.id = id;
         }
@@ -88,7 +88,7 @@ contract Eternal is Context {
         inGage[user][id] = true;
         gage.users += 1;
         reflectionRates[user][id] = eternal.getReflectionRate();
-        eternal.transferFrom(user, address(this), amount * (10**9));
+        eternal.transferFrom(user, address(this), gage.amount);
         emit UserAdded(id, user);
 
         // If contract is filled, update its status and initiate the gage
@@ -125,11 +125,14 @@ contract Eternal is Context {
             emit GageClosed(id, gage.amount, gage.risk);
         }
 
-        // Compute the amount minus the loss incurred from forfeiting
-        uint256 netAmount = gage.amount - (gage.amount * gage.risk / 100);
+        // Calculate the new amount after rewards accrued during the gage
+        uint256 oldRate = reflectionRates[user][id];
+        uint256 currentRate = eternal.getReflectionRate();
+        uint256 amount = gage.amount * (currentRate / oldRate);
         // Users get the entire entry amount back if the gage wasn't active
-        uint256 amount = (gage.status == Status.Open) ? gage.amount : netAmount;
-        eternal.transfer(user, amount * (10**9));
+        // Otherwise the systems substracts the loss incurred from forfeiting
+        amount = (gage.status == Status.Open) ? amount : (amount - (gage.amount * gage.risk / 100));
+        eternal.transfer(user, amount);
     }
 
     /**
@@ -148,8 +151,16 @@ contract Eternal is Context {
         require(inGage[user][id], "User is not the winner");
 
         inGage[user][id] = false;
-        uint256 reward = gage.amount + (gage.amount * 9 * gage.risk / 100);
-        eternal.transfer(user, reward * (10**9));
+        
+        // Calculate rewards accrued during the gage
+        uint256 oldRate = reflectionRates[user][id];
+        uint256 currentRate = eternal.getReflectionRate();
+        uint256 reward = gage.amount * (currentRate / oldRate);
+        // Calculate the gage reward and add it to the redistribution reward (total reward)
+        uint256 totalReward = reward + (gage.amount * 9 * gage.risk / 100);
+        eternal.transfer(user, totalReward);
+
+        emit UserRemoved(id, user);
     }
 
 /////–––««« Variable state-inspection functions »»»––––\\\\\
