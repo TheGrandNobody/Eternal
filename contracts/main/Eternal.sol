@@ -151,13 +151,13 @@ contract Eternal is Context {
         require(inGage[user][id], "User is not the winner");
 
         inGage[user][id] = false;
-        
+
         // Calculate rewards accrued during the gage
         uint256 oldRate = reflectionRates[user][id];
         uint256 currentRate = eternal.getReflectionRate();
-        uint256 reward = gage.amount * (currentRate / oldRate);
+        uint256 rewards = gage.amount * (currentRate / oldRate);
         // Calculate the gage reward and add it to the redistribution reward (total reward)
-        uint256 totalReward = reward + (gage.amount * 9 * gage.risk / 100);
+        uint256 totalReward = rewards + (gage.amount * 9 * gage.risk / 100);
         eternal.transfer(user, totalReward);
 
         emit UserRemoved(id, user);
