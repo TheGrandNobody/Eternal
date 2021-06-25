@@ -25,6 +25,12 @@ interface IEternalToken is IERC20, IERC20Metadata {
     function setLiquidityThreshold(uint64 value) external;
     // Designates a new Eternal DAO address
     function designateFund(address fund) external;
+    // View the rate used to convert between the reflection and true token space
+    function getReflectionRate() external view returns (uint256);
+    // View whether an address is excluded from the transaction fees
+    function isExcludedFromFee(address account) external view returns (bool);
+    // View whether an address is excluded from rewards
+    function isExcludedFromReward(address account) external view returns (bool);
 
     // Signals a change of value of a given rate in the Eternal Token contract
     event UpdateRate(uint256 oldRate, uint256 newRate, Rate rate);

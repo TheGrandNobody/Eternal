@@ -41,6 +41,8 @@ contract Eternal is Context {
 
     // Keeps track of all gage contracts
     mapping (uint256 => Gage) gages;
+    // Keeps track of the reflection rate for a given address and gage to recalculate rewards earned during the gage
+    mapping (address => mapping (uint256 => uint256)) reflectionRates;
     // Keeps track of whether a user is participating in a specific gage
     mapping (address => mapping(uint256 => bool)) inGage;
     // Keeps track of the latest gage contract id with a certain entry deposit and risk
@@ -85,6 +87,7 @@ contract Eternal is Context {
         // Add user to the gage
         inGage[user][id] = true;
         gage.users += 1;
+        reflectionRates[user][id] = eternal.getReflectionRate();
         eternal.transferFrom(user, address(this), amount * (10**9));
         emit UserAdded(id, user);
 

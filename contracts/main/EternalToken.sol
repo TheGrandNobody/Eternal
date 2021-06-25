@@ -153,6 +153,15 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
         return isExcludedFromRewards[account];
     }
 
+    /**
+     * @dev Computes the current rate used to inter-convert from the mathematically reflected space to the "true" or total space
+     * @return The ratio of net reflected ETRNL to net total ETRNL
+     */
+    function getReflectionRate() public view override returns (uint256) {
+        (uint256 netReflectedSupply, uint256 netTokenSupply) = getNetSupplies();
+        return netReflectedSupply / netTokenSupply;
+    }
+
 /////–––««« IERC20/ERC20 functions »»»––––\\\\\
     
     /**
@@ -364,15 +373,6 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
         uint256 netReflectedTransferAmount = reflectedAmount - reflectedTotalFees;
         
         return (reflectedAmount, netReflectedTransferAmount, netTransferAmount);
-    }
-
-    /**
-     * @dev Computes the current rate used to inter-convert from the mathematically reflected space to the "true" or total space
-     * @return The ratio of net reflected ETRNL to net total ETRNL
-     */
-    function getReflectionRate() private view returns(uint256) {
-        (uint256 netReflectedSupply, uint256 netTokenSupply) = getNetSupplies();
-        return netReflectedSupply / netTokenSupply;
     }
 
     /**
