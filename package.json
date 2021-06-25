@@ -1,7 +1,7 @@
 {
   "name": "eternal",
   "version": "1.0.0",
-  "description": "Eternal contracts",
+  "description": "",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -10,26 +10,18 @@
     "type": "git",
     "url": "git+https://github.com/TheGrandNobody/Eternal.git"
   },
-  "author": "Nobody",
+  "author": "",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/TheGrandNobody/Eternal/issues"
   },
   "homepage": "https://github.com/TheGrandNobody/Eternal#readme",
-  "dependencies": {
-    "@ethersproject/contracts": "^5.2.0",
-    "@ethersproject/providers": "^5.2.0",
-    "@ethersproject/solidity": "^5.2.0",
-    "@openzeppelin/contracts": "^4.1.0",
-    "@pangolindex/sdk": "^1.1.0"
-  },
   "devDependencies": {
     "@nomiclabs/hardhat-ethers": "^2.0.2",
     "@nomiclabs/hardhat-waffle": "^2.0.1",
     "chai": "^4.3.4",
     "ethereum-waffle": "^3.4.0",
     "ethers": "^5.3.1",
-    "hardhat": "^2.3.0",
-    "hardhat-gas-reporter": "^1.0.4"
+    "hardhat": "^2.4.1"
   }
 }

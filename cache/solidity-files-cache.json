@@ -1,6 +1,76 @@
 {
   "_format": "hh-sol-cache-2",
   "files": {
+    "/Users/lumonne/Eternal/node_modules/hardhat/console.sol": {
+      "lastModificationDate": 1624484477798,
+      "contentHash": "cc4777addd464ea56fa35b1c45df0591",
+      "sourceName": "hardhat/console.sol",
+      "solcConfig": {
+        "version": "0.8.0",
+        "settings": {
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        ">=0.4.22 <0.9.0"
+      ],
+      "artifacts": [
+        "console"
+      ]
+    },
+    "/Users/lumonne/Eternal/contracts/inheritances/OwnableEnhanced.sol": {
+      "lastModificationDate": 1624271571945,
+      "contentHash": "8cf10c54bfbe75aef1951192e9ef9a59",
+      "sourceName": "contracts/inheritances/OwnableEnhanced.sol",
+      "solcConfig": {
+        "version": "0.8.0",
+        "settings": {
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "@openzeppelin/contracts/utils/Context.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "OwnableEnhanced"
+      ]
+    },
     "/Users/lumonne/Eternal/node_modules/@openzeppelin/contracts/utils/Context.sol": {
       "lastModificationDate": 1621719879293,
       "contentHash": "bc047f55d4e6dcc5a9c7ee096f530312",
@@ -35,10 +105,10 @@
         "Context"
       ]
     },
-    "/Users/lumonne/Eternal/contracts/main/EternalToken.sol": {
-      "lastModificationDate": 1624373161309,
-      "contentHash": "eb95efcc51267709e6e38b05e57eb3bd",
-      "sourceName": "contracts/main/EternalToken.sol",
+    "/Users/lumonne/Eternal/contracts/main/TestToken.sol": {
+      "lastModificationDate": 1624480358678,
+      "contentHash": "e11ed219f5b24aacadf9e48304049c88",
+      "sourceName": "contracts/main/TestToken.sol",
       "solcConfig": {
         "version": "0.8.0",
         "settings": {
@@ -62,123 +132,20 @@
         }
       },
       "imports": [
-        "../interfaces/IEternalToken.sol",
-        "../interfaces/IEternalFundV0.sol",
+        "@openzeppelin/contracts/token/ERC20/ERC20.sol",
         "../inheritances/OwnableEnhanced.sol"
       ],
       "versionPragmas": [
         "^0.8.0"
       ],
       "artifacts": [
-        "EternalToken"
+        "TestToken"
       ]
     },
-    "/Users/lumonne/Eternal/node_modules/@pangolindex/exchange-contracts/contracts/pangolin-core/interfaces/IPangolinFactory.sol": {
-      "lastModificationDate": 1622100100356,
-      "contentHash": "0cece940e3c7445637b8e966db2d341e",
-      "sourceName": "@pangolindex/exchange-contracts/contracts/pangolin-core/interfaces/IPangolinFactory.sol",
-      "solcConfig": {
-        "version": "0.8.0",
-        "settings": {
-          "optimizer": {
-            "enabled": false,
-            "runs": 200
-          },
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [],
-      "versionPragmas": [
-        ">=0.5.0"
-      ],
-      "artifacts": [
-        "IPangolinFactory"
-      ]
-    },
-    "/Users/lumonne/Eternal/node_modules/@pangolindex/exchange-contracts/contracts/pangolin-periphery/interfaces/IPangolinRouter.sol": {
-      "lastModificationDate": 1622100100358,
-      "contentHash": "dc96721ed3d13b27870460d2a2bd15e1",
-      "sourceName": "@pangolindex/exchange-contracts/contracts/pangolin-periphery/interfaces/IPangolinRouter.sol",
-      "solcConfig": {
-        "version": "0.8.0",
-        "settings": {
-          "optimizer": {
-            "enabled": false,
-            "runs": 200
-          },
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [],
-      "versionPragmas": [
-        ">=0.6.2"
-      ],
-      "artifacts": [
-        "IPangolinRouter"
-      ]
-    },
-    "/Users/lumonne/Eternal/contracts/interfaces/IStakingRewards.sol": {
-      "lastModificationDate": 1624015925804,
-      "contentHash": "6840115c700a066b2fe96d58ec5a5b61",
-      "sourceName": "contracts/interfaces/IStakingRewards.sol",
-      "solcConfig": {
-        "version": "0.8.0",
-        "settings": {
-          "optimizer": {
-            "enabled": false,
-            "runs": 200
-          },
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [],
-      "versionPragmas": [
-        "^0.8.0"
-      ],
-      "artifacts": [
-        "IStakingRewards"
-      ]
-    },
-    "/Users/lumonne/Eternal/contracts/interfaces/IEternalToken.sol": {
-      "lastModificationDate": 1624349140056,
-      "contentHash": "37fe2a9842be4398302f79f471dd427b",
-      "sourceName": "contracts/interfaces/IEternalToken.sol",
+    "/Users/lumonne/Eternal/node_modules/@openzeppelin/contracts/token/ERC20/ERC20.sol": {
+      "lastModificationDate": 1624480808156,
+      "contentHash": "b49f99240ed3ec1259c262c951152b85",
+      "sourceName": "@openzeppelin/contracts/token/ERC20/ERC20.sol",
       "solcConfig": {
         "version": "0.8.0",
         "settings": {
@@ -202,14 +169,15 @@
         }
       },
       "imports": [
-        "@openzeppelin/contracts/token/ERC20/IERC20.sol",
-        "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol"
+        "./IERC20.sol",
+        "./extensions/IERC20Metadata.sol",
+        "../../utils/Context.sol"
       ],
       "versionPragmas": [
         "^0.8.0"
       ],
       "artifacts": [
-        "IEternalToken"
+        "ERC20"
       ]
     },
     "/Users/lumonne/Eternal/node_modules/@openzeppelin/contracts/token/ERC20/IERC20.sol": {
@@ -283,7 +251,7 @@
       ]
     },
     "/Users/lumonne/Eternal/contracts/main/Eternal.sol": {
-      "lastModificationDate": 1624271571895,
+      "lastModificationDate": 1624479555881,
       "contentHash": "ddeddeeeda1088527f55fce1a94ef527",
       "sourceName": "contracts/main/Eternal.sol",
       "solcConfig": {
@@ -319,44 +287,10 @@
         "Eternal"
       ]
     },
-    "/Users/lumonne/Eternal/contracts/Migrations.sol": {
-      "lastModificationDate": 1621720106951,
-      "contentHash": "dca04644d5044ab1b56860492280b57a",
-      "sourceName": "contracts/Migrations.sol",
-      "solcConfig": {
-        "version": "0.8.0",
-        "settings": {
-          "optimizer": {
-            "enabled": false,
-            "runs": 200
-          },
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [],
-      "versionPragmas": [
-        "^0.8.0"
-      ],
-      "artifacts": [
-        "Migrations"
-      ]
-    },
-    "/Users/lumonne/Eternal/contracts/inheritances/OwnableEnhanced.sol": {
-      "lastModificationDate": 1624263538694,
-      "contentHash": "8cf10c54bfbe75aef1951192e9ef9a59",
-      "sourceName": "contracts/inheritances/OwnableEnhanced.sol",
+    "/Users/lumonne/Eternal/contracts/interfaces/IEternalToken.sol": {
+      "lastModificationDate": 1624349140056,
+      "contentHash": "37fe2a9842be4398302f79f471dd427b",
+      "sourceName": "contracts/interfaces/IEternalToken.sol",
       "solcConfig": {
         "version": "0.8.0",
         "settings": {
@@ -380,17 +314,56 @@
         }
       },
       "imports": [
-        "@openzeppelin/contracts/utils/Context.sol"
+        "@openzeppelin/contracts/token/ERC20/IERC20.sol",
+        "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol"
       ],
       "versionPragmas": [
         "^0.8.0"
       ],
       "artifacts": [
-        "OwnableEnhanced"
+        "IEternalToken"
+      ]
+    },
+    "/Users/lumonne/Eternal/contracts/main/EternalToken.sol": {
+      "lastModificationDate": 1624377496406,
+      "contentHash": "eb95efcc51267709e6e38b05e57eb3bd",
+      "sourceName": "contracts/main/EternalToken.sol",
+      "solcConfig": {
+        "version": "0.8.0",
+        "settings": {
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "../interfaces/IEternalToken.sol",
+        "../interfaces/IEternalFundV0.sol",
+        "../inheritances/OwnableEnhanced.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "EternalToken"
       ]
     },
     "/Users/lumonne/Eternal/contracts/interfaces/IEternalFundV0.sol": {
-      "lastModificationDate": 1624266884233,
+      "lastModificationDate": 1624271571894,
       "contentHash": "663ba06581573348dc1f68daacc8cb86",
       "sourceName": "contracts/interfaces/IEternalFundV0.sol",
       "solcConfig": {
@@ -462,6 +435,178 @@
       ],
       "artifacts": [
         "EternalFundV0"
+      ]
+    },
+    "/Users/lumonne/Eternal/node_modules/@pangolindex/exchange-contracts/contracts/pangolin-core/interfaces/IPangolinFactory.sol": {
+      "lastModificationDate": 1622100100356,
+      "contentHash": "0cece940e3c7445637b8e966db2d341e",
+      "sourceName": "@pangolindex/exchange-contracts/contracts/pangolin-core/interfaces/IPangolinFactory.sol",
+      "solcConfig": {
+        "version": "0.8.0",
+        "settings": {
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        ">=0.5.0"
+      ],
+      "artifacts": [
+        "IPangolinFactory"
+      ]
+    },
+    "/Users/lumonne/Eternal/node_modules/@pangolindex/exchange-contracts/contracts/pangolin-periphery/interfaces/IPangolinRouter.sol": {
+      "lastModificationDate": 1622100100358,
+      "contentHash": "dc96721ed3d13b27870460d2a2bd15e1",
+      "sourceName": "@pangolindex/exchange-contracts/contracts/pangolin-periphery/interfaces/IPangolinRouter.sol",
+      "solcConfig": {
+        "version": "0.8.0",
+        "settings": {
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        ">=0.6.2"
+      ],
+      "artifacts": [
+        "IPangolinRouter"
+      ]
+    },
+    "/Users/lumonne/Eternal/contracts/interfaces/IStakingRewards.sol": {
+      "lastModificationDate": 1624271507116,
+      "contentHash": "6840115c700a066b2fe96d58ec5a5b61",
+      "sourceName": "contracts/interfaces/IStakingRewards.sol",
+      "solcConfig": {
+        "version": "0.8.0",
+        "settings": {
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "IStakingRewards"
+      ]
+    },
+    "/Users/lumonne/Eternal/contracts/main/TestContract.sol": {
+      "lastModificationDate": 1624480282340,
+      "contentHash": "5ed46af4c2af495c8fe11a7a21ce074b",
+      "sourceName": "contracts/main/TestContract.sol",
+      "solcConfig": {
+        "version": "0.8.0",
+        "settings": {
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "@openzeppelin/contracts/token/ERC20/IERC20.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "TestContract"
+      ]
+    },
+    "/Users/lumonne/Eternal/contracts/Migrations.sol": {
+      "lastModificationDate": 1624484739098,
+      "contentHash": "dca04644d5044ab1b56860492280b57a",
+      "sourceName": "contracts/Migrations.sol",
+      "solcConfig": {
+        "version": "0.8.0",
+        "settings": {
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "Migrations"
       ]
     }
   }

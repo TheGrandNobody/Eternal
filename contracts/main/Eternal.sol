@@ -71,7 +71,7 @@ contract Eternal is Context {
         
         // If the latest gage is unopen or user is already in it, create a new one 
         if (gage.status != Status.Open || inGage[user][id]) {
-            // Update the absolute id-tracker and specific amount-risk id-tracker
+            // Update the absolute id counter and the specific amount-risk id counter
             lastGage[0][0] += 1;
             id = lastGage[0][0];
             lastGage[amount][risk] = id;
@@ -85,7 +85,7 @@ contract Eternal is Context {
         // Add user to the gage
         inGage[user][id] = true;
         gage.users += 1;
-        eternal.transferFrom(user, address(this), amount * 10**9);
+        eternal.transferFrom(user, address(this), amount * (10**9));
         emit UserAdded(id, user);
 
         // If contract is filled, update its status and initiate the gage
@@ -125,8 +125,8 @@ contract Eternal is Context {
         // Compute the amount minus the loss incurred from forfeiting
         uint256 netAmount = gage.amount - (gage.amount * gage.risk / 100);
         // Users get the entire entry amount back if the gage wasn't active
-        uint256 amount = gage.status == Status.Open ? gage.amount : netAmount;
-        eternal.transfer(user, amount * 10**9);
+        uint256 amount = (gage.status == Status.Open) ? gage.amount : netAmount;
+        eternal.transfer(user, amount * (10**9));
     }
 
     /**
@@ -167,7 +167,7 @@ contract Eternal is Context {
 
         inGage[user][id] = false;
         uint256 reward = gage.amount + (gage.amount * 9 * gage.risk / 100);
-        eternal.transfer(user, reward);
+        eternal.transfer(user, reward * (10**9));
     }
 
 /////–––««« Variable state-inspection functions »»»––––\\\\\

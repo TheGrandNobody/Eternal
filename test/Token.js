@@ -1,22 +1,23 @@
 const { expect } = require("chai");
-const { BigNumber } = require("ethers");
 
-let owner, addr1, addr2, Token, eternal;
+let owner, addr1, tt, tc, TestToken, TestContract;
 
-beforeEach(async function() {
-  [owner, addr1, addr2] = await ethers.getSigners();
-  Token = await ethers.getContractFactory("EternalToken");
-  eternal = await Token.deploy();
-})
+describe("Functions that call transfer", function() {
 
-describe("Token contract", function() {
-  it("Should correctly send 2000 tokens to user1 then 1000 to user2", async function() {
-    const amount = BigNumber.from(2000000000000);
-    const amount1 = BigNumber.from(1000000000000);
+  this.timeout(2000000);
 
-    await eternal.transfer(addr1.address, amount);
-    await eternal.connect(addr1).transfer(addr2.address, amount1);
-    
-    
+  before (async function() {
+    [owner, addr1] = await ethers.getSigners();
+    TestToken = await ethers.getContractFactory("TestToken");
+    TestContract = await ethers.getContractFactory("TestContract");
+    tt = await TestToken.deploy();
+    tc = await TestContract.deploy();
+  });
+
+  it("Should call transfer as the contracts and not the users", async function() {
+    await tt.transfer(addr1.address, 1000);
+    await tt.transfer(tc.address, 2000);
+    await tc.testFunc(500, tt.address, addr1.address);
+    expect(await tt.balanceOf(addr1.address)).to.equal(1000);
   });
 });
