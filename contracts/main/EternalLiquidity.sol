@@ -7,6 +7,11 @@ import "../interfaces/IEternalToken.sol";
 import "../interfaces/IEternalLiquidity.sol";
 import "../inheritances/OwnableEnhanced.sol";
 
+/**
+ * @title Eternal automatic liquidity provider contract
+ * @author Nobody (me)
+ * @notice The Eternal Liquidity provides liquidity for the Eternal Token
+ */
 contract EternalLiquidity is IEternalLiquidity, OwnableEnhanced {
 
     // The ETRNL token

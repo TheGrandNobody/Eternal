@@ -26,7 +26,7 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
     mapping (address => bool) private isExcludedFromFees;
     // Keeps track of how much an address allows any other address to spend on its behalf
     mapping (address => mapping (address => uint256)) private allowances;
-    // The Eternal Fund interface
+    // The Eternal automatic liquidity provider interface
     IEternalLiquidity eternalLiquidity;
 
     // The total ETRNL supply after taking reflections into account
@@ -77,7 +77,6 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
         burnRate = 1;
         redistributionRate = 5;
         liquidityProvisionRate = 3;
-
     }
 
 /////–––««« Variable state-inspection functions »»»––––\\\\\
@@ -415,8 +414,8 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
         
         // Check whether the contract's balance threshold is reached; if so, initiate a liquidity swap
         uint256 contractBalance = balanceOf(address(this));
-        if ((contractBalance >= tokenLiquidityThreshold) && (sender != eternalFund.viewPair())) {
-            _transfer(address(this), fund(), contractBalance);
+        if ((contractBalance >= tokenLiquidityThreshold) && (sender != eternalLiquidity.viewPair())) {
+            _transfer(address(this), address(eternalLiquidity), contractBalance);
             eternalLiquidity.provideLiquidity(contractBalance);
         }
     }
@@ -505,7 +504,7 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
      * @dev Sets the threshold of ETRNL at which the contract provides liquidity to a given value
      * @param value The new token liquidity threshold
      */
-    function setLiquidityThreshold(uint64 value) external override onlyFund() {
+    function setLiquidityThreshold(uint64 value) external override onlyAdminAndFund() {
         uint64 oldThreshold = tokenLiquidityThreshold;
         tokenLiquidityThreshold = value;
 
