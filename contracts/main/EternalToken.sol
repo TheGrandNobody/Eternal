@@ -49,7 +49,8 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
     receive() external payable {}
 
     /**
-     * @dev Initialize supplies and routers and create a pair. Mints total supply to the contract deployer. Exclude some addresses from fees and/or rewards.
+     * @dev Initialize supplies and routers and create a pair. Mints total supply to the contract deployer. 
+     * Exclude some addresses from fees and/or rewards. Sets rates.
      */
     constructor () {
 
