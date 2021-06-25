@@ -402,44 +402,6 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
     }
 
     /**
-     * @dev Sets the value of a given rate to a given rate type (Owner and Fund only)
-     * @param rate The type of the specified rate
-     * @param newRate The specified new rate value
-     *
-     * Requirements:
-     *
-     * - Rate type must be either Liquidity, Funding, Redistribution or Burn
-     * - Rate value must be positive
-     * - The sum of all rates cannot exceed 25 percent
-     */
-    function setRate(Rate rate, uint8 newRate) external override onlyOwnerAndFund() {
-        require((uint(rate) >= 0 && uint(rate) <= 3), "Invalid rate type");
-        require(newRate >= 0, "The new rate must be positive");
-
-        uint256 oldRate;
-
-        if (rate == Rate.Liquidity) {
-            require((newRate + fundingRate + redistributionRate + burnRate) < 25, "Total rate exceeds 25%");
-            oldRate = liquidityProvisionRate;
-            liquidityProvisionRate = newRate;
-        } else if (rate == Rate.Funding) {
-            require((liquidityProvisionRate + newRate + redistributionRate + burnRate) < 25, "Total rate exceeds 25%");
-            oldRate = fundingRate;
-            fundingRate = newRate;
-        } else if (rate == Rate.Redistribution) {
-            require((liquidityProvisionRate + fundingRate + newRate + burnRate) < 25, "Total rate exceeds 25%");
-            oldRate = redistributionRate;
-            redistributionRate = newRate;
-        } else {
-            require((liquidityProvisionRate + fundingRate + redistributionRate + newRate) < 25, "Total rate exceeds 25%");
-            oldRate = burnRate;
-            burnRate = newRate;
-        }
-
-        emit UpdateRate(oldRate, newRate, rate);
-    }
-
-    /**
      * @dev Excludes a given wallet or contract's address from accruing rewards. (Owner only)
      * @param account The wallet or contract's address
      *
@@ -502,7 +464,56 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
 /////–––««« Owner/Fund-only functions »»»––––\\\\\
 
     /**
-     * Attributes a given address to the Eternal Fund variable in this contract. (Owner and Fund only)
+     * @dev Sets the value of a given rate to a given rate type (Owner and Fund only)
+     * @param rate The type of the specified rate
+     * @param newRate The specified new rate value
+     *
+     * Requirements:
+     *
+     * - Rate type must be either Liquidity, Funding, Redistribution or Burn
+     * - Rate value must be positive
+     * - The sum of all rates cannot exceed 25 percent
+     */
+    function setRate(Rate rate, uint8 newRate) external override onlyOwnerAndFund() {
+        require((uint(rate) >= 0 && uint(rate) <= 3), "Invalid rate type");
+        require(newRate >= 0, "The new rate must be positive");
+
+        uint256 oldRate;
+
+        if (rate == Rate.Liquidity) {
+            require((newRate + fundingRate + redistributionRate + burnRate) < 25, "Total rate exceeds 25%");
+            oldRate = liquidityProvisionRate;
+            liquidityProvisionRate = newRate;
+        } else if (rate == Rate.Funding) {
+            require((liquidityProvisionRate + newRate + redistributionRate + burnRate) < 25, "Total rate exceeds 25%");
+            oldRate = fundingRate;
+            fundingRate = newRate;
+        } else if (rate == Rate.Redistribution) {
+            require((liquidityProvisionRate + fundingRate + newRate + burnRate) < 25, "Total rate exceeds 25%");
+            oldRate = redistributionRate;
+            redistributionRate = newRate;
+        } else {
+            require((liquidityProvisionRate + fundingRate + redistributionRate + newRate) < 25, "Total rate exceeds 25%");
+            oldRate = burnRate;
+            burnRate = newRate;
+        }
+
+        emit UpdateRate(oldRate, newRate, rate);
+    }
+
+    /**
+     * @dev Sets the threshold of ETRNL at which the contract provides liquidity to a given value
+     * @param value The new token liquidity threshold
+     */
+    function setLiquidityThreshold(uint64 value) external override onlyFund() {
+        uint64 oldThreshold = tokenLiquidityThreshold;
+        tokenLiquidityThreshold = value;
+
+        emit  UpdateLiquidityThreshold(oldThreshold, tokenLiquidityThreshold);
+    }
+
+    /**
+     * @dev Attributes a given address to the Eternal Fund variable in this contract. (Owner and Fund only)
      * @param _fund The specified address of the designated fund
      */
     function designateFund(address _fund) external override onlyOwnerAndFund() {

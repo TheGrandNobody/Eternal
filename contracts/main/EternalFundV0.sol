@@ -10,23 +10,15 @@ import "../inheritances/OwnableEnhanced.sol";
 
 contract EternalFundV0 is IEternalFundV0, OwnableEnhanced {
 
-    // PangolinDex Router interface to swap tokens for AVAX and add liquidity
-    IPangolinRouter private pangolinRouter;
-    // Staking rewards interface for staking LP tokens and claiming liquidity rewards
-    IStakingRewards private stakingRewards;
-    // The address of the ETRNL/AVAX pair
-    address private pangolinPair;
-    // The pangolin reward token
-    IERC20 private png;
-    // The pangolin liquidity token
-    IERC20 private pgl;
     // The ETRNL token
     IEternalToken private eternal;
+    // PangolinDex Router interface to swap tokens for AVAX and add liquidity
+    IPangolinRouter private pangolinRouter;
+    // The address of the ETRNL/AVAX pair
+    address private pangolinPair;
 
     // Keeps track of accumulated, locked AVAX as a result of automatic liquidity provision
     uint256 private lockedAVAXBalance;
-    // Keeps track of staked lp tokens 
-    uint256 private totalStakedPGL;
 
     // Determines whether an auto-liquidity provision process is undergoing
     bool private undergoingSwap;
@@ -38,12 +30,6 @@ contract EternalFundV0 is IEternalFundV0, OwnableEnhanced {
         pangolinRouter = IPangolinRouter(0xE54Ca86531e17Ef3616d22Ca28b0D458b6C89106);
         // Create pair address
         pangolinPair = IPangolinFactory(pangolinRouter.factory()).createPair(address(this), pangolinRouter.WAVAX());
-        // Initialize Pangolin Staking Rewards
-        stakingRewards = IStakingRewards(0x701e03fAD691799a8905043C0d18d2213BbCf2c7);
-        // Inititalize Pangolin lp token
-        pgl = IERC20(pangolinPair);
-        // Initialize Pangolin reward token
-        png = IERC20(0x60781C2586D68229fde47564546784ab3fACA982);
         // Initialize the Eternal Token
         eternal = IEternalToken(_eternal);
     }
@@ -122,10 +108,6 @@ contract EternalFundV0 is IEternalFundV0, OwnableEnhanced {
         lockedAVAXBalance += address(this).balance;
 
         emit AutomaticLiquidityProvision(amountETRNL, contractBalance, amountAVAX);
-
-        // Stake the LP tokens received
-        uint256 amountPGL = pgl.balanceOf(address(this));
-        stake(amountPGL);
     }
 
     /**
@@ -144,6 +126,10 @@ contract EternalFundV0 is IEternalFundV0, OwnableEnhanced {
         emit LockedAVAXTransferred(amount, recipient);
     }
 
+    function withdrawLiquidityTokens(address recipient) external override onlyFund() {
+        require(lockedAVAXBalance > 0, " Locked AVAX balance is 0");
+    }
+
     /**
      * @dev Determines whether the contract should automatically provide liquidity from part of the transaction fees. (Owner and Fund only)
      * @param value True if automatic liquidity provision is desired. False otherwise.
@@ -151,64 +137,6 @@ contract EternalFundV0 is IEternalFundV0, OwnableEnhanced {
     function setAutoLiquidityProvision(bool value) external override onlyOwnerAndFund() {
         autoLiquidityProvision = value;
 
-        emit AutoLiquidityProvisionUpdated(value);
-    }
-
-/////–––««« Staking functions »»»––––\\\\\
-
-    /**
-     * @dev Stakes a given amount of PGL 
-     */
-    function stake(uint256 amount) public override onlyFund() {
-        pgl.approve(address(stakingRewards), amount);
-        stakingRewards.stake(amount);
-        totalStakedPGL += amount;
-    }
-
-    /**
-     * @dev Claims the PNG earned as a reward for staking lp tokens 
-     */
-    function claimReward() external override onlyFund() {
-        uint256 pngBefore = png.balanceOf(address(this));
-        stakingRewards.getReward();
-        uint256 pngAfter = png.balanceOf(address(this));
-
-        emit LPRewardsClaimed(pngAfter - pngBefore);
-    }
-
-    /**
-     * @dev Transfers a given amount of PNG earned as lp-staking reward to a given address
-     * @param amount The specified amount of PNG to be sent
-     * @param recipient The specified address to send the PNG to
-     *
-     * Requirements
-     *
-     * - Amount cannot exceed the contract's total PNG balance
-     */
-    function withdrawLPReward(uint256 amount, address recipient) external override onlyFund() {
-        uint256 pngBalance = png.balanceOf(address(this));
-        require(amount <= pngBalance, "Amount exceeds PNG balance");
-
-        png.transfer(recipient, amount);
-
-        emit LPRewardsTransferred(amount, recipient);
-    }
-
-    /**
-     * @dev Unstakes and transfers a given amount of staked PGL to a given address
-     * @param amount The amount of PGL to be unstaked and withdrawn
-     * @param recipient The destination to send the PGL to
-     *
-     * Requirements:
-     *
-     * - Amount cannot exceed the contract's total staked PGL balance
-     */
-    function withdrawStakedLP(uint256 amount, address recipient) external override onlyFund() {
-        require(amount <= totalStakedPGL, "Amount exceeds staked balance");
-
-        stakingRewards.withdraw(amount);
-        totalStakedPGL -= amount;
-
-        emit LPTokensUnstakedAndTransferred(amount, recipient);
+        emit AutomaticLiquidityProvisionUpdated(value);
     }
 }
