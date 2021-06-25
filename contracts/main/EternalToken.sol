@@ -430,7 +430,7 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
      * Requirements:
      * – Account must not already be excluded from rewards.
      */
-    function excludeFromReward(address account) public onlyOwnerAndFund() {
+    function excludeFromReward(address account) public onlyAdminAndFund() {
         require(!isExcludedFromRewards[account], "Account is already excluded");
         if(reflectedBalances[account] > 0) {
             // Compute the true token balance from non-empty reflected balances and update it
@@ -448,7 +448,7 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
      * Requirements:
      * – Account must not already be accruing rewards.
      */
-    function includeInReward(address account) external onlyOwnerAndFund() {
+    function includeInReward(address account) external onlyAdminAndFund() {
         require(isExcludedFromRewards[account], "Account is already included");
         for (uint i = 0; i < excludedAddresses.length; i++) {
             if (excludedAddresses[i] == account) {
@@ -474,7 +474,7 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
      * - Rate value must be positive
      * - The sum of all rates cannot exceed 25 percent
      */
-    function setRate(Rate rate, uint8 newRate) external override onlyOwnerAndFund() {
+    function setRate(Rate rate, uint8 newRate) external override onlyAdminAndFund() {
         require((uint(rate) >= 0 && uint(rate) <= 3), "Invalid rate type");
         require(newRate >= 0, "The new rate must be positive");
 
@@ -516,7 +516,7 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
      * @dev Attributes a given address to the Eternal Fund variable in this contract. (Owner and Fund only)
      * @param _fund The specified address of the designated fund
      */
-    function designateFund(address _fund) external override onlyOwnerAndFund() {
+    function designateFund(address _fund) external override onlyAdminAndFund() {
         isExcludedFromFees[fund()] = false;
         eternalFund = IEternalFundV0(_fund);
         isExcludedFromFees[_fund] = true;

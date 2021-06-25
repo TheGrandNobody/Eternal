@@ -113,7 +113,7 @@ contract EternalFundV0 is IEternalFundV0, OwnableEnhanced {
      * @dev Transfers locked AVAX that accumulates in the contract over time as a result of dust left over from automatic liquidity provision. (Owner and Fund only)
      * @param recipient The address to which the AVAX is to be sent
      */
-    function withdrawLockedAVAX(address payable recipient) external override onlyFund() {
+    function withdrawLockedAVAX(address payable recipient) external override onlyAdminAndFund() {
         require(recipient != address(0), "Recipient is the zero address");
         require(lockedAVAXBalance > 0, " Locked AVAX balance is 0");
 
@@ -129,7 +129,7 @@ contract EternalFundV0 is IEternalFundV0, OwnableEnhanced {
      * @dev Determines whether the contract should automatically provide liquidity from part of the transaction fees. (Owner and Fund only)
      * @param value True if automatic liquidity provision is desired. False otherwise.
      */
-    function setAutoLiquidityProvision(bool value) external override onlyOwnerAndFund() {
+    function setAutoLiquidityProvision(bool value) external override onlyAdminAndFund() {
         autoLiquidityProvision = value;
 
         emit AutomaticLiquidityProvisionUpdated(value);
