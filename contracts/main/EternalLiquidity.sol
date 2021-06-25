@@ -40,7 +40,7 @@ contract EternalLiquidity is IEternalLiquidity, OwnableEnhanced {
 
 /////–––««« Modifiers »»»––––\\\\\
     /**
-     * Ensures the contract doesn't swap when it's already swapping (prevents it from getting caught in a circular liquidity event)
+     * Ensures the contract doesn't swap when it's already swapping (prevents it from getting caught in a circular liquidity event).
      */
     modifier haltsLiquidityProvision() {
         undergoingSwap = true;
@@ -51,7 +51,7 @@ contract EternalLiquidity is IEternalLiquidity, OwnableEnhanced {
 /////–––««« Variable state-inspection functions »»»––––\\\\\
 
     /**
-     * @dev View the address of the ETRNL/AVAX pair on Pangolin
+     * @dev View the address of the ETRNL/AVAX pair on Pangolin.
      */
     function viewPair() external view override returns(address) {
         return pangolinPair;
@@ -115,7 +115,7 @@ contract EternalLiquidity is IEternalLiquidity, OwnableEnhanced {
     }
 
     /**
-     * @dev Transfers locked AVAX that accumulates in the contract over time as a result of dust left over from automatic liquidity provision. (Owner and Fund only)
+     * @dev Transfers locked AVAX that accumulates in the contract over time as a result of dust left over from automatic liquidity provision. (Admin and Fund only)
      * @param recipient The address to which the AVAX is to be sent
      */
     function withdrawLockedAVAX(address payable recipient) external override onlyAdminAndFund() {
@@ -131,7 +131,7 @@ contract EternalLiquidity is IEternalLiquidity, OwnableEnhanced {
     }
 
     /**
-     * @dev Determines whether the contract should automatically provide liquidity from part of the transaction fees. (Owner and Fund only)
+     * @dev Determines whether the contract should automatically provide liquidity from part of the transaction fees. (Admin and Fund only)
      * @param value True if automatic liquidity provision is desired. False otherwise.
      */
     function setAutoLiquidityProvision(bool value) external override onlyAdminAndFund() {
