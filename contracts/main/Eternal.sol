@@ -11,9 +11,9 @@ import "@openzeppelin/contracts/utils/Context.sol";
  */
 contract Eternal is Context {
 
-    constructor (address eternalToken) {
+    constructor (address _eternal) {
         // Initialize the ETRNL interface
-        eternal = IEternalToken(eternalToken);
+        eternal = IEternalToken(_eternal);
 
         // The gage with ID 0 must have status closed for this contract to function
         Gage storage gage =  gages[0];
