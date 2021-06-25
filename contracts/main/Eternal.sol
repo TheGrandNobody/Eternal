@@ -130,37 +130,16 @@ contract Eternal is Context {
     }
 
     /**
-     * @dev Claims the reward for a given user of a given gage
-     * @param id The id of the specified gage contract
-     * @param user The address of the specified winner
-     * @return True if the procedure goes to completion
-     */
-    function claimRewardFor(uint256 id, address user) external returns (bool) {
-        _claimReward(id, user);
-        return true;
-    }
-
-    /**
-     * @dev Claims the reward of a given gage
-     * @param id The id of the specified gage contract
-     * @return True if the procedure goes to completion
-     */
-    function claimRewardSelf(uint256 id) external returns (bool) {
-        _claimReward(id, _msgSender());
-        return true;
-    }
-
-    /**
      * @dev Claims the reward of a given user of a given gage
      * @param id The id of the specified gage contract
      * @param user The address of the specified winner
-     * 
+     *
      * Requirements:
      *
      * - Selected gage status cannot be 'Open' or 'Active'
      * - User must actually be the winner of this gage
      */
-    function _claimReward(uint256 id, address user) private {
+    function claimReward(uint256 id, address user) external {
         Gage storage gage = gages[id];
         require(gage.status == Status.Closed, "Gage status is not 'Closed'");
         require(inGage[user][id], "User is not the winner");
