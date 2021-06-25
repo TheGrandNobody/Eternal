@@ -15,7 +15,6 @@ contract FundLock is OwnableEnhanced {
     // Keeps track of how much time has elapsed before the funds
     uint256 timeOfRelease;
 
-
     constructor (address _eternal) {
         eternal = IEternalToken(_eternal);
         timeOfRelease = block.timestamp + 6574500;
