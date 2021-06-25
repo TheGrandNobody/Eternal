@@ -129,7 +129,7 @@ abstract contract OwnableEnhanced is Context {
     }
 
     /**
-     * @dev Admin gives up admin rights for a given amount of time
+     * @dev Admin gives up admin rights for a given amount of time.
      * @param time The amount of time (in seconds) that the admin rights are given up for 
      */
     function lockAdminRights(uint256 time) public onlyAdmin {
@@ -140,7 +140,7 @@ abstract contract OwnableEnhanced is Context {
     }
 
     /**
-     * @dev Used to regain admin rights of a previously locked contract
+     * @dev Used to regain admin rights of a previously locked contract.
      *
      * Requirements:
      *
