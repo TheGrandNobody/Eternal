@@ -5,7 +5,6 @@ import "@pangolindex/exchange-contracts/contracts/pangolin-core/interfaces/IPang
 import "@pangolindex/exchange-contracts/contracts/pangolin-periphery/interfaces/IPangolinRouter.sol";
 import "../interfaces/IEternalToken.sol";
 import "../interfaces/IEternalFundV0.sol";
-import "../interfaces/IStakingRewards.sol";
 import "../inheritances/OwnableEnhanced.sol";
 
 contract EternalFundV0 is IEternalFundV0, OwnableEnhanced {
@@ -124,10 +123,6 @@ contract EternalFundV0 is IEternalFundV0, OwnableEnhanced {
         recipient.transfer(amount);
 
         emit LockedAVAXTransferred(amount, recipient);
-    }
-
-    function withdrawLiquidityTokens(address recipient) external override onlyFund() {
-        require(lockedAVAXBalance > 0, " Locked AVAX balance is 0");
     }
 
     /**
