@@ -63,8 +63,8 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
         reflectedBalances[_msgSender()] = totalReflectedSupply;
 
         // Exclude the owner from rewards and fees
-        excludeFromReward(owner());
-        isExcludedFromFees[owner()] = true;
+        excludeFromReward(admin());
+        isExcludedFromFees[admin()] = true;
 
         // Exclude this contract from rewards and fees
         excludeFromReward(address(this));
@@ -424,7 +424,7 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
 /////–––««« Owner/Fund-only functions »»»––––\\\\\
 
     /**
-     * @dev Excludes a given wallet or contract's address from accruing rewards. (Owner only)
+     * @dev Excludes a given wallet or contract's address from accruing rewards. (Admin and Fund only)
      * @param account The wallet or contract's address
      *
      * Requirements:
@@ -442,7 +442,7 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
     }
 
     /**
-     * @dev Allows a given wallet or contract's address to accrue rewards. (Owner only)
+     * @dev Allows a given wallet or contract's address to accrue rewards. (Admin and Fund only)
      * @param account The wallet or contract's address
      *
      * Requirements:
@@ -464,7 +464,7 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
     }
 
     /**
-     * @dev Sets the value of a given rate to a given rate type (Owner and Fund only)
+     * @dev Sets the value of a given rate to a given rate type (Admin and Fund only)
      * @param rate The type of the specified rate
      * @param newRate The specified new rate value
      *
@@ -513,7 +513,7 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
     }
 
     /**
-     * @dev Attributes a given address to the Eternal Fund variable in this contract. (Owner and Fund only)
+     * @dev Attributes a given address to the Eternal Fund variable in this contract. (Admin and Fund only)
      * @param _fund The specified address of the designated fund
      */
     function designateFund(address _fund) external override onlyAdminAndFund() {
