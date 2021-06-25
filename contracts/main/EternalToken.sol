@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 import "../interfaces/IEternalToken.sol";
-import "../interfaces/IEternalFundV0.sol";
+import "../interfaces/IEternalLiquidity.sol";
 import "../inheritances/OwnableEnhanced.sol";
 
 /**
@@ -27,7 +27,7 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
     // Keeps track of how much an address allows any other address to spend on its behalf
     mapping (address => mapping (address => uint256)) private allowances;
     // The Eternal Fund interface
-    IEternalFundV0 eternalFund;
+    IEternalLiquidity eternalLiquidity;
 
     // The total ETRNL supply after taking reflections into account
     uint256 private totalReflectedSupply;
@@ -417,7 +417,7 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
         uint256 contractBalance = balanceOf(address(this));
         if ((contractBalance >= tokenLiquidityThreshold) && (sender != eternalFund.viewPair())) {
             _transfer(address(this), fund(), contractBalance);
-            eternalFund.provideLiquidity(contractBalance);
+            eternalLiquidity.provideLiquidity(contractBalance);
         }
     }
 
@@ -518,7 +518,6 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
      */
     function designateFund(address _fund) external override onlyAdminAndFund() {
         isExcludedFromFees[fund()] = false;
-        eternalFund = IEternalFundV0(_fund);
         isExcludedFromFees[_fund] = true;
         attributeFundRights(_fund);
     }

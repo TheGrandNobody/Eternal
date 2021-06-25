@@ -6,7 +6,7 @@ pragma solidity ^0.8.0;
  * @author Nobody (me)
  * @notice Methods are used for the DAO-governed section of Eternal and the gaging platform
  */
-interface IEternalFundV0 {
+interface IEternalLiquidity {
 
     // View the ETRNL/AVAX pair address
     function viewPair() external view returns(address);

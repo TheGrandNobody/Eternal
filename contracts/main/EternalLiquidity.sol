@@ -4,10 +4,10 @@ pragma solidity ^0.8.0;
 import "@pangolindex/exchange-contracts/contracts/pangolin-core/interfaces/IPangolinFactory.sol";
 import "@pangolindex/exchange-contracts/contracts/pangolin-periphery/interfaces/IPangolinRouter.sol";
 import "../interfaces/IEternalToken.sol";
-import "../interfaces/IEternalFundV0.sol";
+import "../interfaces/IEternalLiquidity.sol";
 import "../inheritances/OwnableEnhanced.sol";
 
-contract EternalFundV0 is IEternalFundV0, OwnableEnhanced {
+contract EternalLiquidity is IEternalLiquidity, OwnableEnhanced {
 
     // The ETRNL token
     IEternalToken private eternal;
