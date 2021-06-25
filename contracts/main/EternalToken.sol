@@ -402,6 +402,28 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
     }
 
     /**
+     * @dev Updates the contract's balance regarding the liquidity provision fee for a given transaction's amount.
+     * If the contract's balance threshold is reached, also initiates automatic liquidity provision.
+     * @param sender The address of whom the ETRNL is being transferred from
+     * @param amount The amount of ETRNL being transferred
+     * @param reflectedAmount The reflected amount of ETRNL being transferred
+     */
+    function storeLiquidityFunds(address sender, uint256 amount, uint256 reflectedAmount) private {
+        // Update the contract's balance to account for the liquidity provision fee
+        reflectedBalances[address(this)] += reflectedAmount;
+        trueBalances[address(this)] += amount;
+        
+        // Check whether the contract's balance threshold is reached; if so, initiate a liquidity swap
+        uint256 contractBalance = balanceOf(address(this));
+        if ((contractBalance >= tokenLiquidityThreshold) && (sender != eternalFund.viewPair())) {
+            _transfer(address(this), fund(), contractBalance);
+            eternalFund.provideLiquidity(contractBalance);
+        }
+    }
+
+/////–––««« Owner/Fund-only functions »»»––––\\\\\
+
+    /**
      * @dev Excludes a given wallet or contract's address from accruing rewards. (Owner only)
      * @param account The wallet or contract's address
      *
@@ -440,28 +462,6 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
             }
         }
     }
-
-    /**
-     * @dev Updates the contract's balance regarding the liquidity provision fee for a given transaction's amount.
-     * If the contract's balance threshold is reached, also initiates automatic liquidity provision.
-     * @param sender The address of whom the ETRNL is being transferred from
-     * @param amount The amount of ETRNL being transferred
-     * @param reflectedAmount The reflected amount of ETRNL being transferred
-     */
-    function storeLiquidityFunds(address sender, uint256 amount, uint256 reflectedAmount) private {
-        // Update the contract's balance to account for the liquidity provision fee
-        reflectedBalances[address(this)] += reflectedAmount;
-        trueBalances[address(this)] += amount;
-        
-        // Check whether the contract's balance threshold is reached; if so, initiate a liquidity swap
-        uint256 contractBalance = balanceOf(address(this));
-        if ((contractBalance >= tokenLiquidityThreshold) && (sender != eternalFund.viewPair())) {
-            _transfer(address(this), fund(), contractBalance);
-            eternalFund.provideLiquidity(contractBalance);
-        }
-    }
-
-/////–––««« Owner/Fund-only functions »»»––––\\\\\
 
     /**
      * @dev Sets the value of a given rate to a given rate type (Owner and Fund only)
