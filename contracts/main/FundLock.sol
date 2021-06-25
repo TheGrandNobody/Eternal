@@ -22,7 +22,7 @@ contract FundLock is OwnableEnhanced {
     }
 
     /**
-     * @dev Withraws locked funds to the Eternal Fund if 2.5 months have elapsed since deployment
+     * @dev Withraws locked funds to the Eternal Fund if 2.5 months have elapsed since deployment.
      */
     function withdrawFunds() external onlyAdminAndFund() {
         require(block.timestamp <= timeOfRelease, "Funds are still locked");

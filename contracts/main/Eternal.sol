@@ -30,7 +30,7 @@ contract Eternal is Context {
     // Defines a Gage Contract
     struct Gage {
         uint256 id;            // The id of the gage
-        uint64 amount;         // The entry deposit of ETRNL needed to participate in this gage
+        uint256 amount;         // The entry deposit of ETRNL needed to participate in this gage
         Status status;         // The status of the gage
         uint8 users;           // The current number of users participating in this gage
         uint8 risk;            // The percentage that is being risked in this gage
@@ -47,26 +47,26 @@ contract Eternal is Context {
     mapping (address => mapping(uint256 => bool)) inGage;
     // Keeps track of the latest gage contract id with a certain entry deposit and risk
     // Using entry deposit 0 and risk 0 gives the absolute latest gage id
-    mapping (uint64 => mapping(uint8 => uint256)) lastGage;
+    mapping (uint256 => mapping(uint256 => uint256)) lastGage;
 
     // Signals the addition of a user to a specific gage (whilst gage is still 'Open')
     event UserAdded(uint256 id, address indexed user);
     // Signals the removal of a user from a specific gage (whilst gage is still 'Open')
     event UserRemoved(uint256 id, address indexed user);
     // Signals the transition from 'Open' to 'Active for a given gage
-    event GageInitiated(uint256 id, uint64 amount, uint8 risk);
+    event GageInitiated(uint256 id, uint256 amount, uint256 risk);
     // Signals the transition from 'Active' to 'Closed' for a given gage
-    event GageClosed(uint256 id, uint64 amount, uint8 risk);
+    event GageClosed(uint256 id, uint256 amount, uint256 risk);
 
 /////–––««« Gage-logic functions »»»––––\\\\\
 
     /**
-     * @dev Adds a given user to an available gage contract with a given entry deposit, risk percentage and capacity
+     * @dev Adds a given user to an available gage contract with a given entry deposit, risk percentage and capacity.
      * @param user The address of the specified user
      * @param amount The amount of ETRNL the user will initially lock in the gage
      * @param risk The percentage of the initial amount the user is willing to risk in the gage
      */
-    function assignUserToGage(address user, uint64 amount, uint8 risk) external {
+    function assignUserToGage(address user, uint256 amount, uint8 risk) external {
         // Load the last gage with said amount and risk
         uint256 id = lastGage[amount][risk];
         Gage storage gage = gages[id];
@@ -99,7 +99,7 @@ contract Eternal is Context {
     }
 
     /**
-     * @dev Removes a given user from a given gage
+     * @dev Removes a given user from a given gage.
      * @param id The id of the specified gage contract
      * @param user The address of the specified user
      *
@@ -125,10 +125,8 @@ contract Eternal is Context {
             emit GageClosed(id, gage.amount, gage.risk);
         }
 
-        // Calculate the new amount after rewards accrued during the gage
-        uint256 oldRate = reflectionRates[user][id];
-        uint256 currentRate = eternal.getReflectionRate();
-        uint256 amount = gage.amount * (currentRate / oldRate);
+        // Compute any rewards accrued during the gage
+        uint256 amount = computeAccruedRewards(gage.amount, user, id);
         // Users get the entire entry amount back if the gage wasn't active
         // Otherwise the systems substracts the loss incurred from forfeiting
         amount = (gage.status == Status.Open) ? amount : (amount - (gage.amount * gage.risk / 100));
@@ -136,14 +134,14 @@ contract Eternal is Context {
     }
 
     /**
-     * @dev Claims the reward of a given user of a given gage
+     * @dev Claims the reward of a given user of a given gage.
      * @param id The id of the specified gage contract
      * @param user The address of the specified winner
      *
      * Requirements:
      *
      * - Selected gage status cannot be 'Open' or 'Active'
-     * - User must actually be the winner of this gage
+     * - Specified user must actually be the winning address of this gage
      */
     function claimReward(uint256 id, address user) external {
         Gage storage gage = gages[id];
@@ -152,10 +150,8 @@ contract Eternal is Context {
 
         inGage[user][id] = false;
 
-        // Calculate rewards accrued during the gage
-        uint256 oldRate = reflectionRates[user][id];
-        uint256 currentRate = eternal.getReflectionRate();
-        uint256 rewards = gage.amount * (currentRate / oldRate);
+        // Compute any rewards accrued during the gage
+        uint256 rewards = computeAccruedRewards(gage.amount, user, id);
         // Calculate the gage reward and add it to the redistribution reward (total reward)
         uint256 totalReward = rewards + (gage.amount * 9 * gage.risk / 100);
         eternal.transfer(user, totalReward);
@@ -166,7 +162,7 @@ contract Eternal is Context {
 /////–––««« Variable state-inspection functions »»»––––\\\\\
 
     /**
-     * @dev View the number of stakeholders in a given gage that is still forming
+     * @dev View the number of stakeholders in a given gage that is still forming.
      * @param id The id of the specified gage contract
      * @return The number of stakeholders in the selected gage
      *
@@ -177,6 +173,7 @@ contract Eternal is Context {
     function viewGageUserCount(uint256 id) external view returns (uint8) {
         Gage storage gage = gages[id];
         require(gage.status != Status.Active, "Gage can't be active");
+
         return gage.users;
     }
 
@@ -187,7 +184,22 @@ contract Eternal is Context {
      * @param absolute True if we want to view the absolute latest gage. False otherwise.
      * @return The latest gage id with specified entry deposit and risk. Otherwise the last created gage.
      */
-    function viewLatestGage(uint64 amount, uint8 risk, bool absolute) external view returns (uint256) {
+    function viewLatestGage(uint256 amount, uint256 risk, bool absolute) external view returns (uint256) {
         return absolute ? lastGage[0][0] : lastGage[amount][risk];
+    }
+
+/////–––««« Utility functions »»»––––\\\\\
+
+    /**
+     * @dev Calculates any redistribution rewards accrued during a given gage a given user participated in.
+     * @param amount The specified entry deposit
+     * @param user The address of the user who we calculate rewards for
+     * @param id The id of the specified gage
+     */
+    function computeAccruedRewards(uint256 amount, address user, uint256 id) private view returns (uint256) {
+        uint256 oldRate = reflectionRates[user][id];
+        uint256 currentRate = eternal.getReflectionRate();
+
+        return (amount * (currentRate / oldRate));
     }
 }

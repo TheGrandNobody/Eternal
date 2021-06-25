@@ -73,6 +73,7 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
         // Exclude the burn address from rewards
         isExcludedFromRewards[address(0)];
 
+        // Set initial rates for fees
         fundingRate = 1;
         burnRate = 1;
         redistributionRate = 5;
@@ -90,7 +91,7 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
     }
 
     /**
-     * @dev View the token ticker
+     * @dev View the token ticker.
      * @return The token ticker
      */
     function symbol() external pure override returns (string memory) {
@@ -98,7 +99,7 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
     }
 
     /**
-     * @dev View the maximum number of decimals for the Eternal token
+     * @dev View the maximum number of decimals for the Eternal token.
      * @return The number of decimals
      */
     function decimals() external pure override returns (uint8) {
@@ -140,7 +141,7 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
      * @param account The wallet or contract's address
      * @return Whether the account is excluded from transaction fees.
      */
-    function isExcludedFromFee(address account) external view returns (bool) {
+    function isExcludedFromFee(address account) external view override returns (bool) {
         return isExcludedFromFees[account];
     }
 
@@ -149,12 +150,12 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
      * @param account The wallet or contract's address
      * @return Whether the account is excluded from rewards.
      */
-    function isExcludedFromReward(address account) external view returns (bool) {
+    function isExcludedFromReward(address account) external view override returns (bool) {
         return isExcludedFromRewards[account];
     }
 
     /**
-     * @dev Computes the current rate used to inter-convert from the mathematically reflected space to the "true" or total space
+     * @dev Computes the current rate used to inter-convert from the mathematically reflected space to the "true" or total space.
      * @return The ratio of net reflected ETRNL to net total ETRNL
      */
     function getReflectionRate() public view override returns (uint256) {
@@ -172,6 +173,7 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
      */
     function increaseAllowance(address spender, uint256 addedValue) external virtual returns (bool) {
         _approve(_msgSender(), spender, (allowances[_msgSender()][spender] + addedValue));
+
         return true;
     }
     
@@ -183,6 +185,7 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
      */
     function decreaseAllowance(address spender, uint256 subtractedValue) external virtual returns (bool) {
         _approve(_msgSender(), spender, (allowances[_msgSender()][spender] - subtractedValue));
+
         return true;
     }
 
@@ -194,6 +197,7 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
      */
     function transfer(address recipient, uint256 amount) external override returns (bool){
         _transfer(_msgSender(), recipient, uint64(amount));
+
         return true;
     }
 
@@ -205,6 +209,7 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
      */
     function approve(address spender, uint256 amount) external override returns (bool){
         _approve(_msgSender(), spender, amount);
+
         return true;
     }
 
@@ -320,6 +325,7 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
         trueBalances[sender] = isExcludedFromRewards[sender] ? (trueBalances[sender] - amount) : trueBalances[sender];
 
         _burn(sender, amount, reflectedAmount);
+
         return true;
     }
     
@@ -350,11 +356,12 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
      */
     function convertFromReflectedToTrueAmount(uint256 reflectedAmount) private view returns(uint256) {
         uint256 currentRate =  getReflectionRate();
+
         return reflectedAmount / currentRate;
     }
 
     /**
-     * @dev Compute the reflected and net reflected transferred amounts and the net transferred amount from a given amount of ETRNL
+     * @dev Compute the reflected and net reflected transferred amounts and the net transferred amount from a given amount of ETRNL.
      * @param trueAmount The specified amount of ETRNL
      * @return The reflected amount, the net reflected transfer amount, the actual net transfer amount, and the total reflected fees
      */
@@ -376,7 +383,7 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
     }
 
     /**
-     * @dev Computes the net reflected and total token supplies (adjusted for non-reward-accruing accounts)
+     * @dev Computes the net reflected and total token supplies (adjusted for non-reward-accruing accounts).
      * @return The adjusted reflected supply and adjusted total token supply
      */
     function getNetSupplies() private view returns(uint256, uint256) {
@@ -463,7 +470,7 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
     }
 
     /**
-     * @dev Sets the value of a given rate to a given rate type (Admin and Fund only)
+     * @dev Sets the value of a given rate to a given rate type. (Admin and Fund only)
      * @param rate The type of the specified rate
      * @param newRate The specified new rate value
      *
@@ -501,14 +508,14 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
     }
 
     /**
-     * @dev Sets the threshold of ETRNL at which the contract provides liquidity to a given value
+     * @dev Sets the threshold of ETRNL at which the contract provides liquidity to a given value.
      * @param value The new token liquidity threshold
      */
     function setLiquidityThreshold(uint64 value) external override onlyAdminAndFund() {
-        uint64 oldThreshold = tokenLiquidityThreshold;
+        uint256 oldThreshold = tokenLiquidityThreshold;
         tokenLiquidityThreshold = value;
 
-        emit  UpdateLiquidityThreshold(oldThreshold, tokenLiquidityThreshold);
+        emit UpdateLiquidityThreshold(oldThreshold, tokenLiquidityThreshold);
     }
 
     /**

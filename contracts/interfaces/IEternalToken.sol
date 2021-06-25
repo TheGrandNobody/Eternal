@@ -35,5 +35,5 @@ interface IEternalToken is IERC20, IERC20Metadata {
     // Signals a change of value of a given rate in the Eternal Token contract
     event UpdateRate(uint256 oldRate, uint256 newRate, Rate rate);
     // Signals a change of value of the token liquidity threshold
-    event UpdateLiquidityThreshold(uint64 oldThreshold, uint64 newThreshold);
+    event UpdateLiquidityThreshold(uint256 oldThreshold, uint256 newThreshold);
 }
