@@ -9,15 +9,18 @@ import "../interfaces/IEternalToken.sol";
  * @notice The FundLock contract holds the funds earned from the (initially) 1% fee until the Eternal Fund contract is released (2.5 months)
  */
 contract FundLock is OwnableEnhanced {
+
+    uint256 constant TWOPOINTFIVEMONTHS = 6574500;
+
     // The Eternal Token interface
-    IEternalToken eternal;
+    IEternalToken private eternal;
 
     // Keeps track of how much time has elapsed before the funds
-    uint256 timeOfRelease;
+    uint256 public timeOfRelease;
 
     constructor (address _eternal) {
         eternal = IEternalToken(_eternal);
-        timeOfRelease = block.timestamp + 6574500;
+        timeOfRelease = block.timestamp + TWOPOINTFIVEMONTHS;
     }
 
     /**

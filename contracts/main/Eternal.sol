@@ -77,7 +77,7 @@ contract Eternal is Context {
             lastGage[0][0] += 1;
             id = lastGage[0][0];
             lastGage[amount][risk] = id;
-            // Save the gage parameters
+            // Save the new gage parameters
             gage = gages[id];
             gage.amount = amount * (10**9);
             gage.risk = risk;
