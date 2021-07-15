@@ -14,13 +14,13 @@ interface IEternalLiquidity {
     function setAutoLiquidityProvision(bool value) external;
     // Provides liquidity for the ETRNL/AVAX pair for the ETRNL token contract
     function provideLiquidity(uint256 contractBalance) external;
-    // Allows the withdrawal of AVAX locked in the contract over time
-    function withdrawLockedAVAX(address payable recipient) external;
+    // Allows the withdrawal of AVAX in the contract
+    function withdrawAVAX(address payable recipient, uint256 amount) external;
 
     // Signals a disabling/enabling of the automatic liquidity provision
     event AutomaticLiquidityProvisionUpdated(bool value);
     // Signals that liquidity has been added to the ETRNL/WAVAX pair 
     event AutomaticLiquidityProvision(uint256 amountETRNL, uint256 totalSwappedETRNL, uint256 amountAVAX);
     // Signals that the locked AVAX balance has been cleared to a given address
-    event LockedAVAXTransferred(uint256 amount, address recipient);
+    event AVAXTransferred(uint256 amount, address recipient);
 }

@@ -80,6 +80,7 @@ contract EternalLiquidity is IEternalLiquidity, OwnableEnhanced {
      * 
      * - Automatic liquidity provision must be enabled
      * - There cannot already be a liquidity swap in progress
+     * - Caller can only be the ETRNL contract
      */
     function provideLiquidity(uint256 contractBalance) external override {
         require(_msgSender() == address(eternal), "Only callable by ETRNL contract");
@@ -115,19 +116,16 @@ contract EternalLiquidity is IEternalLiquidity, OwnableEnhanced {
     }
 
     /**
-     * @dev Transfers locked AVAX that accumulates in the contract over time as a result of dust left over from automatic liquidity provision. (Admin and Fund only)
+     * @dev Transfers a given amount of AVAX from the contract to an address. (Admin and Fund only)
      * @param recipient The address to which the AVAX is to be sent
+     * @param amount The specified amount of AVAX to transfer
      */
-    function withdrawLockedAVAX(address payable recipient) external override onlyAdminAndFund() {
+    function withdrawAVAX(address payable recipient, uint256 amount) external override onlyAdminAndFund() {
         require(recipient != address(0), "Recipient is the zero address");
-        require(lockedAVAXBalance > 0, " Locked AVAX balance is 0");
 
-        // Intermediate variable to prevent re-entrancy attacks
-        uint256 amount = lockedAVAXBalance;
-        lockedAVAXBalance = 0;
         recipient.transfer(amount);
 
-        emit LockedAVAXTransferred(amount, recipient);
+        emit AVAXTransferred(amount, recipient);
     }
 
     /**
