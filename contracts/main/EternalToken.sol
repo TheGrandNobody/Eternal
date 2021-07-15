@@ -36,14 +36,15 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
     // The true total ETRNL supply 
     uint64 private totalTokenSupply;
 
+    // All fees accept up to three decimal points
     // The percentage of the fee, taken at each transaction, that is stored in the EternalFund
-    uint8 private fundingRate;
+    uint16 private fundingRate;
     // The percentage of the fee, taken at each transaction, that is burned
-    uint8 private burnRate;
+    uint16 private burnRate;
     // The percentage of the fee, taken at each transaction, that is redistributed to holders
-    uint8 private redistributionRate;
+    uint16 private redistributionRate;
     // The percentage of the fee taken at each transaction, that is used to auto-lock liquidity
-    uint8 private liquidityProvisionRate;
+    uint16 private liquidityProvisionRate;
 
     // Allows contract to receive AVAX tokens from Pangolin
     receive() external payable {}
@@ -75,10 +76,10 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
         isExcludedFromRewards[address(0)];
 
         // Set initial rates for fees
-        fundingRate = 1;
-        burnRate = 1;
-        redistributionRate = 5;
-        liquidityProvisionRate = 3;
+        fundingRate = 500;
+        burnRate = 500;
+        redistributionRate = 5000;
+        liquidityProvisionRate = 1500;
     }
 
 /////–––««« Variable state-inspection functions »»»––––\\\\\
@@ -291,13 +292,13 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
         // If the sender or recipient are excluded from fees, we ignore the fee altogether
         if (takeFee) {
             // Perform a burn based on the burn rate 
-            _burn(address(this), uint64(amount) * burnRate / 100, reflectedAmount * burnRate / 100);
+            _burn(address(this), uint64(amount) * burnRate / 1000, reflectedAmount * burnRate / 1000);
             // Redistribute based on the redistribution rate 
-            totalReflectedSupply -= reflectedAmount * redistributionRate / 100;
+            totalReflectedSupply -= reflectedAmount * redistributionRate / 1000;
             // Store ETRNL away in the EternalFund based on the funding rate
-            reflectedBalances[fund()] += reflectedAmount * fundingRate / 100;
+            reflectedBalances[fund()] += reflectedAmount * fundingRate / 1000;
             // Provide liqudity to the ETRNL/AVAX pair on Pangolin based on the liquidity provision rate
-            storeLiquidityFunds(sender, amount * liquidityProvisionRate / 100, reflectedAmount * liquidityProvisionRate / 100);
+            storeLiquidityFunds(sender, amount * liquidityProvisionRate / 1000, reflectedAmount * liquidityProvisionRate / 1000);
         }
 
         emit Transfer(sender, recipient, netTransferAmount);
@@ -481,7 +482,7 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
      * - Rate value must be positive
      * - The sum of all rates cannot exceed 25 percent
      */
-    function setRate(Rate rate, uint8 newRate) external override onlyAdminAndFund() {
+    function setRate(Rate rate, uint16 newRate) external override onlyAdminAndFund() {
         require((uint(rate) >= 0 && uint(rate) <= 3), "Invalid rate type");
         require(newRate >= 0, "The new rate must be positive");
 

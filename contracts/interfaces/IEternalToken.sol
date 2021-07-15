@@ -20,7 +20,7 @@ interface IEternalToken is IERC20, IERC20Metadata {
     }
     
     // Sets the value of any given rate
-    function setRate(Rate rate, uint8 newRate) external;
+    function setRate(Rate rate, uint16 newRate) external;
     // Sets the liquidity threshold to a given value
     function setLiquidityThreshold(uint64 value) external;
     // Designates a new Eternal DAO address
