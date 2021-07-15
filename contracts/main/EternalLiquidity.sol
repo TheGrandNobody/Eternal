@@ -121,9 +121,18 @@ contract EternalLiquidity is IEternalLiquidity, OwnableEnhanced {
      * @param amount The specified amount of AVAX to transfer
      */
     function withdrawAVAX(address payable recipient, uint256 amount) external override onlyFund() {
-        require(recipient != address(0), "Recipient is the zero address");
-
         recipient.transfer(amount);
+
+        emit AVAXTransferred(amount, recipient);
+    }
+
+    /**
+     * @dev Transfers a given amount of ETRNL from the contract to an address. (Admin and Fund only)
+     * @param recipient The address to which the ETRNL is to be sent
+     * @param amount The specified amount of ETRNL to transfer
+     */
+    function withdrawETRNL(address recipient, uint256 amount) external override onlyFund() {
+        eternal.transfer(recipient, amount);
 
         emit AVAXTransferred(amount, recipient);
     }
