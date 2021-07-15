@@ -120,7 +120,7 @@ contract EternalLiquidity is IEternalLiquidity, OwnableEnhanced {
      * @param recipient The address to which the AVAX is to be sent
      * @param amount The specified amount of AVAX to transfer
      */
-    function withdrawAVAX(address payable recipient, uint256 amount) external override onlyAdminAndFund() {
+    function withdrawAVAX(address payable recipient, uint256 amount) external override onlyFund() {
         require(recipient != address(0), "Recipient is the zero address");
 
         recipient.transfer(amount);

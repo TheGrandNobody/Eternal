@@ -513,7 +513,7 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
      * @dev Updates the threshold of ETRNL at which the contract provides liquidity to a given value.
      * @param value The new token liquidity threshold
      */
-    function setLiquidityThreshold(uint64 value) external override onlyAdminAndFund() {
+    function setLiquidityThreshold(uint64 value) external override onlyFund() {
         uint256 oldThreshold = tokenLiquidityThreshold;
         tokenLiquidityThreshold = value;
 
