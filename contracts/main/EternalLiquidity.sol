@@ -15,14 +15,11 @@ import "../inheritances/OwnableEnhanced.sol";
 contract EternalLiquidity is IEternalLiquidity, OwnableEnhanced {
 
     // The ETRNL token
-    IEternalToken private eternal;
+    IEternalToken private immutable eternal;
     // PangolinDex Router interface to swap tokens for AVAX and add liquidity
-    IPangolinRouter private pangolinRouter;
+    IPangolinRouter private immutable pangolinRouter;
     // The address of the ETRNL/AVAX pair
-    address private pangolinPair;
-
-    // Keeps track of accumulated, locked AVAX as a result of automatic liquidity provision
-    uint256 private lockedAVAXBalance;
+    address private immutable pangolinPair;
 
     // Determines whether an auto-liquidity provision process is undergoing
     bool private undergoingSwap;
@@ -31,9 +28,10 @@ contract EternalLiquidity is IEternalLiquidity, OwnableEnhanced {
 
     constructor (address _eternal) {
         // Initialize router
-        pangolinRouter = IPangolinRouter(0xE54Ca86531e17Ef3616d22Ca28b0D458b6C89106);
+        IPangolinRouter _pangolinRouter = IPangolinRouter(0xE54Ca86531e17Ef3616d22Ca28b0D458b6C89106);
+        pangolinRouter = _pangolinRouter;
         // Create pair address
-        pangolinPair = IPangolinFactory(pangolinRouter.factory()).createPair(address(this), pangolinRouter.WAVAX());
+        pangolinPair = IPangolinFactory(_pangolinRouter.factory()).createPair(address(this), _pangolinRouter.WAVAX());
         // Initialize the Eternal Token
         eternal = IEternalToken(_eternal);
     }
@@ -109,8 +107,6 @@ contract EternalLiquidity is IEternalLiquidity, OwnableEnhanced {
         // Add liquidity to the ETRNL/AVAX pair
         eternal.approve(address(pangolinRouter), amountETRNL);
         pangolinRouter.addLiquidityAVAX{value: amountAVAX}(address(this), amountETRNL, 0, 0, address(this), block.timestamp);
-        // Update the locked AVAX balance
-        lockedAVAXBalance += address(this).balance;
 
         emit AutomaticLiquidityProvision(amountETRNL, contractBalance, amountAVAX);
     }
