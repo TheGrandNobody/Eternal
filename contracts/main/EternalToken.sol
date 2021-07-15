@@ -27,7 +27,7 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
     // Keeps track of how much an address allows any other address to spend on its behalf
     mapping (address => mapping (address => uint256)) private allowances;
     // The Eternal automatic liquidity provider interface
-    IEternalLiquidity eternalLiquidity;
+    IEternalLiquidity public eternalLiquidity;
 
     // The total ETRNL supply after taking reflections into account
     uint256 private totalReflectedSupply;
