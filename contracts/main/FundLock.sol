@@ -13,10 +13,10 @@ contract FundLock is OwnableEnhanced {
     uint256 constant TWOPOINTFIVEMONTHS = 6574500;
 
     // The Eternal Token interface
-    IEternalToken private eternal;
+    IEternalToken private immutable eternal;
 
     // Keeps track of how much time has elapsed before the funds
-    uint256 public timeOfRelease;
+    uint256 public immutable timeOfRelease;
 
     constructor (address _eternal) {
         eternal = IEternalToken(_eternal);

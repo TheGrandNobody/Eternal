@@ -37,7 +37,7 @@ contract Eternal is Context {
     }
 
     // The ETRNL interface
-    IEternalToken private eternal;
+    IEternalToken private immutable eternal;
 
     // Keeps track of all gage contracts
     mapping (uint256 => Gage) gages;
