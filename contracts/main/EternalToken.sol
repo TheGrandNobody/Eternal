@@ -46,9 +46,6 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
     // The percentage of the fee taken at each transaction, that is used to auto-lock liquidity
     uint16 private liquidityProvisionRate;
 
-    // Allows contract to receive AVAX tokens from Pangolin
-    receive() external payable {}
-
     /**
      * @dev Initialize supplies and routers and create a pair. Mints total supply to the contract deployer. 
      * Exclude some addresses from fees and/or rewards. Sets rates.

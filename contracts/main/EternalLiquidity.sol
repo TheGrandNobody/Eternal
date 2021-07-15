@@ -26,6 +26,9 @@ contract EternalLiquidity is IEternalLiquidity, OwnableEnhanced {
     // Determines whether the contract is tasked with providing liquidity using part of the transaction fees
     bool private autoLiquidityProvision;
 
+    // Allows contract to receive AVAX tokens from Pangolin
+    receive() external payable {}
+
     constructor (address _eternal) {
         // Initialize router
         IPangolinRouter _pangolinRouter = IPangolinRouter(0xE54Ca86531e17Ef3616d22Ca28b0D458b6C89106);
