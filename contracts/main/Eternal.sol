@@ -198,7 +198,7 @@ contract Eternal is Context {
      */
     function computeAccruedRewards(uint256 amount, address user, uint256 id) private view returns (uint256) {
         uint256 oldRate = reflectionRates[user][id];
-        uint256 currentRate = eternal.getReflectionRate();
+        uint256 currentRate = eternal.isExcludedFromReward(user) ? oldRate : eternal.getReflectionRate();
 
         return (amount * (currentRate / oldRate));
     }
