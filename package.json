@@ -23,5 +23,9 @@
     "ethereum-waffle": "^3.4.0",
     "ethers": "^5.3.1",
     "hardhat": "^2.4.1"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^4.2.0",
+    "@pangolindex/exchange-contracts": "^1.0.1"
   }
 }
