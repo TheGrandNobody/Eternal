@@ -30,7 +30,7 @@ contract Eternal is Context {
     // Defines a Gage Contract
     struct Gage {
         uint256 id;            // The id of the gage
-        uint256 amount;         // The entry deposit of ETRNL needed to participate in this gage
+        uint256 amount;        // The entry deposit of ETRNL needed to participate in this gage
         Status status;         // The status of the gage
         uint8 users;           // The current number of users participating in this gage
         uint8 risk;            // The percentage that is being risked in this gage
