@@ -10,21 +10,22 @@ import "../interfaces/IEternalToken.sol";
  */
 contract FundLock is OwnableEnhanced {
 
-    uint256 constant TWOPOINTFIVEMONTHS = 6574500;
-
     // The Eternal Token interface
     IEternalToken private immutable eternal;
 
-    // Keeps track of how much time has elapsed before the funds
+    // Keeps track of the time at which the funds become available
     uint256 public immutable timeOfRelease;
+    // Keeps track of the total amount of time to be waited
+    uint256 public immutable totalWaitingTime;
 
-    constructor (address _eternal) {
+    constructor (address _eternal, uint256 _totalWaitingTime) {
         eternal = IEternalToken(_eternal);
-        timeOfRelease = block.timestamp + TWOPOINTFIVEMONTHS;
+        timeOfRelease = block.timestamp + _totalWaitingTime;
+        totalWaitingTime = _totalWaitingTime;
     }
 
     /**
-     * @dev Withraws locked funds to the Eternal Fund if 2.5 months have elapsed since deployment.
+     * @dev Withraws locked funds to the Eternal Fund if the total waiting time has elapsed since deployment.
      */
     function withdrawFunds() external onlyAdminAndFund() {
         require(block.timestamp <= timeOfRelease, "Funds are still locked");
