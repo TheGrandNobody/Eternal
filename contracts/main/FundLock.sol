@@ -6,7 +6,7 @@ import "../interfaces/IEternalToken.sol";
 /**
  * @title FundLock contract
  * @author Nobody (me)
- * @notice The FundLock contract holds the funds earned from the (initially) 1% fee until the Eternal Fund contract is released (2.5 months)
+ * @notice The FundLock contract holds funds for a given time period
  */
 contract FundLock is OwnableEnhanced {
 
