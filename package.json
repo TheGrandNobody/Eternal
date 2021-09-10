@@ -1,5 +1,5 @@
 {
-  "name": "eternal",
+  "name": "@TheGrandNobody/Eternal",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -21,11 +21,12 @@
     "@nomiclabs/hardhat-waffle": "^2.0.1",
     "chai": "^4.3.4",
     "ethereum-waffle": "^3.4.0",
-    "ethers": "^5.3.1",
-    "hardhat": "^2.4.1"
+    "ethers": "^5.4.4",
+    "hardhat": "^2.6.0"
   },
   "dependencies": {
     "@openzeppelin/contracts": "^4.2.0",
-    "@pangolindex/exchange-contracts": "^1.0.1"
+    "@pangolindex/exchange-contracts": "^1.0.1",
+    "mocha": "^7.2.0"
   }
 }
