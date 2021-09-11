@@ -1,6 +1,5 @@
 pragma solidity ^0.8.0;
 
-import "../inheritances/OwnableEnhanced.sol";
 import "../interfaces/IEternalToken.sol";
 
 /**
@@ -8,7 +7,7 @@ import "../interfaces/IEternalToken.sol";
  * @author Nobody (me)
  * @notice The FundLock contract holds funds for a given time period. This is particularly useful for automated token vesting. 
  */
-contract FundLock is OwnableEnhanced {
+contract FundLock{
 
     // The Eternal Token interface
     IEternalToken private immutable eternal;
