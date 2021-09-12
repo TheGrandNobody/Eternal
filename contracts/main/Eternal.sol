@@ -22,7 +22,7 @@ contract Eternal is Context, IEternal {
 
     // Keeps track of the respective gage tied to any given ID
     mapping (uint256 => Gage) gages;
-    // Keeps track of the reflection rate for a given address and gage to recalculate rewards earned during the gage
+    // Keeps track of the reflection rate for any given address and gage to recalculate rewards earned during the gage
     mapping (address => mapping (uint256 => uint256)) reflectionRates;
 
     // Keeps track of the latest Gage ID
@@ -56,14 +56,15 @@ contract Eternal is Context, IEternal {
      * @param user The address of the specified user
      *
      */
-    function withdraw(uint256 id, address user) external {
+    function withdraw(address user, uint256 id) external override {
         Gage gage = gages[id];
         (address asset, uint256 amount, uint256 risk) = gage.viewUserData(user);
 
         // Compute any rewards accrued during the gage
         uint256 finalAmount = computeAccruedRewards(amount, user, id);
         // Users get the entire entry amount back if the gage wasn't active
-        // Otherwise the systems substracts the loss incurred from forfeiting
+        // If the user forfeited, the system substracts the loss incurred 
+        // Otherwise, the gage return is awarded to the winner.
         finalAmount = gage.viewStatus() == 0 ? finalAmount : (gage.viewStatus() == 1 ? (finalAmount - (amount * risk / 100)) : (finalAmount + ((gage.viewCapacity()-1) * amount * risk / 100)));
         IERC20(asset).transfer(user, finalAmount);
     }

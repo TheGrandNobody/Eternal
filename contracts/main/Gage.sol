@@ -41,7 +41,7 @@ contract Gage is Context, IGage {
     }      
 
     /**
-     * @dev Adds a stakeholder to this gage and records the initial data
+     * @dev Adds a stakeholder to this gage and records the initial data.
      * @param asset The address of the asset used as deposit by this user
      * @param amount The user's chosen deposit amount 
      * @param risk The user's chosen risk percentage
@@ -72,7 +72,7 @@ contract Gage is Context, IGage {
     }
 
     /**
-     * @dev Removes a stakeholder from this gage
+     * @dev Removes a stakeholder from this gage.
      *
      * Requirements:
      *
@@ -114,7 +114,7 @@ contract Gage is Context, IGage {
         return users;
     }
 
-    function viewCapacity() external view returns(uint256) {
+    function viewCapacity() external view override returns(uint256) {
         return capacity;
     }
 

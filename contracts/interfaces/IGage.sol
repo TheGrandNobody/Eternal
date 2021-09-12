@@ -1,6 +1,11 @@
 //SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
+/**
+ * @dev Gage interface
+ * @author Nobody (me)
+ * @notice Methods are used for all gage contracts
+ */
 interface IGage {
     // Signals the addition of a user to a specific gage (whilst gage is still 'Open')
     event UserAdded(uint256 id, address indexed user);
