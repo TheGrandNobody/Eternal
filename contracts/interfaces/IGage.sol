@@ -14,5 +14,7 @@ interface IGage {
     function join(address asset, uint256 amount, uint8 risk) external;
     function exit() external;
     function viewGageUserCount() external view returns (uint32);
-    function viewStatus() external returns (uint);
+    function viewCapacity() external view returns (uint256);
+    function viewStatus() external view returns (uint);
+    function viewUserData(address user) external view returns (address, uint256, uint256);
 }

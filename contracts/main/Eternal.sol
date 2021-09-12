@@ -43,7 +43,7 @@ contract Eternal is Context, IEternal {
     /**
      * @dev Transfers a given user's gage funds to storage or further processing depending on the type of the gage
      */
-    function deposit(address asset, address user, uint256 amount, uint256 id) external {
+    function deposit(address asset, address user, uint256 amount, uint256 id) external override {
         if (asset == address(eternal)) {
             reflectionRates[user][id] = eternal.getReflectionRate();
         }
@@ -51,61 +51,21 @@ contract Eternal is Context, IEternal {
     }
 
     /**
-     * @dev Removes a given user from a given gage.
+     * @dev Withdraws a given user's gage return
      * @param id The id of the specified gage contract
      * @param user The address of the specified user
      *
-     * Requirements:
-     *
-     * - User must be in the gage
-     * - User cannot be the winner of the gage
      */
-    function removeUserFromGage(uint256 id, address user) external {
+    function withdraw(uint256 id, address user) external {
+        Gage gage = gages[id];
+        (address asset, uint256 amount, uint256 risk) = gage.viewUserData(user);
+
         // Compute any rewards accrued during the gage
-        uint256 amount = computeAccruedRewards(gage.amount, user, id);
+        uint256 finalAmount = computeAccruedRewards(amount, user, id);
         // Users get the entire entry amount back if the gage wasn't active
         // Otherwise the systems substracts the loss incurred from forfeiting
-        amount = (gage.status == Status.Open) ? amount : (amount - (gage.amount * gage.risk / 100));
-        eternal.transfer(user, amount);
-    }
-
-    /**
-     * @dev Claims the reward of a given user of a given gage.
-     * @param id The id of the specified gage contract
-     * @param user The address of the specified winner
-     *
-     * Requirements:
-     *
-     * - Selected gage status cannot be 'Open' or 'Active'
-     * - Specified user must actually be the winning address of this gage
-     */
-    function claimReward(uint256 id, address user) external {
-        Gage storage gage = gages[id];
-        require(gage.status == Status.Closed, "Gage status is not 'Closed'");
-        require(inGage[user][id], "User is not the winner");
-
-        inGage[user][id] = false;
-
-        // Compute any rewards accrued during the gage
-        uint256 rewards = computeAccruedRewards(gage.amount, user, id);
-        // Calculate the gage reward and add it to the redistribution reward (total reward)
-        uint256 totalReward = rewards + (9 * gage.amount * gage.risk / 100);
-        eternal.transfer(user, totalReward);
-
-        emit UserRemoved(id, user);
-    }
-
-/////–––««« Variable state-inspection functions »»»––––\\\\\
-
-    /**
-     * @dev View the latest gage id for a given entry deposit and risk. If not specified, view the absolute latest gage contract id.
-     * @param amount The specified initial deposit of the gage
-     * @param risk The specified risked percentage of the gage
-     * @param absolute True if we want to view the absolute latest gage. False otherwise.
-     * @return The latest gage id with specified entry deposit and risk. Otherwise the last created gage.
-     */
-    function viewLatestGage(uint256 amount, uint256 risk, bool absolute) external view returns (uint256) {
-        return absolute ? lastGage[0][0] : lastGage[amount][risk];
+        finalAmount = gage.viewStatus() == 0 ? finalAmount : (gage.viewStatus() == 1 ? (finalAmount - (amount * risk / 100)) : (finalAmount + ((gage.viewCapacity()-1) * amount * risk / 100)));
+        IERC20(asset).transfer(user, finalAmount);
     }
 
 /////–––««« Utility functions »»»––––\\\\\

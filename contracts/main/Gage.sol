@@ -33,7 +33,7 @@ contract Gage is Context, IGage {
     // Keeps track of the number of users left in the gage
     uint32 private users;
     // The state of the gage       
-    Status public status;         
+    Status internal status;         
 
     constructor (uint256 _id, uint32 _users) {
         id = _id;
@@ -45,18 +45,21 @@ contract Gage is Context, IGage {
      * @param asset The address of the asset used as deposit by this user
      * @param amount The user's chosen deposit amount 
      * @param risk The user's chosen risk percentage
+     *
+     * Requirements:
+     *
+     * - Risk must not exceed 100 percent
+     * - User must not already be in the gage
      */
     function join(address asset, uint256 amount, uint8 risk) external override {
         require(risk <= 100, "Invalid risk percentage");
         UserData storage data = userData[_msgSender()];
         require(!data.inGage, "User is already in this gage");
-        require(amount <= IERC20(asset).balanceOf(_msgSender()), "Deposit amount exceeds balance");
 
         data.amount = amount;
         data.asset = asset;
         data.risk = risk;
         data.inGage = true;
-        // Add user to the gage
         users += 1;
 
         eternal.deposit(asset, _msgSender(), amount, id);
@@ -70,6 +73,10 @@ contract Gage is Context, IGage {
 
     /**
      * @dev Removes a stakeholder from this gage
+     *
+     * Requirements:
+     *
+     * - User must be in the gage
      */
     function exit() external override {
         UserData storage data = userData[_msgSender()];
@@ -102,17 +109,29 @@ contract Gage is Context, IGage {
      *
      * - Gage status cannot be 'Active'
      */
-    function viewGageUserCount() external view returns (uint32) {
+    function viewGageUserCount() external view override returns (uint32) {
         require(status != Status.Active, "Gage can't be active");
-
         return users;
+    }
+
+    function viewCapacity() external view returns(uint256) {
+        return capacity;
     }
 
     /**
      * @dev View the status of the gage
      * @return An integer indicating the status of the gage
      */
-    function viewStatus() external view returns (uint) {
+    function viewStatus() external view override returns (uint) {
         return uint(status);
+    }
+
+    /**
+     * @dev View a given user's gage data 
+     * @param user The address of the specified user
+     */
+    function viewUserData(address user) external view override returns (address, uint256, uint256){
+        UserData storage data = userData[user];
+        return (data.asset, data.amount, data.risk);
     }
 }
