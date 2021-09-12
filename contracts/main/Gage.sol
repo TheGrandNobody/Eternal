@@ -59,7 +59,7 @@ contract Gage is Context, IGage {
         // Add user to the gage
         users += 1;
 
-        IERC20(asset).transferFrom(_msgSender(), address(eternal), amount);
+        eternal.deposit(asset, _msgSender(), amount, id);
 
         // If contract is filled, update its status and initiate the gage
         if (users == 10) {

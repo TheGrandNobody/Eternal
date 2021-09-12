@@ -2,7 +2,6 @@
 pragma solidity ^0.8.0;
 
 import "../interfaces/IEternalToken.sol";
-import "../interfaces/IEternal.sol";
 import "./Gage.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
 
@@ -21,39 +20,35 @@ contract Eternal is Context, IEternal {
     // The ETRNL interface
     IEternalToken private immutable eternal;
 
-    mapping ()
+    // Keeps track of the respective gage tied to any given ID
+    mapping (uint256 => Gage) gages;
     // Keeps track of the reflection rate for a given address and gage to recalculate rewards earned during the gage
     mapping (address => mapping (uint256 => uint256)) reflectionRates;
-    // Keeps track of the latest gage contract id with a certain entry deposit and risk
-    // Using entry deposit 0 and risk 0 gives the absolute latest gage id
-    mapping (uint256 => mapping(uint256 => uint256)) lastGage;
+
+    // Keeps track of the latest Gage ID
+    uint256 lastId;
 
 /////–––««« Gage-logic functions »»»––––\\\\\
 
     /**
-     * @dev Creates a standard n-holder gage contract with n users and adds the creator to it
+     * @dev Creates a standard n-holder gage contract with n users
      * @param users The desired number of users in the gage
-     * @param asset The address of the asset deposited by the creator
-     * @param amount The amount of ETRNL the creator will initially lock in the gage
-     * @param risk The percentage of the initial amount the creator is willing to risk in the gage
      */
-    function initiateStandardGage(uint256 users, address asset, uint256 amount, uint8 risk) external {
-        
+    function initiateStandardGage(uint32 users) external {
+        lastId += 1;
+        Gage newGage = new Gage(lastId, users);
+        gages[lastId] = newGage;
     }
 
     /**
-        // Load the last gage with said amount and risk
-        uint256 id = lastGage[amount][risk];
-
-        // If the latest gage is unopen or user is already in it, create a new one 
-        if (gage.status != Status.Open || inGage[user][id]) {
-            // Update the absolute id counter and the specific amount-risk id counter
-            lastGage[0][0] += 1;
-            id = lastGage[0][0];
-            lastGage[amount][risk] = id;
-        }
-        reflectionRates[user][id] = eternal.getReflectionRate();
+     * @dev Transfers a given user's gage funds to storage or further processing depending on the type of the gage
      */
+    function deposit(address asset, address user, uint256 amount, uint256 id) external {
+        if (asset == address(eternal)) {
+            reflectionRates[user][id] = eternal.getReflectionRate();
+        }
+        IERC20(asset).transferFrom(user, address(this), amount);
+    }
 
     /**
      * @dev Removes a given user from a given gage.
