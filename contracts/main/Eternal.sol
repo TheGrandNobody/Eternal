@@ -3,6 +3,7 @@ pragma solidity ^0.8.0;
 
 import "../interfaces/IEternalToken.sol";
 import "../interfaces/IEternal.sol";
+import "./Gage.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
 
 /**
@@ -15,17 +16,12 @@ contract Eternal is Context, IEternal {
     constructor (address _eternal) {
         // Initialize the ETRNL interface
         eternal = IEternalToken(_eternal);
-
-        // The gage with ID 0 must have status closed for this contract to function
-        Gage storage gage = gages[0];
-        gage.status = Status.Closed;
     }
 
     // The ETRNL interface
     IEternalToken private immutable eternal;
 
-    // Keeps track of all gage contracts
-    mapping (uint256 => Gage) gages;
+    mapping ()
     // Keeps track of the reflection rate for a given address and gage to recalculate rewards earned during the gage
     mapping (address => mapping (uint256 => uint256)) reflectionRates;
     // Keeps track of the latest gage contract id with a certain entry deposit and risk
@@ -35,16 +31,20 @@ contract Eternal is Context, IEternal {
 /////–––««« Gage-logic functions »»»––––\\\\\
 
     /**
-     * @dev Adds a given user to an available gage contract with a given entry deposit, risk percentage and capacity.
-     * @param user The address of the specified user
-     * @param amount The amount of ETRNL the user will initially lock in the gage
-     * @param risk The percentage of the initial amount the user is willing to risk in the gage
+     * @dev Creates a standard n-holder gage contract with n users and adds the creator to it
+     * @param users The desired number of users in the gage
+     * @param asset The address of the asset deposited by the creator
+     * @param amount The amount of ETRNL the creator will initially lock in the gage
+     * @param risk The percentage of the initial amount the creator is willing to risk in the gage
      */
-    function assignUserToGage(address user, uint256 amount, uint8 risk) external {
+    function initiateStandardGage(uint256 users, address asset, uint256 amount, uint8 risk) external {
+        
+    }
+
+    /**
         // Load the last gage with said amount and risk
         uint256 id = lastGage[amount][risk];
-        Gage storage gage = gages[id];
-        
+
         // If the latest gage is unopen or user is already in it, create a new one 
         if (gage.status != Status.Open || inGage[user][id]) {
             // Update the absolute id counter and the specific amount-risk id counter
@@ -53,7 +53,7 @@ contract Eternal is Context, IEternal {
             lastGage[amount][risk] = id;
         }
         reflectionRates[user][id] = eternal.getReflectionRate();
-    }
+     */
 
     /**
      * @dev Removes a given user from a given gage.

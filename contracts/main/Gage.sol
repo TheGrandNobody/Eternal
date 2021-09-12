@@ -4,8 +4,9 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/utils/Context.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "../interfaces/IEternal.sol";
+import "../interfaces/IGage.sol";
 
-contract Gage is Context {
+contract Gage is Context, IGage {
 
     // Holds all possible statuses for a gage
     enum Status {
@@ -32,16 +33,7 @@ contract Gage is Context {
     // Keeps track of the number of users left in the gage
     uint32 private users;
     // The state of the gage       
-    Status public status;    
-
-    // Signals the addition of a user to a specific gage (whilst gage is still 'Open')
-    event UserAdded(uint256 id, address indexed user);
-    // Signals the removal of a user from a specific gage (whilst gage is still 'Open')
-    event UserRemoved(uint256 id, address indexed user);
-    // Signals the transition from 'Open' to 'Active for a given gage
-    event GageInitiated(uint256 id);
-    // Signals the transition from 'Active' to 'Closed' for a given gage
-    event GageClosed(uint256 id);        
+    Status public status;         
 
     constructor (uint256 _id, uint32 _users) {
         id = _id;
@@ -54,7 +46,7 @@ contract Gage is Context {
      * @param amount The user's chosen deposit amount 
      * @param risk The user's chosen risk percentage
      */
-    function join(address asset, uint256 amount, uint8 risk) external {
+    function join(address asset, uint256 amount, uint8 risk) external override {
         require(risk <= 100, "Invalid risk percentage");
         UserData storage data = userData[_msgSender()];
         require(!data.inGage, "User is already in this gage");
@@ -79,7 +71,7 @@ contract Gage is Context {
     /**
      * @dev Removes a stakeholder from this gage
      */
-    function exit() external {
+    function exit() external override {
         UserData storage data = userData[_msgSender()];
         require(data.inGage, "User is not in this gage");
         
