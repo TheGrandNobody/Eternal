@@ -22,7 +22,7 @@ contract Eternal is Context, IEternal {
     IEternalToken private immutable eternal;
 
     // Keeps track of the respective gage tied to any given ID
-    mapping (uint256 => Gage) gages;
+    mapping (uint256 => address) gages;
     // Keeps track of the reflection rate for any given address and gage to recalculate rewards earned during the gage
     mapping (address => mapping (uint256 => uint256)) reflectionRates;
 
@@ -38,7 +38,7 @@ contract Eternal is Context, IEternal {
     function initiateStandardGage(uint32 users) external {
         lastId += 1;
         Gage newGage = new Gage(lastId, users);
-        gages[lastId] = newGage;
+        gages[lastId] = address(newGage);
     }
 
     /**
@@ -58,7 +58,7 @@ contract Eternal is Context, IEternal {
      *
      */
     function withdraw(address user, uint256 id) external override {
-        IGageV2 gage = IGageV2(address(gages[id]));
+        IGageV2 gage = IGageV2(gages[id]);
         (address asset, uint256 amount, uint256 risk, bool loyalty) = gage.viewUserData(user);
 
         bool usingETRNL = asset == address(eternal);
