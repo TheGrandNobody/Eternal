@@ -54,7 +54,7 @@ contract Gage is Context {
      * @param amount The user's chosen deposit amount 
      * @param risk The user's chosen risk percentage
      */
-    function join(address asset, address vault, uint256 amount, uint8 risk) external {
+    function join(address asset, uint256 amount, uint8 risk) external {
         require(risk <= 100, "Invalid risk percentage");
         UserData storage data = userData[_msgSender()];
         require(!data.inGage, "User is already in this gage");
@@ -76,6 +76,9 @@ contract Gage is Context {
         }
     }
 
+    /**
+     * @dev Removes a stakeholder from this gage
+     */
     function exit() external {
         UserData storage data = userData[_msgSender()];
         require(data.inGage, "User is not in this gage");
@@ -113,6 +116,10 @@ contract Gage is Context {
         return users;
     }
 
+    /**
+     * @dev View the status of the gage
+     * @return An integer indicating the status of the gage
+     */
     function viewStatus() external view returns (uint) {
         return uint(status);
     }
