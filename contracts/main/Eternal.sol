@@ -65,7 +65,7 @@ contract Eternal is Context, IEternal {
         // Users get the entire entry amount back if the gage wasn't active
         // If the user forfeited, the system substracts the loss incurred 
         // Otherwise, the gage return is awarded to the winner.
-        finalAmount = gage.viewStatus() == 0 ? finalAmount : (gage.viewStatus() == 1 ? (finalAmount - (amount * risk / 100)) : (finalAmount + ((gage.viewCapacity()-1) * amount * risk / 100)));
+        finalAmount = gage.viewStatus() == 0 ? finalAmount : (gage.viewStatus() == 1 ? (finalAmount - (amount * risk / 100)) : (finalAmount + ((gage.viewCapacity() - 1) * amount * risk / 100)));
         IERC20(asset).transfer(user, finalAmount);
     }
 

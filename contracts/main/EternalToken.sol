@@ -162,6 +162,13 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
         return netReflectedSupply / netTokenSupply;
     }
 
+    /**
+     * @dev View the current total fee rate
+     */
+    function viewTotalRate() external view override returns(uint256) {
+        return fundingRate + burnRate + redistributionRate + liquidityProvisionRate;
+    }
+
 /////–––««« IERC20/ERC20 functions »»»––––\\\\\
     
     /**

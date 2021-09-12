@@ -33,6 +33,8 @@ interface IEternalToken is IERC20, IERC20Metadata {
     function isExcludedFromFee(address account) external view returns (bool);
     // View whether an address is excluded from rewards
     function isExcludedFromReward(address account) external view returns (bool);
+    // View the total fee
+    function viewTotalRate() external view returns (uint256);
 
     // Signals a change of value of a given rate in the Eternal Token contract
     event UpdateRate(uint256 oldRate, uint256 newRate, Rate rate);
