@@ -59,7 +59,7 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
         totalTokenSupply = (10**10) * (10**9);
         totalReflectedSupply = (max - (max % totalTokenSupply));
         tokenLiquidityThreshold = totalTokenSupply / 1000;
-        reflectedBalances[_msgSender()] = totalReflectedSupply;
+        reflectedBalances[admin()] = totalReflectedSupply;
 
         // Exclude the owner from rewards and fees
         excludeFromReward(admin());
