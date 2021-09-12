@@ -60,11 +60,14 @@ contract Eternal is Context, IEternal {
         Gage gage = gages[id];
         (address asset, uint256 amount, uint256 risk) = gage.viewUserData(user);
 
+        bool usingETRNL = asset == address(eternal);
+        // Compute the amount minus the fee rate if using ETRNL
+        uint256 netAmount = usingETRNL ? amount - (amount * eternal.viewTotalRate()) / 100000 : 0;
         // Compute any rewards accrued during the gage
-        uint256 finalAmount = computeAccruedRewards(amount, user, id);
-        // Users get the entire entry amount back if the gage wasn't active
-        // If the user forfeited, the system substracts the loss incurred 
-        // Otherwise, the gage return is awarded to the winner.
+        uint256 finalAmount = usingETRNL ? computeAccruedRewards(netAmount, user, id)  : computeAccruedRewards(amount, user, id);
+        /** Users get the entire entry amount back if the gage wasn't active at the time of departure.
+            If the user forfeited, the system substracts the loss incurred. 
+            In any other case, the gage return is awarded to the winner. */
         finalAmount = gage.viewStatus() == 0 ? finalAmount : (gage.viewStatus() == 1 ? (finalAmount - (amount * risk / 100)) : (finalAmount + ((gage.viewCapacity() - 1) * amount * risk / 100)));
         IERC20(asset).transfer(user, finalAmount);
     }
