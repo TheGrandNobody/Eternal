@@ -2,6 +2,7 @@
 pragma solidity ^0.8.0;
 
 import "../interfaces/IEternalToken.sol";
+import "../interfaces/IEternal.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
 
 /**
@@ -9,7 +10,7 @@ import "@openzeppelin/contracts/utils/Context.sol";
  * @author Nobody (me)
  * @notice The Eternal contract holds all user-data and gage logic.
  */
-contract Eternal is Context {
+contract Eternal is Context, IEternal {
 
     constructor (address _eternal) {
         // Initialize the ETRNL interface
@@ -20,22 +21,6 @@ contract Eternal is Context {
         gage.status = Status.Closed;
     }
 
-    // Holds all possible statuses for a gage
-    enum Status {
-        Open,
-        Active,
-        Closed
-    }
-
-    // Defines a Gage Contract
-    struct Gage {
-        uint256 id;            // The id of the gage
-        uint256 amount;        // The entry deposit of ETRNL needed to participate in this gage
-        Status status;         // The status of the gage
-        uint8 users;           // The current number of users participating in this gage
-        uint8 risk;            // The percentage that is being risked in this gage
-    }
-
     // The ETRNL interface
     IEternalToken private immutable eternal;
 
@@ -43,20 +28,9 @@ contract Eternal is Context {
     mapping (uint256 => Gage) gages;
     // Keeps track of the reflection rate for a given address and gage to recalculate rewards earned during the gage
     mapping (address => mapping (uint256 => uint256)) reflectionRates;
-    // Keeps track of whether a user is participating in a specific gage
-    mapping (address => mapping(uint256 => bool)) inGage;
     // Keeps track of the latest gage contract id with a certain entry deposit and risk
     // Using entry deposit 0 and risk 0 gives the absolute latest gage id
     mapping (uint256 => mapping(uint256 => uint256)) lastGage;
-
-    // Signals the addition of a user to a specific gage (whilst gage is still 'Open')
-    event UserAdded(uint256 id, address indexed user);
-    // Signals the removal of a user from a specific gage (whilst gage is still 'Open')
-    event UserRemoved(uint256 id, address indexed user);
-    // Signals the transition from 'Open' to 'Active for a given gage
-    event GageInitiated(uint256 id, uint256 amount, uint256 risk);
-    // Signals the transition from 'Active' to 'Closed' for a given gage
-    event GageClosed(uint256 id, uint256 amount, uint256 risk);
 
 /////–––««« Gage-logic functions »»»––––\\\\\
 
@@ -77,25 +51,8 @@ contract Eternal is Context {
             lastGage[0][0] += 1;
             id = lastGage[0][0];
             lastGage[amount][risk] = id;
-            // Save the new gage parameters
-            gage = gages[id];
-            gage.amount = amount * (10**9);
-            gage.risk = risk;
-            gage.id = id;
         }
-
-        // Add user to the gage
-        inGage[user][id] = true;
-        gage.users += 1;
         reflectionRates[user][id] = eternal.getReflectionRate();
-        eternal.transferFrom(user, address(this), gage.amount);
-        emit UserAdded(id, user);
-
-        // If contract is filled, update its status and initiate the gage
-        if (gage.users == 10) {
-            gage.status = Status.Active;
-            emit GageInitiated(id, amount, risk);
-        }
     }
 
     /**
@@ -109,22 +66,6 @@ contract Eternal is Context {
      * - User cannot be the winner of the gage
      */
     function removeUserFromGage(uint256 id, address user) external {
-        require(inGage[user][id], "User is not in this gage");
-        Gage storage gage = gages[id];
-        require(gage.status != Status.Closed, "Winner can't leave a closed gage");
-
-        // Remove user from the gage first (prevent re-entrancy)
-        inGage[user][id] = false;
-        gage.users -= 1;
-
-        if (gage.status == Status.Open) {
-            emit UserRemoved(id, user);
-        } else if (gage.status == Status.Active && gage.users == 1) {
-            // If there is only one user left after this one has left, update the gage's status accordingly
-            gage.status = Status.Closed;
-            emit GageClosed(id, gage.amount, gage.risk);
-        }
-
         // Compute any rewards accrued during the gage
         uint256 amount = computeAccruedRewards(gage.amount, user, id);
         // Users get the entire entry amount back if the gage wasn't active
@@ -160,22 +101,6 @@ contract Eternal is Context {
     }
 
 /////–––««« Variable state-inspection functions »»»––––\\\\\
-
-    /**
-     * @dev View the number of stakeholders in a given gage that is still forming.
-     * @param id The id of the specified gage contract
-     * @return The number of stakeholders in the selected gage
-     *
-     * Requirements:
-     *
-     * - Gage status cannot be 'Active'
-     */
-    function viewGageUserCount(uint256 id) external view returns (uint8) {
-        Gage storage gage = gages[id];
-        require(gage.status != Status.Active, "Gage can't be active");
-
-        return gage.users;
-    }
 
     /**
      * @dev View the latest gage id for a given entry deposit and risk. If not specified, view the absolute latest gage contract id.
