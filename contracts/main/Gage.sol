@@ -16,13 +16,15 @@ contract Gage is Context, IGage {
     }
 
     struct UserData {
-        address asset;                       // The AVAX address of the asset used as deposit       
+        address asset;                       // The AVAX address of the asset used as deposit     
         uint256 amount;                      // The entry deposit (in tokens) needed to participate in this gage        
         uint8 risk;                          // The percentage that is being risked in this gage  
         bool inGage;                         // Keeps track of whether the user is in the gage or not
+        bool loyalty;                        // Determines whether the gage is a loyalty gage or not
     }
 
-    IEternal public eternal;
+    // The eternal platform
+    IEternal public eternal;                
 
     mapping (address => UserData) userData;
 
@@ -31,7 +33,7 @@ contract Gage is Context, IGage {
     // The maximum number of users in the gage
     uint32 public immutable  capacity; 
     // Keeps track of the number of users left in the gage
-    uint32 private users;
+    uint32 internal users;
     // The state of the gage       
     Status internal status;         
 
@@ -45,13 +47,14 @@ contract Gage is Context, IGage {
      * @param asset The address of the asset used as deposit by this user
      * @param amount The user's chosen deposit amount 
      * @param risk The user's chosen risk percentage
+     * @param loyalty Whether the gage is a loyalty gage
      *
      * Requirements:
      *
      * - Risk must not exceed 100 percent
      * - User must not already be in the gage
      */
-    function join(address asset, uint256 amount, uint8 risk) external override {
+    function join(address asset, uint256 amount, uint8 risk, bool loyalty) external override {
         require(risk <= 100, "Invalid risk percentage");
         UserData storage data = userData[_msgSender()];
         require(!data.inGage, "User is already in this gage");
@@ -60,12 +63,13 @@ contract Gage is Context, IGage {
         data.asset = asset;
         data.risk = risk;
         data.inGage = true;
+        data.loyalty = loyalty;
         users += 1;
 
         eternal.deposit(asset, _msgSender(), amount, id);
 
         // If contract is filled, update its status and initiate the gage
-        if (users == 10) {
+        if (users == capacity) {
             status = Status.Active;
             emit GageInitiated(id);
         }
@@ -114,6 +118,10 @@ contract Gage is Context, IGage {
         return users;
     }
 
+    /**
+     * @dev View the total user capacity of the gage
+     * @return The total user capacity
+     */
     function viewCapacity() external view override returns(uint256) {
         return capacity;
     }
@@ -129,9 +137,10 @@ contract Gage is Context, IGage {
     /**
      * @dev View a given user's gage data 
      * @param user The address of the specified user
+     * @return The asset, amount and risk for this user 
      */
-    function viewUserData(address user) external view override returns (address, uint256, uint256){
+    function viewUserData(address user) external view override returns (address, uint256, uint256, bool){
         UserData storage data = userData[user];
-        return (data.asset, data.amount, data.risk);
+        return (data.asset, data.amount, data.risk, data.loyalty);
     }
 }

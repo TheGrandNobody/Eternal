@@ -2,6 +2,7 @@
 pragma solidity ^0.8.0;
 
 import "../interfaces/IEternalToken.sol";
+import "../interfaces/IGageV2.sol";
 import "./Gage.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
 
@@ -57,8 +58,8 @@ contract Eternal is Context, IEternal {
      *
      */
     function withdraw(address user, uint256 id) external override {
-        Gage gage = gages[id];
-        (address asset, uint256 amount, uint256 risk) = gage.viewUserData(user);
+        IGageV2 gage = IGageV2(address(gages[id]));
+        (address asset, uint256 amount, uint256 risk, bool loyalty) = gage.viewUserData(user);
 
         bool usingETRNL = asset == address(eternal);
         // Compute the amount minus the fee rate if using ETRNL
@@ -67,8 +68,22 @@ contract Eternal is Context, IEternal {
         uint256 finalAmount = usingETRNL ? computeAccruedRewards(netAmount, user, id)  : computeAccruedRewards(amount, user, id);
         /** Users get the entire entry amount back if the gage wasn't active at the time of departure.
             If the user forfeited, the system substracts the loss incurred. 
-            In any other case, the gage return is awarded to the winner. */
-        finalAmount = gage.viewStatus() == 0 ? finalAmount : (gage.viewStatus() == 1 ? (finalAmount - (amount * risk / 100)) : (finalAmount + ((gage.viewCapacity() - 1) * amount * risk / 100)));
+            Otherwise, the gage return is awarded to the winner. */
+        if (gage.viewStatus() == 1) {
+            if (loyalty && user != gage.viewBuyer()) {
+                (,uint256 otherAmount,,) = gage.viewUserData(gage.viewBuyer());
+                finalAmount -= (otherAmount * risk / 100);
+            } else {
+                finalAmount -= (amount * risk / 100);
+            }
+        } else if (gage.viewStatus() == 2) {
+            if (loyalty && user != gage.viewBuyer()) {
+                (,uint256 otherAmount,,) = gage.viewUserData(gage.viewBuyer());
+                finalAmount += (gage.viewCapacity() - 1) * otherAmount * risk / 100;
+            } else {
+                finalAmount += (gage.viewCapacity() - 1) * amount * risk / 100;
+            }
+        }
         IERC20(asset).transfer(user, finalAmount);
     }
 

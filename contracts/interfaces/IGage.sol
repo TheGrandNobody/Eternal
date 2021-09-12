@@ -16,10 +16,16 @@ interface IGage {
     // Signals the transition from 'Active' to 'Closed' for a given gage
     event GageClosed(uint256 id); 
 
-    function join(address asset, uint256 amount, uint8 risk) external;
+    // Adds a user to the gage
+    function join(address asset, uint256 amount, uint8 risk, bool loyalty) external;
+    // Removes a user from the gage
     function exit() external;
+    // View the user count in the gage whilst it is not Active
     function viewGageUserCount() external view returns (uint32);
+    // View the total user capacity of the gage
     function viewCapacity() external view returns (uint256);
+    // View the gage's status
     function viewStatus() external view returns (uint);
-    function viewUserData(address user) external view returns (address, uint256, uint256);
+    // View a given user's gage data
+    function viewUserData(address user) external view returns (address, uint256, uint256, bool);
 }
