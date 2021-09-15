@@ -133,7 +133,7 @@ contract EternalLiquidity is IEternalLiquidity, OwnableEnhanced {
     function withdrawETRNL(address recipient, uint256 amount) external override onlyFund() {
         eternal.transfer(recipient, amount);
 
-        emit AVAXTransferred(amount, recipient);
+        emit ETRNLTransferred(amount, recipient);
     }
 
     /**

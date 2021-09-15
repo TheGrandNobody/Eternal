@@ -23,6 +23,8 @@ interface IEternalLiquidity {
     event AutomaticLiquidityProvisionUpdated(bool value);
     // Signals that liquidity has been added to the ETRNL/WAVAX pair 
     event AutomaticLiquidityProvision(uint256 amountETRNL, uint256 totalSwappedETRNL, uint256 amountAVAX);
-    // Signals that the locked AVAX balance has been cleared to a given address
+    // Signals that part of the locked AVAX balance has been cleared to a given address
     event AVAXTransferred(uint256 amount, address recipient);
+    // Signals that part of the ETRNL balance has been sent to a given address
+    event ETRNLTransferred(uint256 amount, address recipient);
 }
