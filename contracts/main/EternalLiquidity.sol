@@ -1,8 +1,8 @@
 //SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "@pangolindex/exchange-contracts/contracts/pangolin-core/interfaces/IPangolinFactory.sol";
-import "@pangolindex/exchange-contracts/contracts/pangolin-periphery/interfaces/IPangolinRouter.sol";
+import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoeFactory.sol";
+import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoeRouter02.sol";
 import "../interfaces/IEternalToken.sol";
 import "../interfaces/IEternalLiquidity.sol";
 import "../inheritances/OwnableEnhanced.sol";
@@ -16,25 +16,25 @@ contract EternalLiquidity is IEternalLiquidity, OwnableEnhanced {
 
     // The ETRNL token
     IEternalToken private immutable eternal;
-    // PangolinDex Router interface to swap tokens for AVAX and add liquidity
-    IPangolinRouter private immutable pangolinRouter;
+    // Trader Joe Router interface to swap tokens for AVAX and add liquidity
+    IJoeRouter02 private immutable joeRouter;
     // The address of the ETRNL/AVAX pair
-    address private immutable pangolinPair;
+    address private immutable joePair;
 
     // Determines whether an auto-liquidity provision process is undergoing
     bool private undergoingSwap;
     // Determines whether the contract is tasked with providing liquidity using part of the transaction fees
     bool private autoLiquidityProvision;
 
-    // Allows contract to receive AVAX tokens from Pangolin
+    // Allows contract to receive AVAX tokens
     receive() external payable {}
 
     constructor (address _eternal) {
         // Initialize router
-        IPangolinRouter _pangolinRouter = IPangolinRouter(0xE54Ca86531e17Ef3616d22Ca28b0D458b6C89106);
-        pangolinRouter = _pangolinRouter;
+        IJoeRouter02 _joeRouter= IJoeRouter02(0xE54Ca86531e17Ef3616d22Ca28b0D458b6C89106);
+        joeRouter = _joeRouter;
         // Create pair address
-        pangolinPair = IPangolinFactory(_pangolinRouter.factory()).createPair(address(this), _pangolinRouter.WAVAX());
+        joePair = IJoeFactory(_joeRouter.factory()).createPair(address(this), _joeRouter.WAVAX());
         // Initialize the Eternal Token
         eternal = IEternalToken(_eternal);
     }
@@ -52,29 +52,29 @@ contract EternalLiquidity is IEternalLiquidity, OwnableEnhanced {
 /////–––««« Variable state-inspection functions »»»––––\\\\\
 
     /**
-     * @dev View the address of the ETRNL/AVAX pair on Pangolin.
+     * @dev View the address of the ETRNL/AVAX pair on Trader Joe.
      */
     function viewPair() external view override returns(address) {
-        return pangolinPair;
+        return joePair;
     }
 
 /////–––««« Automatic liquidity provision functions »»»––––\\\\\
 
     /**
-     * @dev Swaps a given amount of ETRNL for AVAX using PangolinDEX. (Used for auto-liquidity swaps)
+     * @dev Swaps a given amount of ETRNL for AVAX using Trader Joe. (Used for auto-liquidity swaps)
      * @param amount The amount of ETRNL to be swapped for AVAX
      */
     function swapTokensForAVAX(uint256 amount) private {
         address[] memory path = new address[](2);
         path[0] = address(this);
-        path[1] = pangolinRouter.WAVAX();
+        path[1] = joeRouter.WAVAX();
 
-        eternal.approve(address(pangolinRouter), amount);
-        pangolinRouter.swapExactTokensForAVAXSupportingFeeOnTransferTokens(amount, 0, path, address(this), block.timestamp);
+        eternal.approve(address(joeRouter), amount);
+        joeRouter.swapExactTokensForAVAXSupportingFeeOnTransferTokens(amount, 0, path, address(this), block.timestamp);
     }
 
     /**
-     * @dev Provides liquidity to the ETRNL/AVAX pair on pangolin for the EternalToken contract.
+     * @dev Provides liquidity to the ETRNL/AVAX pair on Trader Joe for the EternalToken contract.
      * @param contractBalance The contract's ETRNL balance
      *
      * Requirements:
@@ -108,8 +108,8 @@ contract EternalLiquidity is IEternalLiquidity, OwnableEnhanced {
         uint256 amountAVAX = address(this).balance - initialBalance;
 
         // Add liquidity to the ETRNL/AVAX pair
-        eternal.approve(address(pangolinRouter), amountETRNL);
-        pangolinRouter.addLiquidityAVAX{value: amountAVAX}(address(this), amountETRNL, 0, 0, address(this), block.timestamp);
+        eternal.approve(address(joeRouter), amountETRNL);
+        joeRouter.addLiquidityAVAX{value: amountAVAX}(address(this), amountETRNL, 0, 0, address(this), block.timestamp);
 
         emit AutomaticLiquidityProvision(amountETRNL, contractBalance, amountAVAX);
     }

@@ -26,7 +26,7 @@
   },
   "dependencies": {
     "@openzeppelin/contracts": "^4.2.0",
-    "@pangolindex/exchange-contracts": "^1.0.1",
+    "@traderjoe-xyz/core": "^1.1.0",
     "mocha": "^7.2.0"
   }
 }
