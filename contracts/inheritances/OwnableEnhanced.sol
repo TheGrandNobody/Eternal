@@ -42,7 +42,7 @@ abstract contract OwnableEnhanced is Context {
      * @dev Throws if called by any account other than the admin.
      */
     modifier onlyAdmin() {
-        require(admin() == _msgSender(), "Ownable: caller is not the admin");
+        require(admin() == _msgSender(), "Caller is not the admin");
         _;
     }
 
@@ -50,7 +50,7 @@ abstract contract OwnableEnhanced is Context {
      * @dev Throws if called by any account other than the fund.
      */
     modifier onlyFund() {
-        require(fund() == _msgSender(), "Ownable: caller is not the fund");
+        require(fund() == _msgSender(), "Caller is not the fund");
         _;
     }
 
@@ -58,7 +58,7 @@ abstract contract OwnableEnhanced is Context {
      * @dev Throws if called by any account other than the admin or the fund.
      */
     modifier onlyAdminAndFund() {
-        require((admin() == _msgSender()) || (fund() == _msgSender()), "Ownable: caller is neither the admin or fund");
+        require((admin() == _msgSender()) || (fund() == _msgSender()), "Caller is not the admin/fund");
         _;
     }
 
@@ -108,7 +108,7 @@ abstract contract OwnableEnhanced is Context {
      * - New admin cannot be the zero address
      */
     function attributeFundRights(address newFund) public virtual onlyAdminAndFund {
-        require(newFund != address(0), "Ownable: new fund is the zero address");
+        require(newFund != address(0), "New fund is the zero address");
         _fund = newFund;
         emit FundRightsAttributed(newFund);
     }
@@ -123,7 +123,7 @@ abstract contract OwnableEnhanced is Context {
      * - New admin cannot be the zero address
      */
     function transferAdminRights(address newAdmin) public virtual onlyAdmin {
-        require(newAdmin != address(0), "Ownable: new admin is the zero address");
+        require(newAdmin != address(0), "New admin is the zero address");
         emit AdminRightsTransferred(_admin, newAdmin);
         _admin = newAdmin;
     }
@@ -148,7 +148,7 @@ abstract contract OwnableEnhanced is Context {
      * - The locking period must have elapsed
      */
     function unlock() public {
-        require(_previousAdmin == msg.sender, "Only the previous admin can unlock onwership");
+        require(_previousAdmin == msg.sender, "Caller is not the previous admin");
         require(block.timestamp > _lockPeriod, "The contract is still locked");
         emit AdminRightsTransferred(_admin, _previousAdmin);
         _admin = _previousAdmin;
