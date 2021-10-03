@@ -15,6 +15,7 @@ contract Gage is Context, IGage {
         Closed
     }
 
+    // Holds user-specific information with regards to the gage
     struct UserData {
         address asset;                       // The AVAX address of the asset used as deposit     
         uint256 amount;                      // The entry deposit (in tokens) needed to participate in this gage        
@@ -26,7 +27,8 @@ contract Gage is Context, IGage {
     // The eternal platform
     IEternal public eternal;                
 
-    mapping (address => UserData) userData;
+    // Holds all users' information in the gage
+    mapping (address => UserData) internal userData;
 
     // The id of the gage
     uint256 public immutable id;  
