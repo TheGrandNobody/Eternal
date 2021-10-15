@@ -22,12 +22,12 @@ contract Eternal is Context, IEternal {
     IEternalToken private immutable eternal;
 
     // Keeps track of the respective gage tied to any given ID
-    mapping (uint256 => address) gages;
+    mapping (uint256 => address) private gages;
     // Keeps track of the reflection rate for any given address and gage to recalculate rewards earned during the gage
-    mapping (address => mapping (uint256 => uint256)) reflectionRates;
+    mapping (address => mapping (uint256 => uint256)) private reflectionRates;
 
     // Keeps track of the latest Gage ID
-    uint256 lastId;
+    uint256 public lastId;
 
 /////–––««« Gage-logic functions »»»––––\\\\\
 

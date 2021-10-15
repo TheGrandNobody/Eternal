@@ -27,6 +27,7 @@ contract EternalLiquidity is IEternalLiquidity, OwnableEnhanced {
     bool private autoLiquidityProvision;
 
     // Allows contract to receive AVAX tokens
+    // solhint-disable-next-line no-empty-blocks
     receive() external payable {}
 
     constructor (address _eternal) {
