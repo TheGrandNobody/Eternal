@@ -39,6 +39,7 @@ contract Eternal is Context, IEternal {
         lastId += 1;
         Gage newGage = new Gage(lastId, users);
         gages[lastId] = address(newGage);
+        emit NewGage(lastId, address(newGage))
     }
 
     /**
