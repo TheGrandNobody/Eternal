@@ -67,7 +67,7 @@ contract Gage is Context, IGage {
         users += 1;
 
         eternal.deposit(asset, _msgSender(), amount, id);
-
+        emit UserAdded(id, _msgSender());
         // If contract is filled, update its status and initiate the gage
         if (users == capacity) {
             status = Status.Active;
