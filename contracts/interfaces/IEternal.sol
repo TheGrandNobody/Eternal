@@ -8,6 +8,7 @@ pragma solidity ^0.8.0;
  */
 interface IEternal {
     
+    function initiateStandardGage(uint32 users) external returns(uint256);
     function deposit(address asset, address user, uint256 amount, uint256 id) external;
     function withdraw(address user, uint256 id) external;
     

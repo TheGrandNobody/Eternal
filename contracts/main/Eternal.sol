@@ -35,11 +35,13 @@ contract Eternal is Context, IEternal {
      * @dev Creates a standard n-holder gage contract with n users
      * @param users The desired number of users in the gage
      */
-    function initiateStandardGage(uint32 users) external {
+    function initiateStandardGage(uint32 users) external override returns(uint256) {
         lastId += 1;
         Gage newGage = new Gage(lastId, users);
         gages[lastId] = address(newGage);
         emit NewGage(lastId, address(newGage));
+
+        return lastId;
     }
 
     /**
@@ -102,5 +104,9 @@ contract Eternal is Context, IEternal {
         uint256 currentRate = eternal.isExcludedFromReward(user) ? oldRate : eternal.getReflectionRate();
 
         return (amount * (currentRate / oldRate));
+    }
+
+    function viewGageAddress(uint256 id) external view returns(address) {
+        return gages[id];
     }
 }
