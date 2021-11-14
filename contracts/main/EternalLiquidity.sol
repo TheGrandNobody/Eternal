@@ -32,7 +32,7 @@ contract EternalLiquidity is IEternalLiquidity, OwnableEnhanced {
 
     constructor (address _eternal) {
         // Initialize router
-        IJoeRouter02 _joeRouter= IJoeRouter02(0xE54Ca86531e17Ef3616d22Ca28b0D458b6C89106);
+        IJoeRouter02 _joeRouter= IJoeRouter02(0x60aE616a2155Ee3d9A68541Ba4544862310933d4);
         joeRouter = _joeRouter;
         // Create pair address
         joePair = IJoeFactory(_joeRouter.factory()).createPair(address(this), _joeRouter.WAVAX());
