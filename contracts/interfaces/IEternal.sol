@@ -12,5 +12,5 @@ interface IEternal {
     function deposit(address asset, address user, uint256 amount, uint256 id) external;
     function withdraw(address user, uint256 id) external;
     
-    event NewGage(uint256 id, address indexed gageAddress)
+    event NewGage(uint256 id, address indexed gageAddress);
 }
