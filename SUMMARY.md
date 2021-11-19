@@ -1,6 +1,6 @@
 # Table of contents
 
-* [📔 Introduction](README.md)
+* [📔 Introduction/FAQ](README.md)
 
 ## User Manual
 
@@ -8,7 +8,6 @@
   * [Get started](user-manual/how-to/get-started.md)
   * [Use the platform](user-manual/how-to/use-the-platform.md)
   * [View your stats](user-manual/how-to/view-your-stats.md)
-* [❔ FAQ](user-manual/faq.md)
 
 ## Products/Services
 
