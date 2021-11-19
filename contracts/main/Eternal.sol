@@ -78,14 +78,14 @@ contract Eternal is Context, IEternal {
                 (,uint256 otherAmount,,) = gage.viewUserData(gage.viewBuyer());
                 finalAmount -= (otherAmount * risk / 100);
             } else {
-                finalAmount -= (amount * risk / 100);
+                finalAmount -= (finalAmount * risk / 100);
             }
         } else if (gage.viewStatus() == 2) {
             if (loyalty && user != gage.viewBuyer()) {
                 (,uint256 otherAmount,,) = gage.viewUserData(gage.viewBuyer());
                 finalAmount += (gage.viewCapacity() - 1) * otherAmount * risk / 100;
             } else {
-                finalAmount += (gage.viewCapacity() - 1) * amount * risk / 100;
+                finalAmount += (gage.viewCapacity() - 1) * finalAmount * risk / 100;
             }
         }
         IERC20(asset).transfer(user, finalAmount);
