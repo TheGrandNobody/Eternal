@@ -22,7 +22,7 @@ A gage is broadly defined as a **contract between two or more stakeholders who p
 
 ## Why should I use gages?
 
-The developed gage-related applications, are not only designed and proven to **earn you more money** with **less risk than any other instrument**, they're also **completely free** and **accessible to all**. The catch? You will need to fight your short-termist instincts, and approach everything with a long-term mentality. This simply means that the most patient investors will win the most money.&#x20;
+The developed gage-related applications, are not only designed and proven to **earn you more money with less risk than any other instrument**, they're also **completely free** and **accessible to all**. The catch? You will need to fight your short-termist instincts, and approach everything with a long-term mentality. This simply means that the most patient investors will win the most money.&#x20;
 
 **Are you more patient than everyone else?**
 
