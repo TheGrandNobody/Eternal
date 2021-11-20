@@ -28,11 +28,11 @@ The developed gage-related applications, are not only designed and proven to **e
 
 ## How do gages solve short-termism?
 
-**Gages are particularly useful when it comes to creating win-win relationships between two or more individuals.** Short-termism arises as a result of poor dynamics between individuals. For example, one of the main reasons firms are short-termist is because of the unhealthy relationship they with their investors, who, you've guessed it, are also short-termist.
+**Gages are particularly useful when it comes to creating win-win relationships between two or more individuals.** Short-termism arises as a result of poor dynamics between individuals. For example, one of the main reasons firms are short-termist is because of their unhealthy relationships with investors, who, you've guessed it, are also short-termist.
 
 **Use Case – The Firm-Investor Dilemma:**
 
-Firms rely on investors to buy and hold their shares. Investors want to make money as fast as possible, and will consequently tend to choose firms which make the most short-term profits. This forces firms to make poor short-term choices in order to survive. As a result, this causes long-term issues, like unemployment, pollution, less R\&D and ironically, less revenue and growth for the firm.
+Firms rely on investors to buy and hold their shares. Investors want to make money as fast as possible, and will consequently tend to choose firms which make the most short-term profits. In turn, firms do everything in their power to increase short-term revenue. In the process, they end up making all kinds of poor decisions with no regard for the long-term consequences. This leads to more issues, like unemployment, pollution, less R\&D and ironically, less revenue and growth for the firm.
 
 In this case we propose a solution with [loyalty gages](products-services/gages/loyalty-gage.md).
 
