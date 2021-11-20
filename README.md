@@ -53,11 +53,9 @@ Eternal Finance B.V was necessary to obtain the funds which covered not only mar
 
 Unfortunately, we have not reached a point in society where all systems are fully decentralized. Eternal Finance B.V is primarily here to serve as a bridge of trust between the centralized and decentralized. This will be useful for upcoming releases, where some applications are particularly useful to countries where internet access is not as common, or to make necessary agreements with governments.
 
-## Governance
+## What's the governance in status Eternal?
 
-In the **second quarter post-launch**, the Eternal Fund will be released and Eternal will go from having Nobody as the initial admin, to a fully decentralized autonomous organization (DAO). This decision was chosen for **two reasons:**
-
-In the **second quarter post-launch**, the Eternal Fund will be released and Eternal will go from having Nobody as the initial admin, to a fully decentralized autonomous organization (DAO). This decision was chosen for **two reasons:**
+In the **second quarter post-launch**, the Eternal Fund will be released and Eternal will go from having Nobody as the initial admin, to a fully decentralized autonomous organization and no admin. This decision was chosen for **two reasons:**
 
 **1. Community Input**
 
