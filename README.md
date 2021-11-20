@@ -32,11 +32,11 @@ The developed gage-related applications, are not only designed and proven to **e
 
 **Use Case – The Firm-Investor Dilemma:**
 
-Firms rely on investors to buy and hold their shares. Investors want to make money as fast as possible, and will consequently tend to choose firms which make the most short-term profits. In turn, firms do everything in their power to increase short-term revenue. In the process, they end up making all kinds of poor decisions with no regard for the long-term consequences. This leads to more issues, like unemployment, pollution, less R\&D and ironically, less revenue and growth for the firm.
+Firms rely on investors to buy and hold their shares. Investors want to make money as fast as possible, and will consequently tend to choose firms which make the most short-term profits. In turn, firms do everything in their power to increase short-term revenue and end up making all kinds of poor decisions with no regard for their long-term consequences. This leads to more issues like unemployment, pollution, less R\&D and ironically, less revenue and growth for the firm.
 
-In this case we propose a solution with [loyalty gages](products-services/gages/loyalty-gage.md).
+For this specific case we propose a solution with [loyalty gages](products-services/gages/loyalty-gage.md).
 
-**Most gages are a solution to one of the many aspects of short-termism.**
+**Most gages are a solution to one of the many aspects of short-termism; we've already got four other solutions just waiting to be released.**
 
 ## What is the company Eternal Finance B.V for then?
 
