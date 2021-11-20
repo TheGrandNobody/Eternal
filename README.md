@@ -68,5 +68,3 @@ The best systems have the input of the users, not just the architect. This means
 
 The Eternal Fund holds a treasury funded by the Eternal token. Don't worry, no one can access it, not even Nobody. It's best to give it some time to let the Fund accumulate some value.
 
-<mark style="color:purple;">****</mark>
-
