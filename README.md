@@ -1,13 +1,12 @@
 ---
 description: A summary of Eternal, what it is and what it does.
-coverY: -290.0463392029657
 ---
 
 # 📔 Introduction/FAQ
 
 ## What is Eternal?
 
-First and foremost, Eternal is<mark style="color:purple;">** **</mark>**not a company**<mark style="color:purple;">** **</mark>and<mark style="color:purple;">** **</mark>**not owned by anyone except for its token holders.**<mark style="color:purple;">** **</mark>As a result, the company Eternal Finance B.V and the architect Nobody, hold no initial stake in Eternal.&#x20;
+First and foremost, Eternal is **not a company** and **not owned by anyone except for its token holders.** As a result, the company Eternal Finance B.V and the architect Nobody, hold no initial stake in Eternal.&#x20;
 
 Second, Eternal **aims to popularize a new class of long-term DeFi tools, gages, as a solution to a $1.7 trillion problem named short-termism.**
 
@@ -19,17 +18,17 @@ Short-termism is **the habit of focusing on short-term results at the cost of lo
 
 ## What is a gage?
 
-A gage is broadly defined as a** contract between two or more stakeholders who promise to pay a given percentage of a deposited asset to the last stakeholder who breaks a predetermined condition.** It's a lot easier to understand a gage through its applications: you can do exactly that by reading [the gage section](products-services/gages/), or our academic whitepaper introducing gages.
+A gage is broadly defined as a **contract between two or more stakeholders who promise to pay a given percentage of a deposited asset to the last stakeholder who breaks a predetermined condition.** It's a lot easier to understand a gage through its applications: you can do exactly that by reading [the gage section](products-services/gages/), or our academic whitepaper introducing gages.
 
 ## Why should I use gages?
 
-The developed gage-related applications, are not only designed and proven to earn you **more money **with** less risk** **than any other instrument**, they're also **completely free** and **accessible to all**. The catch? You will need to fight your short-termist instincts, and approach everything with a long-term mentality. This simply means that the most patient investors will win the most money.&#x20;
+The developed gage-related applications, are not only designed and proven to **earn you more money** with **less risk than any other instrument**, they're also **completely free** and **accessible to all**. The catch? You will need to fight your short-termist instincts, and approach everything with a long-term mentality. This simply means that the most patient investors will win the most money.&#x20;
 
 **Are you more patient than everyone else?**
 
 ## How do gages solve short-termism?
 
-**Gages are particularly useful when it comes to creating win-win relationships between two or more individuals.**<mark style="color:purple;">** **</mark>Short-termism arises as a result of poor dynamics between individuals. For example, one of the main reasons firms are short-termist is because of the unhealthy relationship they with their investors, who, you've guessed it, are also short-termist.
+**Gages are particularly useful when it comes to creating win-win relationships between two or more individuals.** Short-termism arises as a result of poor dynamics between individuals. For example, one of the main reasons firms are short-termist is because of the unhealthy relationship they with their investors, who, you've guessed it, are also short-termist.
 
 **Use Case – The Firm-Investor Dilemma:**
 
