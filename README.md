@@ -18,7 +18,7 @@ Most of the time,** the majority of us are making decisions which only benefit u
 
 ## **Why should I care about short-termism?**
 
-Short termism is everywhere. We breathe short-termism, we make/use short-termist technology and we think short-termist. Here's one of the best real life example:
+Short termism is everywhere. We breathe short-termism, we make and use short-termist technology and we think and act short-term. Here's one of the best real life examples:
 
 **The Firm-Investor Dilemma:**
 
@@ -66,7 +66,7 @@ Unfortunately, we have not reached a point in society where all systems are full
 
 ## What's the governance like in Eternal?
 
-In the **second quarter post-launch**, the Eternal Fund will be released and Eternal will go from having Nobody as the initial admin, to a fully decentralized autonomous organization and no admin. This decision was chosen for **two reasons:**
+In the **second quarter post-launch**, the Eternal Fund will be released and Eternal will go from having Nobody as the initial admin, to a fully decentralized autonomous organization and no admin. This decision was made for **two reasons:**
 
 **1. Community Input**
 
