@@ -6,13 +6,13 @@ description: A summary of Eternal, what it is and what it does.
 
 ## What is Eternal?
 
-First and foremost, Eternal is **not a company** and **not owned by anyone except for its token holders.** As a result, the company Eternal Finance B.V and the architect Nobody, hold no initial stake in Eternal.&#x20;
+First and foremost, Eternal is **not a company** and **not owned by anyone except for its token holders.** As a result, the company Eternal Finance B.V and the architect Nobody, hold no initial stake in Eternal.
 
 Second, Eternal **aims to popularize a new class of long-term DeFi tools, gages, as a solution to a $1.7 trillion problem named short-termism.**
 
 ## What is short-termism?
 
-Short-termism is **the habit of focusing on short-term results at the cost of long-term gain**. Think of someone who tries to earn money as fast as possible, without thinking about risk, or someone who only eats takeaway, without thinking about their health. Sounds familiar? We've all been there. Point is, whether its a money-hungry firm who doesn't care about the world, or investors aping on risky meme tokens, we're psychologically engineered to be short-termist.&#x20;
+Short-termism is **the habit of focusing on short-term results at the cost of long-term gain**. Think of someone who tries to earn money as fast as possible, without thinking about risk, or someone who only eats takeaway, without thinking about their health. Sounds familiar? We've all been there. Point is, whether its a money-hungry firm who doesn't care about the world, or investors aping on risky meme tokens, we're psychologically engineered to be short-termist.
 
 **And it's costing the world $79.1 billion every year, for the past 22 years.**
 
@@ -22,7 +22,7 @@ A gage is broadly defined as a **contract between two or more stakeholders who p
 
 ## Why should I use gages?
 
-The developed gage-related applications, are not only designed and proven to **earn you more money with less risk than any other instrument**, they're also **completely free** and **accessible to all**. The catch? You will need to fight your short-termist instincts, and approach everything with a long-term mentality. This simply means that the most patient investors will win the most money.&#x20;
+The developed gage-related applications, are not only designed and proven to **earn you more money with less risk than any other instrument**, they're also **completely free** and **accessible to all**. The catch? You will need to fight your short-termist instincts, and approach everything with a long-term mentality. This simply means that the most patient investors will win the most money.
 
 **Are you more patient than everyone else?**
 
@@ -52,7 +52,7 @@ Eternal Finance B.V was necessary to obtain the funds which covered not only mar
 
 Unfortunately, we have not reached a point in society where all systems are fully decentralized. Eternal Finance B.V is primarily here to serve as a bridge of trust between the centralized and decentralized. This will be useful for upcoming releases, where some applications are particularly useful to countries where internet access is not as common, or to make necessary agreements with governments.
 
-## What's the governance in status Eternal?
+## What's the governance like in Eternal?
 
 In the **second quarter post-launch**, the Eternal Fund will be released and Eternal will go from having Nobody as the initial admin, to a fully decentralized autonomous organization and no admin. This decision was chosen for **two reasons:**
 
