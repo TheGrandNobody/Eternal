@@ -24,11 +24,11 @@ Short termism is everywhere. We breathe short-termism, we make and use short-ter
 
 Firms rely on investors to buy and hold their shares. Investors want to make money as fast as possible, and will consequently tend to choose firms which make the most short-term profits. In turn, firms do everything in their power to increase short-term revenue and end up making all kinds of poor decisions with no regard for their long-term consequences. This leads to more issues like unemployment, pollution, less R\&D and ironically, less revenue and growth for the firm.
 
-**And it's costing firms $79.1 billion every year for the past 22 years. **
+**And it's costing firms $79.1 billion every year for the past 22 years.**
 
-But wait: that's just one** **example of short-termism.&#x20;
+But wait: that's just one example of short-termism.
 
-**There's a short-termist issue in almost every single industry and it's reflecting in the global issues we're currently witnessing with our economies,  health systems, environment...**&#x20;
+**There's a short-termist issue in almost every single industry and it's reflecting in the global issues we're currently witnessing with our economies,  health systems, environment...**
 
 You name it.
 
@@ -38,7 +38,7 @@ A gage is broadly defined as a **contract between two or more stakeholders who p
 
 ## Why should I use gages?
 
-The developed gage-related applications, are not only designed and proven to **earn you more money with less risk than any other instrument**, they're also **completely free**,** accessible to all **and** can significantly help change our short-termist ways**. The catch? You will need to fight your short-termist instincts, and approach everything with a long-term mentality. This simply means that **the most patient investors will win the most money**.
+The developed gage-related applications, are not only designed and proven to **earn you more money with less risk than any other instrument**, they're also **completely free**, **accessible to all** and **can significantly help change our short-termist ways**. The catch? You will need to fight your short-termist instincts, and approach everything with a long-term mentality. This simply means that **the most patient investors will win the most money**.
 
 **Are you more patient than everyone else?**
 
