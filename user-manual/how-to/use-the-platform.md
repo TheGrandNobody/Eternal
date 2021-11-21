@@ -1,5 +1,5 @@
 ---
-description: A quick guide on how to get start
+description: A guide on using the Eternal platform.
 ---
 
 # Use the platform
