@@ -12,23 +12,25 @@ Second, Eternal **aims to popularize a new class of long-term DeFi tools, gages,
 
 ## What is short-termism?
 
-Short-termism is **the habit of focusing on short-term results at the cost of long-term gain**. For instance, take an individual who tries to earn money as fast as possible, paying no attention to risk, or another who only eats takeaway, with no care for their health. Sounds familiar? We've all been there. Whether it is a money-hungry firm who does not care about the world, or investors aping on risky meme tokens, [we are all psychologically engineered to be short-termist](https://www.aeaweb.org/articles?id=10.1257/aer.89.1.103).
+Short-termism is **the habit of focusing on short-term results at the cost of long-term gain**. For instance, take an individual who tries to earn money as fast as possible, paying no attention to risk, or another who only eats takeaway, ignoring their health.&#x20;
 
-Most of the time, **the majority of us are making decisions which only benefit us in the moment.**
+Sounds familiar? We have all been there. Whether it is the money-hungry firm with no care for the world, or investors aping on risky meme tokens, [we are all psychologically engineered to be short-termist](https://www.aeaweb.org/articles?id=10.1257/aer.89.1.103).
+
+Most of the time, **the majority of us are making decisions which only benefit us in the moment and end up hurting us or others later on.**
 
 ## **Why should I care about short-termism?**
 
-Short termism is everywhere. We breathe short-termism, we make and use short-termist technology and we think and act short-term. Here's one of the best real life examples:
+Short termism is everywhere. We breathe short-termism, we make and use short-termist technology and we think and act short-term. Here is one of the most relevant real life examples:
 
 **The Firm-Investor Dilemma:**
 
 Firms rely on investors to buy and hold their shares. Investors want to make money as fast as possible, and will consequently tend to choose firms which make the most short-term profits. In turn, firms do everything in their power to increase short-term revenue and end up making all kinds of poor decisions with no regard for their long-term consequences. This leads to more issues like unemployment, pollution, less R\&D and ironically, less revenue and growth for the firm.
 
-**And it's costing firms $79.1 billion every year for the past 22 years.**
+**And it is costing firms $79.1 billion every year for the past 22 years.**
 
 Yet, that is just one example of short-termism.
 
-**There is a short-termist issue in almost every single industry and it's reflecting in the global issues we're currently witnessing with our economies, health systems, environment...**
+**There is a short-termist issue in almost every single industry and it is reflecting in the global issues we are currently witnessing with our economies, health systems, environment...**
 
 You name it.
 
@@ -38,7 +40,7 @@ A gage is broadly defined as a **contract between two or more stakeholders who p
 
 ## Why should I use gages?
 
-The developed gage-related applications, are not only designed and proven to **earn you more money with less risk than any other instrument**, they're also **completely free**, **accessible to all** and **can significantly help change our short-termist ways**. The catch? You will need to fight your short-termist instincts, and approach everything with a long-term mentality. This simply means that **the most patient investors will win the most money**.
+The developed gage-related applications, are not only designed and proven to **earn you more money with less risk than any other instrument**, they are also **completely free**, **accessible to all** and **can significantly help change our short-termist behaviour**. The catch? You will need to fight your short-termist instincts, and approach everything with a long-term mentality. This simply means that **the most patient investors will win the most money**.
 
 **Are you more patient than everyone else?**
 
@@ -50,7 +52,7 @@ For this specific dilemma we propose a solution with [loyalty gages](products-se
 
 But that is not the end of it.
 
-**Most gages are a solution to a specific aspect of short-termism; there are already four other solutions to four other different aspects, only waiting to be announced.**
+**Most gages are a solution to a specific aspect of short-termism; there are already four other solutions to four additional aspects which are just as harmful, only waiting to be announced.**
 
 ## What is the company Eternal Finance B.V for then?
 
@@ -66,7 +68,7 @@ Eternal Finance B.V was necessary to obtain the funds which covered not only mar
 
 Unfortunately, we have not reached a point in society where all systems are fully decentralized. Eternal Finance B.V is primarily here to serve as a bridge of trust between the centralized and decentralized. This will be useful for upcoming releases, where some applications are particularly useful to countries where internet access is not as common, or to make necessary agreements with governments.
 
-## What's the governance like in Eternal?
+## What is the governance like in Eternal?
 
 In the **second quarter post-launch**, the Eternal Fund will be released and Eternal will go from having Nobody as the initial admin, to nobody as the admin. Meaning, Eternal will become a fully decentralized autonomous organization. This decision was made for **two reasons:**
 
@@ -76,8 +78,8 @@ The best systems have the input of the users, not just the architect. This means
 
 **2. Treasury**
 
-The Eternal Fund holds a treasury funded by the Eternal token. However, it needs a minimum time period for it to accumulate some value. Don't worry, no one can access it, not even Nobody.
+The Eternal Fund holds a treasury funded by the Eternal token. However, it needs a minimum time period for it to accumulate some value. Do not worry, no one can access it, not even Nobody.
 
 ## Who is Nobody?
 
-It doesn't matter.
+It does not matter.
