@@ -1,5 +1,5 @@
 ---
-description: A guide on using the Eternal platform.
+description: A guide on using the Eternal platform
 ---
 
 # Use the platform

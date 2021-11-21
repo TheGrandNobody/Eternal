@@ -1,5 +1,5 @@
 ---
-description: A guide to getting started with Eternal.
+description: A guide to getting started with Eternal
 ---
 
 # Get started

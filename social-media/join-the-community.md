@@ -1,7 +1,7 @@
 ---
 description: >-
   Chat with other cool people or keep up to date with Eternal Finance's
-  operations in this world!
+  operations in this world
 ---
 
 # 🫂 Join the Community

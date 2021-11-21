@@ -1,5 +1,5 @@
 ---
-description: A summary of Eternal, what it is and what it does.
+description: A summary of Eternal, what it is and what it does
 ---
 
 # 📔 Introduction/FAQ
@@ -34,7 +34,7 @@ You name it.
 
 ## What is a gage?
 
-A gage is broadly defined as a **contract between two or more stakeholders who promise to pay a given percentage of a deposited asset to the last stakeholder who breaks a predetermined condition.** It's a lot easier to understand a gage through its applications: you can do exactly that by reading [the gage section](products-services/gages/), or the academic whitepaper introducing gages.
+A gage is broadly defined as a **contract between two or more stakeholders who promise to pay a given percentage of a deposited asset to the last stakeholder who breaks a predetermined condition.** It's a lot easier to understand a gage through its applications: you can do exactly that by reading [the gage section](products-services/gages/), or the academic whitepaper, _Introduction to gages_.
 
 ## Why should I use gages?
 
@@ -46,9 +46,11 @@ The developed gage-related applications, are not only designed and proven to **e
 
 **Short-termism arises as a result of poor dynamics between individuals.** For example, back to our firm-investor dilemma, one of the main reasons firms are short-termist is because of their unhealthy relationships with investors, who are also short-termist. **Gages are particularly useful when it comes to creating win-win relationships between two or more individuals.**&#x20;
 
-For this specific dilemma we propose a solution with [loyalty gages](products-services/gages/loyalty-gage.md). But that's not all.
+For this specific dilemma we propose a solution with [loyalty gages](products-services/gages/loyalty-gage.md).&#x20;
 
-**Most gages are a solution to a specific aspect of short-termism; there are already four other solutions to four other aspects, itching to be announced.**
+But that's not all.
+
+**Most gages are a solution to a specific aspect of short-termism; there are already four other solutions to four other aspects, only waiting to be announced.**
 
 ## What is the company Eternal Finance B.V for then?
 
@@ -66,7 +68,7 @@ Unfortunately, we have not reached a point in society where all systems are full
 
 ## What's the governance like in Eternal?
 
-In the **second quarter post-launch**, the Eternal Fund will be released and Eternal will go from having Nobody as the initial admin, to a fully decentralized autonomous organization. This decision was made for **two reasons:**
+In the **second quarter post-launch**, the Eternal Fund will be released and Eternal will go from having Nobody as the initial admin, to nobody as the admin. Meaning, Eternal will become a fully decentralized autonomous organization. This decision was made for **two reasons:**
 
 **1. Community Input**
 
@@ -74,4 +76,8 @@ The best systems have the input of the users, not just the architect. This means
 
 **2. Treasury**
 
-The Eternal Fund holds a treasury funded by the Eternal token. Don't worry, no one can access it, not even Nobody. It's best to give it some time to let the Fund accumulate some value.
+The Eternal Fund holds a treasury funded by the Eternal token. However, it needs a minimum time period for it to accumulate some value. Don't worry, no one can access it, not even Nobody.
+
+## Who is Nobody?
+
+It doesn't matter.

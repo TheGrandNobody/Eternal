@@ -1,5 +1,5 @@
 ---
-description: Your one way ticket to the best earning method in DeFi.
+description: Your one way ticket to the best earning method in DeFi
 ---
 
 # Yield Gage
@@ -18,6 +18,4 @@ A yield gage puts all deposits through yield farming strategies, while still rew
 
 <mark style="color:red;"><mark style="color:green;">Alice and Bob each own 10000 ETRNL. They enter a yield gage with a deposit of 10000 ETRNL and a risk percentage of 1%. Bob forfeits after three months and has to pay 100 ETRNL<mark style="color:green;"></mark> <mark style="color:green;">to Alice. However, over the period of participation, Bob and Alice's deposits also accumulated 500 ETRNL each from token rewards, and an additional 1500 from yield farming. 1% of Bob's total rewards are also paid to Alice. Therefore, Alice now owns 12120 ETRNL and Bob owns 11880 ETRNL.</mark>
 
-<mark style="color:blue;">**Alice earned substantially more than simply through yield farming. **</mark>
-
-<mark style="color:blue;">**Both users came off with a net gain; the most patient earns the most. **</mark>
+<mark style="color:blue;">**Both users came off with a net gain; the most patient not only earns the most, but substantially more than simply through yield farming. **</mark>
