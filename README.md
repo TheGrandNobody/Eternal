@@ -12,7 +12,7 @@ Second, Eternal **aims to popularize a new class of long-term DeFi tools, gages,
 
 ## What is short-termism?
 
-Short-termism is **the habit of focusing on short-term results at the cost of long-term gain**. For instance, take an individual who tries to earn money as fast as possible, paying no attention to risk, or another who only eats takeaway, with no care for their health. Sounds familiar? We've all been there. Point is, whether it's a money-hungry firm who doesn't care about the world, or investors aping on risky meme tokens, [we're psychologically engineered to be short-termist](https://www.aeaweb.org/articles?id=10.1257/aer.89.1.103).
+Short-termism is **the habit of focusing on short-term results at the cost of long-term gain**. For instance, take an individual who tries to earn money as fast as possible, paying no attention to risk, or another who only eats takeaway, with no care for their health. Sounds familiar? We've all been there. Whether it is a money-hungry firm who does not care about the world, or investors aping on risky meme tokens, [we're psychologically engineered to be short-termist](https://www.aeaweb.org/articles?id=10.1257/aer.89.1.103).
 
 Most of the time, **the majority of us are making decisions which only benefit us in the moment.**
 
@@ -26,15 +26,15 @@ Firms rely on investors to buy and hold their shares. Investors want to make mon
 
 **And it's costing firms $79.1 billion every year for the past 22 years.**
 
-Yet, that's just one example of short-termism.
+Yet, that is just one example of short-termism.
 
-**There's a short-termist issue in almost every single industry and it's reflecting in the global issues we're currently witnessing with our economies, health systems, environment...**
+**There is a short-termist issue in almost every single industry and it's reflecting in the global issues we're currently witnessing with our economies, health systems, environment...**
 
 You name it.
 
 ## What is a gage?
 
-A gage is broadly defined as a **contract between two or more stakeholders who promise to pay a given percentage of a deposited asset to the last stakeholder who breaks a predetermined condition.** It's a lot easier to understand a gage through its applications: you can do exactly that by reading [the gage section](products-services/gages/), or the academic whitepaper, _Introduction to gages_.
+A gage is broadly defined as a **contract between two or more stakeholders who promise to pay a given percentage of a deposited asset to the last stakeholder who breaks a predetermined condition.** It is a lot easier to understand a gage through its applications: you can do exactly that by reading [the gage section](products-services/gages/), or the academic whitepaper, _Introduction to gages_.
 
 ## Why should I use gages?
 
@@ -48,9 +48,9 @@ The developed gage-related applications, are not only designed and proven to **e
 
 For this specific dilemma we propose a solution with [loyalty gages](products-services/gages/loyalty-gage.md).
 
-But that's not all.
+But that is not the end of it.
 
-**Most gages are a solution to a specific aspect of short-termism; there are already four other solutions to four other aspects, only waiting to be announced.**
+**Most gages are a solution to a specific aspect of short-termism; there are already four other solutions to four other different aspects, only waiting to be announced.**
 
 ## What is the company Eternal Finance B.V for then?
 
