@@ -12,7 +12,7 @@ Second, Eternal **aims to popularize a new class of long-term DeFi tools, gages,
 
 ## What is short-termism?
 
-Short-termism is **the habit of focusing on short-term results at the cost of long-term gain**. Think of an individual who tries to earn money as fast as possible, without thinking about risk, or another who only eats takeaway, without thinking about their health. Sounds familiar? We've all been there. Point is, whether it's a money-hungry firm who doesn't care about the world, or investors aping on risky meme tokens, [we're psychologically engineered to be short-termist](https://www.aeaweb.org/articles?id=10.1257/aer.89.1.103).
+Short-termism is **the habit of focusing on short-term results at the cost of long-term gain**. For instance, take an individual who tries to earn money as fast as possible, paying no attention to risk, or another who only eats takeaway, with no care for their health. Sounds familiar? We've all been there. Point is, whether it's a money-hungry firm who doesn't care about the world, or investors aping on risky meme tokens, [we're psychologically engineered to be short-termist](https://www.aeaweb.org/articles?id=10.1257/aer.89.1.103).
 
 Most of the time, **the majority of us are making decisions which only benefit us in the moment.**
 
@@ -26,9 +26,9 @@ Firms rely on investors to buy and hold their shares. Investors want to make mon
 
 **And it's costing firms $79.1 billion every year for the past 22 years.**
 
-But wait: that's just one example of short-termism.
+Yet, that's just one example of short-termism.
 
-**There's a short-termist issue in almost every single industry and it's reflecting in the global issues we're currently witnessing with our economies,  health systems, environment...**
+**There's a short-termist issue in almost every single industry and it's reflecting in the global issues we're currently witnessing with our economies, health systems, environment...**
 
 You name it.
 
@@ -44,9 +44,9 @@ The developed gage-related applications, are not only designed and proven to **e
 
 ## How do gages solve short-termism?
 
-**Short-termism arises as a result of poor dynamics between individuals.** For example, back to our firm-investor dilemma, one of the main reasons firms are short-termist is because of their unhealthy relationships with investors, who are also short-termist. **Gages are particularly useful when it comes to creating win-win relationships between two or more individuals.**&#x20;
+**Short-termism arises as a result of poor dynamics between individuals.** For example, back to our firm-investor dilemma, one of the main reasons firms are short-termist is because of their unhealthy relationships with investors, who are also short-termist. **Gages are particularly useful when it comes to creating win-win relationships between two or more individuals.**
 
-For this specific dilemma we propose a solution with [loyalty gages](products-services/gages/loyalty-gage.md).&#x20;
+For this specific dilemma we propose a solution with [loyalty gages](products-services/gages/loyalty-gage.md).
 
 But that's not all.
 
