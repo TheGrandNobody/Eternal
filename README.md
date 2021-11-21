@@ -12,7 +12,7 @@ Second, Eternal **aims to popularize a new class of long-term DeFi tools, gages,
 
 ## What is short-termism?
 
-Short-termism is **the habit of focusing on short-term results at the cost of long-term gain**. For instance, take an individual who tries to earn money as fast as possible, paying no attention to risk, or another who only eats takeaway, with no care for their health. Sounds familiar? We've all been there. Whether it is a money-hungry firm who does not care about the world, or investors aping on risky meme tokens, [we're psychologically engineered to be short-termist](https://www.aeaweb.org/articles?id=10.1257/aer.89.1.103).
+Short-termism is **the habit of focusing on short-term results at the cost of long-term gain**. For instance, take an individual who tries to earn money as fast as possible, paying no attention to risk, or another who only eats takeaway, with no care for their health. Sounds familiar? We've all been there. Whether it is a money-hungry firm who does not care about the world, or investors aping on risky meme tokens, [we are all psychologically engineered to be short-termist](https://www.aeaweb.org/articles?id=10.1257/aer.89.1.103).
 
 Most of the time, **the majority of us are making decisions which only benefit us in the moment.**
 
