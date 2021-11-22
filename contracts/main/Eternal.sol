@@ -4,14 +4,14 @@ pragma solidity ^0.8.0;
 import "../interfaces/IEternalToken.sol";
 import "../interfaces/IGageV2.sol";
 import "./Gage.sol";
-import "@openzeppelin/contracts/utils/Context.sol";
+import "../inheritances/OwnableEnhanced.sol";
 
 /**
  * @title Contract for the Eternal gaging platform
  * @author Nobody (me)
  * @notice The Eternal contract holds all user-data and gage logic.
  */
-contract Eternal is Context, IEternal {
+contract Eternal is IEternal, OwnableEnhanced {
 
     constructor (address _eternal) {
         // Initialize the ETRNL interface
@@ -28,6 +28,8 @@ contract Eternal is Context, IEternal {
 
     // Keeps track of the latest Gage ID
     uint256 public lastId;
+    // The (percentage) fee rate applied to any gage-reward computations not using ETRNL
+    uint16 public feeRate;
 
 /////–––««« Gage-logic functions »»»––––\\\\\
 
@@ -65,11 +67,16 @@ contract Eternal is Context, IEternal {
         IGageV2 gage = IGageV2(gages[id]);
         (address asset, uint256 amount, uint256 risk, bool loyalty) = gage.viewUserData(user);
 
-        bool usingETRNL = asset == address(eternal);
         // Compute the amount minus the fee rate if using ETRNL
-        uint256 netAmount = usingETRNL ? amount - (amount * eternal.viewTotalRate()) / 100000 : 0;
+        uint256 netAmount;
+        if (asset == address(eternal)) {
+            netAmount = amount - (amount * eternal.viewTotalRate()) / 100000;
+        } else {
+            netAmount = amount - (amount * feeRate) / 100000;
+            IERC20(asset).transfer(fund(), (amount * feeRate / 100000));
+        }
         // Compute any rewards accrued during the gage
-        uint256 finalAmount = usingETRNL ? computeAccruedRewards(netAmount, user, id)  : computeAccruedRewards(amount, user, id);
+        uint256 finalAmount = computeAccruedRewards(netAmount, user, id);
         /** Users get the entire entry amount back if the gage wasn't active at the time of departure.
             If the user forfeited, the system substracts the loss incurred. 
             Otherwise, the gage return is awarded to the winner. */
@@ -89,6 +96,18 @@ contract Eternal is Context, IEternal {
             }
         }
         IERC20(asset).transfer(user, finalAmount);
+    }
+
+/////–––««« Fund-only functions »»»––––\\\\\
+
+    /**
+     * @dev Sets the fee rate value that is applied to assets other than ETRNL.
+     * @param newRate The new specified fee rate
+     */
+    function setFeeRate(uint16 newRate) external override onlyFund() {
+        uint16 oldRate = feeRate;
+        feeRate  = newRate;
+        emit FeeRateChanged(oldRate, newRate);
     }
 
 /////–––««« Utility functions »»»––––\\\\\
