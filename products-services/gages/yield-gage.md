@@ -12,7 +12,7 @@ A yield gage puts all deposits through yield farming strategies, while still rew
 
 **Condition:** Non-withdrawal of deposit
 
-**Highest Earning Potential of all DeFi.** Yield gages not only have [all the benefits of the standard gage](yield-gage.md#properties), they also combine them with the earning potential of any yield farming strategy. Doing the math, that's the earning potential of a gage, added to that of yield farming and the ETRNL token rewards. Hence, **yield gages offer you the highest earning potential of all DeFi, by a large margin.**
+**Highest Earning Potential of all DeFi.** Yield gages not only have [all the benefits of the standard gage](standard-gage.md#properties), they also combine them with the earning potential of any yield farming strategy. Doing the math, that's the earning potential of a gage, added to that of yield farming and the ETRNL token rewards. Hence, **yield gages offer you the highest earning potential of all DeFi, by a large margin.**
 
 ### <mark style="color:blue;">**Example**</mark>
 
