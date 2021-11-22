@@ -36,7 +36,7 @@ You name it.
 
 ## What is a gage?
 
-A gage is broadly defined as a **contract between two or more stakeholders who promise to pay a given percentage of a deposited asset to the last stakeholder who breaks a predetermined condition.** It is a lot easier to understand a gage through its applications: you can do exactly that by reading [the gage section](products-services/gages/), or the academic whitepaper, _Introduction to gages_.
+A gage is broadly defined as a **contract between two or more stakeholders who promise to pay a given percentage of a deposited asset to the last stakeholder who breaks a predetermined condition.** It is a lot easier to understand a gage through its applications: it is preferable to do so by reading [the gage section](products-services/gages/), or the academic whitepaper, _Introduction to gages_.
 
 ## Why should I use gages?
 
