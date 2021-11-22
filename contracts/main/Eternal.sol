@@ -16,6 +16,8 @@ contract Eternal is IEternal, OwnableEnhanced {
     constructor (address _eternal) {
         // Initialize the ETRNL interface
         eternal = IEternalToken(_eternal);
+        // Set initial feeRate
+        feeRate = 500;
     }
 
     // The ETRNL interface
