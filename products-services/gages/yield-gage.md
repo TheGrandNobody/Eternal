@@ -4,9 +4,9 @@ description: Your one way ticket to the best earning method in DeFi
 
 # Yield Gage
 
-### Definition
+### <mark style="color:blue;">Definition</mark>
 
-A yield gage puts all deposits through yield farming strategies, while still rewarding the last stakeholder to withdraw his deposit.
+<mark style="color:purple;">A yield gage puts all deposits through yield farming strategies, while still rewarding the last stakeholder to withdraw his deposit.</mark>
 
 ### Properties
 
