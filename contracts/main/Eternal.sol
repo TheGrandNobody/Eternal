@@ -41,7 +41,7 @@ contract Eternal is IEternal, OwnableEnhanced {
      */
     function initiateStandardGage(uint32 users) external override returns(uint256) {
         lastId += 1;
-        Gage newGage = new Gage(lastId, users);
+        Gage newGage = new Gage(lastId, users, address(this));
         gages[lastId] = address(newGage);
         emit NewGage(lastId, address(newGage));
 
