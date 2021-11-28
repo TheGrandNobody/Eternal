@@ -32,9 +32,9 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
     // The total ETRNL supply after taking reflections into account
     uint256 private totalReflectedSupply;
     // Threshold at which the contract swaps its ETRNL balance to provide liquidity (0.1% of total supply by default)
-    uint64 private tokenLiquidityThreshold;
+    uint256 private tokenLiquidityThreshold;
     // The true total ETRNL supply 
-    uint64 private totalTokenSupply;
+    uint256 private totalTokenSupply;
 
     // All fees accept up to three decimal points
     // The percentage of the fee, taken at each transaction, that is stored in the EternalFund
@@ -296,7 +296,7 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
         // If the sender or recipient are excluded from fees, we ignore the fee altogether
         if (takeFee) {
             // Perform a burn based on the burn rate 
-            _burn(address(this), uint64(amount) * burnRate / 1000, reflectedAmount * burnRate / 1000);
+            _burn(address(this), amount * burnRate / 1000, reflectedAmount * burnRate / 1000);
             // Redistribute based on the redistribution rate 
             totalReflectedSupply -= reflectedAmount * redistributionRate / 1000;
             // Store ETRNL away in the EternalFund based on the funding rate
@@ -318,7 +318,7 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
      * - Cannot burn from the burn address
      * - Burn amount cannot be greater than the msgSender's balance
      */
-    function burn(uint64 amount) external returns (bool) {
+    function burn(uint256 amount) external returns (bool) {
         address sender = _msgSender();
         require(sender != address(0), "Burn from the zero address");
         uint256 balance = balanceOf(sender);
@@ -341,7 +341,7 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
      * @param amount The amount of ETRNL being burned
      * @param reflectedAmount The reflected equivalent of ETRNL being burned
      */
-    function _burn(address sender, uint64 amount, uint256 reflectedAmount) private {
+    function _burn(address sender, uint256 amount, uint256 reflectedAmount) private {
         // Send tokens to the 0x0 address
         reflectedBalances[address(0)] += reflectedAmount;
         trueBalances[address(0)] += amount;
@@ -376,7 +376,7 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
         uint256 feeRate = takeFee ? (liquidityProvisionRate + burnRate + fundingRate + redistributionRate) : 0;
 
         // Calculate the total fees and transfered amount after fees
-        uint256 totalFees = (trueAmount * feeRate) / 100;
+        uint256 totalFees = (trueAmount * feeRate) / 100000;
         uint256 netTransferAmount = trueAmount - totalFees;
 
         // Calculate the reflected amount, reflected total fees and reflected amount after fees
@@ -517,7 +517,7 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
      * @dev Updates the threshold of ETRNL at which the contract provides liquidity to a given value.
      * @param value The new token liquidity threshold
      */
-    function setLiquidityThreshold(uint64 value) external override onlyFund() {
+    function setLiquidityThreshold(uint256 value) external override onlyFund() {
         uint256 oldThreshold = tokenLiquidityThreshold;
         tokenLiquidityThreshold = value;
 

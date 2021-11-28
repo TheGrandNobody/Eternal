@@ -24,7 +24,7 @@ interface IEternalToken is IERC20, IERC20Metadata {
     // Sets the address of the Eternal Liquidity contract
     function setEternalLiquidity(address newContract) external;
     // Sets the liquidity threshold to a given value
-    function setLiquidityThreshold(uint64 value) external;
+    function setLiquidityThreshold(uint256 value) external;
     // Designates a new Eternal DAO address
     function designateFund(address fund) external;
     // View the rate used to convert between the reflection and true token space
