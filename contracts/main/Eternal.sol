@@ -65,7 +65,7 @@ contract Eternal is IEternal, OwnableEnhanced {
      *
      */
     function withdraw(address user, uint256 id) external override {
-        require(_msgSender() == gages[id], "msg.sender must be the gage");
+        require(msg.sender == gages[id], "msg.sender must be the gage");
         IGageV2 gage = IGageV2(gages[id]);
         (address asset, uint256 amount, uint256 risk, bool loyalty) = gage.viewUserData(user);
 
