@@ -39,9 +39,10 @@ contract Gage is Context, IGage {
     // The state of the gage       
     Status internal status;         
 
-    constructor (uint256 _id, uint32 _users) {
+    constructor (uint256 _id, uint32 _users, address _eternal) {
         id = _id;
         capacity = _users;
+        eternal = IEternal(_eternal);
     }      
 
     /**
