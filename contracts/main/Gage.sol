@@ -6,7 +6,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "../interfaces/IEternal.sol";
 import "../interfaces/IGage.sol";
 
-contract Gage is Context, IGage {
+contract Gage is IGage {
 
     // Holds all possible statuses for a gage
     enum Status {
@@ -59,7 +59,7 @@ contract Gage is Context, IGage {
      */
     function join(address asset, uint256 amount, uint8 risk, bool loyalty) external override {
         require(risk <= 100, "Invalid risk percentage");
-        UserData storage data = userData[_msgSender()];
+        UserData storage data = userData[msg.sender];
         require(!data.inGage, "User is already in this gage");
 
         data.amount = amount;
@@ -69,8 +69,8 @@ contract Gage is Context, IGage {
         data.loyalty = loyalty;
         users += 1;
 
-        eternal.deposit(asset, _msgSender(), amount, id);
-        emit UserAdded(id, _msgSender());
+        eternal.deposit(asset, msg.sender, amount, id);
+        emit UserAdded(id, msg.sender);
         // If contract is filled, update its status and initiate the gage
         if (users == capacity) {
             status = Status.Active;
@@ -86,7 +86,7 @@ contract Gage is Context, IGage {
      * - User must be in the gage
      */
     function exit() external override {
-        UserData storage data = userData[_msgSender()];
+        UserData storage data = userData[msg.sender];
         require(data.inGage, "User is not in this gage");
         
         // Remove user from the gage first (prevent re-entrancy)
@@ -94,7 +94,7 @@ contract Gage is Context, IGage {
 
         if (status != Status.Closed) {
             users -= 1;
-            emit UserRemoved(id, _msgSender());
+            emit UserRemoved(id, msg.sender);
         }
 
         if (status == Status.Active && users == 1) {
@@ -103,7 +103,7 @@ contract Gage is Context, IGage {
             emit GageClosed(id);
         }
 
-        eternal.withdraw(_msgSender(), id);
+        eternal.withdraw(msg.sender, id);
     }
 
     /////–––««« Variable state-inspection functions »»»––––\\\\\
