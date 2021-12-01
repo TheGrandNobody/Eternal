@@ -1,8 +1,10 @@
 ---
-description: All necessary information on the Eternal token
+description: The economics and crypto-economics of the Eternal token
 ---
 
 # 🪙 ETRNL
+
+### <mark style="color:blue;">Definition</mark>
 
 <mark style="color:purple;">ETRNL (spelled out "Eternal") is fundamentally, one of the three main cogs in the entire long-termist synergetic system which makes up the whole of Eternal.  Functionally, it is Eternal's governance and utility token, as well as the primary currency of usage on the platform.</mark>&#x20;
 
