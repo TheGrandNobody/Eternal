@@ -1,5 +1,5 @@
 ---
-description: A frictionless starter's manual on using Eternal
+description: The starter's guide to beginning a journey of long-term wealth on Eternal
 ---
 
 # ❓ How to
