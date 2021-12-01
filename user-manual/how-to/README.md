@@ -1,4 +1,10 @@
+---
+description: A frictionless starter's manual on using Eternal
+---
+
 # ❓ How to
+
+
 
 {% content-ref url="get-started.md" %}
 [get-started.md](get-started.md)
