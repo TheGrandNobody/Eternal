@@ -20,7 +20,7 @@ In traditional finance, the condition is generally set to re-issuance of shares.
 
 **Bonus**: A given amount of an asset is instantly available to the receiver upon activation of the gage.
 
-**Symbiosis. **Loyalty gages create symbiotic relationships between any given distributor and receiver.
+**Symbiosis.** Loyalty gages create symbiotic relationships between any given distributor and receiver.
 
 ### <mark style="color:blue;">**Example – Traditional Finance**</mark>
 
