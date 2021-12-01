@@ -6,7 +6,7 @@ description: All necessary information on the Eternal token
 
 <mark style="color:purple;">ETRNL (spelled out "Eternal") is fundamentally, one of the three main cogs in the entire long-termist synergetic system which makes up the whole of Eternal.  Functionally, it is Eternal's governance and utility token, as well as the primary currency of usage on the platform.</mark>&#x20;
 
-## <mark style="color:purple;">Economic Value</mark>
+## Economic Value
 
 The intrinsic value of ETRNL is generated and guaranteed by six factors:
 
