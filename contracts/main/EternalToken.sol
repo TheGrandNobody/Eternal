@@ -202,7 +202,7 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
      * @return True if the transfer is successful.
      */
     function transfer(address recipient, uint256 amount) external override returns (bool){
-        _transfer(_msgSender(), recipient, uint64(amount));
+        _transfer(_msgSender(), recipient, amount);
 
         return true;
     }
@@ -231,7 +231,7 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
      * - The caller must be allowed to spend (at least) the given amount on the sender's behalf
      */
     function transferFrom(address sender, address recipient, uint256 amount) external override returns (bool) {
-        _transfer(sender, recipient, uint64(amount));
+        _transfer(sender, recipient, amount);
 
         uint256 currentAllowance = allowances[sender][_msgSender()];
         require(currentAllowance >= amount, "Not enough allowance");

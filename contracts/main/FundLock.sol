@@ -8,41 +8,42 @@ import "../interfaces/IEternalToken.sol";
  * @author Nobody (me)
  * @notice The FundLock contract holds funds for a given time period. This is particularly useful for automated token vesting. 
  */
-contract FundLock{
+contract FundLock {
 
     // The Eternal Token interface
     IEternalToken private immutable eternal;
 
+    // The address of the recipient
     address public immutable recipient;
 
-    // Keeps track of the time at which the funds become available
-    uint256 public immutable timeOfRelease;
-    // Keeps track of the total amount of time to be waited
-    uint256 public immutable totalWaitingTime;
-    // Keeps track of the total withdrawals the recipient can perform
-    uint256 public immutable split;
-    // Keeps track of the number of withdrawals left
-    uint256 public counter;
+    // The maximum supply of the token
+    uint256 public immutable maxSupply;
+    // The total amount of tokens being vested (multiplied by 10 ** 9 for decimal-precision)
+    uint256 public immutable totalAmount;
+    // The factor by which to release a given number of vested tokens
+    uint256 public immutable gamma;
 
-    constructor (uint256 _totalWaitingTime, uint256 _split, address _eternal, address _recipient) {
+    constructor (address _eternal, address _recipient, uint256 _totalAmount, uint256 _maxSupply, uint256 _gamma) {
         eternal = IEternalToken(_eternal);
-        timeOfRelease = block.timestamp + _totalWaitingTime;
-        totalWaitingTime = _totalWaitingTime;
         recipient = _recipient;
-        split = _split;
-        counter = _split;
+        totalAmount = _totalAmount * (10 ** 9);
+        maxSupply = _maxSupply;
+        gamma = _gamma;
     }
 
     /**
-     * @dev Withraws locked funds to the Eternal Fund if the total waiting time has elapsed since deployment.
+     * @dev View the amount of tokens available based on the amount the supply has decreased by
+     */
+    function viewAmountAvailable() public view returns(uint256) {
+        uint256 deltaSupply = maxSupply - eternal.totalSupply();
+        return totalAmount * deltaSupply * gamma/ maxSupply;
+    }
+
+    /**
+     * @dev Withraws (part of) locked funds proportional to the deflation of the circulation supply of the token
      */
     function withdrawFunds() external {
-        if (counter == 1) {
-            require(block.timestamp >= timeOfRelease, "Funds are still locked");
-        } else { 
-            counter -= 1;
-            require(block.timestamp * (10**6) >= ((timeOfRelease * (10**6)) - ((totalWaitingTime * (10**6) * counter) / split)), "Funds are still locked");
-        }
-        eternal.transfer(recipient, eternal.balanceOf(address(this)) / split);
+        uint256 amountWithdrawn = totalAmount - eternal.balanceOf(address(this));
+        eternal.transfer(recipient, viewAmountAvailable() - amountWithdrawn);
     }
 }

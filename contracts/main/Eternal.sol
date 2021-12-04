@@ -62,7 +62,6 @@ contract Eternal is IEternal, OwnableEnhanced {
      * @dev Withdraws a given user's gage return
      * @param id The id of the specified gage contract
      * @param user The address of the specified user
-     *
      */
     function withdraw(address user, uint256 id) external override {
         require(msg.sender == gages[id], "msg.sender must be the gage");
