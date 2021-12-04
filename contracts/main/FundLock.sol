@@ -36,7 +36,7 @@ contract FundLock {
      */
     function viewAmountAvailable() public view returns(uint256) {
         uint256 deltaSupply = maxSupply - eternal.totalSupply();
-        return totalAmount * deltaSupply * gamma/ maxSupply;
+        return totalAmount * deltaSupply * gamma / maxSupply;
     }
 
     /**
