@@ -4,15 +4,15 @@ description: Simple and efficient
 
 # Standard Gage
 
-### Definition
+### <mark style="color:blue;">Definition</mark>
 
-A standard gage is the most basic application of a gage, rewarding the last stakeholder to withdraw his deposit.
+<mark style="color:purple;">A standard gage is the most basic application of a gage, rewarding the last stakeholder to withdraw his deposit.</mark>
 
 ### Properties
 
 **Condition:** Non-withdrawal of deposit
 
-**Less Risk, More Reward.** A standard gage's risk to reward is always equal to $$n-1$$ , where $$n$$ is the number of users. There is a mathematical proof for this in _Introduction to Gages_.
+**Less **<mark style="color:red;">**Risk**</mark>**, More **<mark style="color:green;">**Reward**</mark>**.** A standard gage's risk to reward is always equal to $$n-1$$ , where $$n$$ is the number of users. There is a mathematical proof for this in _Introduction to Gages_.
 
 ### <mark style="color:blue;">**Example**</mark>
 

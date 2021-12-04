@@ -8,7 +8,11 @@
   * [Get started](user-manual/how-to/get-started.md)
   * [Use the platform](user-manual/how-to/use-the-platform.md)
   * [View your stats](user-manual/how-to/view-your-stats.md)
-* [🪙 Tokenomics](user-manual/tokenomics.md)
+
+## Token
+
+* [🪙 ETRNL](token/tokenomics/README.md)
+  * [Tokenomics](token/tokenomics/tokenomics.md)
 
 ## Products/Services
 

@@ -1,4 +1,10 @@
+---
+description: The starter's guide to beginning a journey of long-term wealth on Eternal
+---
+
 # ❓ How to
+
+
 
 {% content-ref url="get-started.md" %}
 [get-started.md](get-started.md)

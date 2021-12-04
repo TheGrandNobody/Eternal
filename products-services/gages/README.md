@@ -6,7 +6,7 @@ description: The lexicon for all gage-related applications
 
 ### <mark style="color:blue;">Definition</mark>
 
-<mark style="color:purple;">A gage is a contract between two or more stakeholders who promise to pay a given percentage of a deposited asset to the last stakeholder who breaks a predetermined condition.</mark>&#x20;
+<mark style="color:purple;">A gage (spelled out the same way as "gauge") is a contract between two or more stakeholders who promise to pay a given percentage of a deposited asset to the last stakeholder who breaks a predetermined condition.</mark>&#x20;
 
 ### **All current gage-related applications**
 
@@ -25,7 +25,7 @@ description: The lexicon for all gage-related applications
 ### All prototyped gage-related applications
 
 {% hint style="info" %}
-**Prototyped applications are not made public and still in early stages. **
+**Prototyped applications are not made public and still in early stages.**&#x20;
 
 **No one will stop you from guessing them though** :wink:
 {% endhint %}

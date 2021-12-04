@@ -6,15 +6,15 @@ description: A summary of Eternal, what it is and what it does
 
 ## What is Eternal?
 
-Eternal is the world's first decentralized gaging platform, **aiming to popularize a new class of long-term financial instruments, gages, as a solution to a $1.7 trillion problem named short-termism.**
+Eternal is the world's first long-termist decentralized gaging platform, **aiming to popularize a new class of long-term financial instruments, gages, as a solution to a $1.7 trillion problem named short-termism.**
 
-However Eternal is **not a company** and **not owned by anyone except for its token holders. **Even the company Eternal Finance B.V and the architect Nobody, hold no initial stake in Eternal.
+However Eternal is **not a company** and **not owned by anyone except for its token holders.** Even the company Eternal Finance B.V and the architect Nobody, hold no initial stake in Eternal.
 
 ## What is short-termism?
 
 Short-termism is **the habit of focusing on short-term results at the cost of long-term gain**. For instance, take an individual trying to earn money as fast as possible, paying no attention to risk, or another who only eats takeaway, ignoring their health.&#x20;
 
-**Sounds familiar? We've all been there. **
+**Sounds familiar? We've all been there.**&#x20;
 
 Whether it is the money-hungry corporations with no care for the world, investors aping on risky meme tokens, or mercenary liquidity providers, [we are all psychologically engineered to be short-termist](https://www.aeaweb.org/articles?id=10.1257/aer.89.1.103).
 
@@ -34,7 +34,7 @@ Firms rely on investors to buy and hold their shares. Investors want to make mon
 
 **The **<mark style="color:red;">**Liquidity-Provider**</mark>** Dilemma:**
 
-Decentralized exchanges (DEX) and Blockchain projects listing their tokens on DEXs rely on liquidity providers for these tokens to be traded at any given price level. Liquidity providers want to earn as much money as possible, and therefore will only provide liquidity in the very short-term (<15 days), whilst the pool rewards are still relatively high, before moving to another project. In turn, projects attempt to appeal to liquidity providers by offering high yields, making all kinds of poor decisions with no regard for their long-term consequences. This leads to more issues such as abnormally high inflation rates, inadequate reflection of value by the token, longer downtrends and periods of recovery and radical short-termist culture.
+Decentralized exchanges (DEX) and Blockchain projects rely on liquidity providers in order for tokens to be traded at any given price level on DEXs. Liquidity providers want to earn as much money as possible, and therefore will only provide liquidity in the very short-term (<15 days), whilst the pool rewards are still relatively high, before moving to another project. In turn, projects attempt to appeal to liquidity providers by offering high yields, making all kinds of poor decisions with no regard for their long-term consequences. This leads to more issues such as abnormally high inflation rates, inadequate reflection of value by the token, longer downtrends and periods of recovery and radical short-termist culture.
 
 {% hint style="info" %}
 **There is a short-termist issue in almost every single industry and it is reflecting in the global issues we are currently witnessing with our economies, health systems, environment...**

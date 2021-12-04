@@ -4,23 +4,23 @@ description: A solution to both corporate and asset finance short-termism.
 
 # Loyalty Gage
 
-### Definition
+### <mark style="color:blue;">Definition</mark>
 
-Loyalty gages involve an entity or individual distributing an asset (**the distributor**), to another entity or individual receiving said asset (**the receiver**). A bonus is rewarded to the receiver either in terms of the risked percentage or another asset. The risked percentage of the distributor is always lower than that of the receiver.
+<mark style="color:purple;">Loyalty gages involve an entity or individual distributing an asset (</mark><mark style="color:purple;">**the distributor**</mark><mark style="color:purple;">), to another entity or individual receiving said asset (</mark><mark style="color:purple;">**the receiver**</mark><mark style="color:purple;">). A bonus is rewarded to the receiver either in terms of the risked percentage or another asset. The risked percentage of the distributor is always lower than that of the receiver.</mark>
 
 ### Properties
 
 **Distributor Condition:**  Depends on context and industry
 
 {% hint style="info" %}
-In traditional finance, the condition is generally set to re-issuance of shares. In decentralized finance, the condition is set to the non-withdrawal of the deposit.
+In traditional finance, the condition is generally set to re-issuance of shares. In decentralized finance, the condition is generally set to a threshold involving the total token supply and its yearly inflation rate.
 {% endhint %}
 
 **Receiver Condition:** Non-withdrawal of deposit
 
-**Bonus**: A given amount of an asset is instantly available to the receiver upon activation of the gage.
+<mark style="color:green;">**Bonus**</mark><mark style="color:green;">:</mark> A given amount of an asset is instantly available to the receiver upon activation of the gage.
 
-**Symbiosis. **Loyalty gages create symbiotic relationships between any given distributor and receiver.
+<mark style="color:orange;">**Symb**</mark><mark style="color:green;">**iosis**</mark>**.** Loyalty gages create symbiotic relationships between any given distributor and receiver.
 
 ### <mark style="color:blue;">**Example – Traditional Finance**</mark>
 
