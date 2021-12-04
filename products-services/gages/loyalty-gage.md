@@ -44,12 +44,12 @@ In traditional finance, the condition is generally set to re-issuance of shares.
 
 <mark style="color:purple;">The loyalty gage warrants Bob 100 LP tokens, with a risk percentage of 5% for Alice, a 5.5% risk percentage for Bob and a 5% bonus of the value of the LP tokens in the form of Alice's token. The distributor condition depends on whether Alice's total token supply has increased by a threshold of 2.5%, or 25% of the token's yearly inflation rate. The receiver condition depends on whether Bob withdraws the deposited LP tokens.</mark>&#x20;
 
-<mark style="color:purple;">As soon as the loyalty gage is active, the bonus of 10 (of Alice's) token is awarded to Bob's wallet, who can freely spend it at will. If Bob withdraws his LP tokens before Alice's total token supply has increased by 2.5%, then Bob pays Alice 5.5 LP tokens, which are equivalent to 11 of Alice's tokens. If Alice's total token supply increases by 2.5% before Bob withdraws the 100 LP tokens deposited in the contract, then Bob receives an additional 10 tokens.</mark>&#x20;
+<mark style="color:purple;">As soon as the loyalty gage is active, the bonus of 10 (of Alice's) token is awarded to Bob's wallet, who can freely spend it at will. If Bob withdraws his LP tokens (plus LP rewards) before Alice's total token supply has increased by 2.5%, then Bob pays Alice 5.5 LP tokens equivalent to 11 of Alice's tokens, plus 5.5% of his LP rewards. If Alice's total token supply increases by 2.5% before Bob withdraws the 100 LP tokens deposited in the contract, then Bob receives an additional 10 tokens.</mark>&#x20;
 
 {% hint style="info" %}
 <mark style="color:blue;">**Alice either gains healthy long-term liquidity providers or profits.**</mark>
 
 <mark style="color:blue;">**Bob either gains the equivalent of 20% more LP tokens, or pays 1% more for the original LP tokens.**</mark>
 
-<mark style="color:blue;">**Loyalty gages end the need for short-termist relationships between Blockchain projects and liquidity providers.**</mark>
+<mark style="color:blue;">**Loyalty gages end the short-termist relationships between Blockchain projects and liquidity providers and also remove the need for abnormally high liquidity mining incentives.**</mark>
 {% endhint %}

@@ -64,6 +64,22 @@ But that is not the end of it.
 
 **Most gages are a solution to a specific aspect of short-termism; there are already four other solutions to four additional aspects that are just as harmful, only waiting to be announced.**
 
+## Is a loyalty gage the same as a bond?
+
+No, a bond is a loan made by an investor to an entity, usually a firm. While bonds may initially sound similar to a loyalty gage in that they are both long-term financial instruments, they are entirely different.&#x20;
+
+1. **Bonds have a fixed period of maturation (vesting period).** **Loyalty gages are completely flexible** **and allow the liquidity providers to withdraw their liquidity whenever they  wish to do so**, penalizing them rather than forcing them into an involuntary choice.
+2. **Bonds yield interest over time to the investor. This entails relatively small rewards distributed over time,** as the full value of the interest is distributed by the end of the maturation period.  **Loyalty gages offer the investor a relatively large, instantaneous bonus percentage** **as well as an additional relatively large bonus** if the investor maintains his promise of long-termism.
+3. **Bonds do not fix the issue of short-termism in investors.** Forcing a vesting period onto investors does not change their short-termist psychology over time. From a behavioral psychology standpoint, forcing anything onto anyone is an unsustainable way to change them in the long-term. **A loyalty gage promotes long-term culture through the creation of a symbiotic relationship between any given investor and  asset-distributing entity.** No one is forced to do anything, but there are consequences which discourage anyone from acting poorly, and rewards which encourage anyone who acts virtuously.
+
+## What about a gage in general, is it similar financial instrument X (bonds, warrants, etc)?
+
+No, gages are a different,  much larger class of long-term financial instruments of their own, which are particularly adept in establishing harmonious dynamics between entities.
+
+1. **A gage has an infinity of applications**, which not only overlap the scope of any given traditional financial instrument, but more broadly, pretty much any interaction between any two or more individuals. &#x20;
+2. **Gage-related applications are generally superior in fixing a short-termist issue as compared to traditional financial instruments** as they create symbiotic relationships rather than force either individual into a given traditional role.&#x20;
+3. **The flexibility of gages always allow more options, more actions, and more fluidity in the interaction between any two or more individuals.** This means that constrains, limits and other barriers to access and usage normally imposed by traditional financial instruments are removed with gages.
+
 ## What is the company Eternal Finance B.V for then?
 
 Eternal Finance B.V is necessary for **two reasons:**

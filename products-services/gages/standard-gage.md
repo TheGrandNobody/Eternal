@@ -1,5 +1,5 @@
 ---
-description: Simple and efficient
+description: The simplest form of the gage.
 ---
 
 # Standard Gage

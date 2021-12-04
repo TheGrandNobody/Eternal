@@ -13,7 +13,7 @@
 
 * [🪙 ETRNL](token/tokenomics/README.md)
   * [Tokenomics](token/tokenomics/tokenomics.md)
-  * [Initial Gage Offering](token/tokenomics/initial-gage-offering.md)
+  * [Staking](token/tokenomics/staking.md)
 
 ## Products/Services
 
@@ -25,6 +25,7 @@
   * [H\*\*\*\*\* Gage](products-services/gages/h-gage.md)
   * [E\*\*\*\*\*\*\*\* Gage](products-services/gages/e-gage.md)
   * [E\*\*\*\*\*\*\*\*\*\*\*\* Gage](products-services/gages/e-gage-1.md)
+  * [Initial Gage Offering](products-services/gages/initial-gage-offering.md)
 
 ## Governance
 
@@ -42,5 +43,3 @@
 ## Resources
 
 * [🔐 Security Audits](resources/security-audits.md)
-
-## Group 1
