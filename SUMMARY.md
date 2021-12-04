@@ -13,6 +13,7 @@
 
 * [🪙 ETRNL](token/tokenomics/README.md)
   * [Tokenomics](token/tokenomics/tokenomics.md)
+  * [Initial Gage Offering](token/tokenomics/initial-gage-offering.md)
 
 ## Products/Services
 
@@ -41,3 +42,5 @@
 ## Resources
 
 * [🔐 Security Audits](resources/security-audits.md)
+
+## Group 1
