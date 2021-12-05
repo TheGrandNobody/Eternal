@@ -6,4 +6,4 @@ description: An explanation of the Initial Gage Offering
 
 ### Definition
 
-An initial gage offering (IGO) is an initial liquidity offering with the option of loyalty gages.
+An initial gage offering (IGO) is an initial liquidity offering with the option of liquid gages.

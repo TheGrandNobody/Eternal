@@ -21,6 +21,7 @@
   * [Standard Gage](products-services/gages/standard-gage.md)
   * [Yield Gage](products-services/gages/yield-gage.md)
   * [Loyalty Gage](products-services/gages/loyalty-gage.md)
+  * [Liquid Gage](products-services/gages/liquid-gage.md)
   * [L\*\*\*\*\*\* Gage](products-services/gages/l-gage.md)
   * [H\*\*\*\*\* Gage](products-services/gages/h-gage.md)
   * [E\*\*\*\*\*\*\*\* Gage](products-services/gages/e-gage.md)
