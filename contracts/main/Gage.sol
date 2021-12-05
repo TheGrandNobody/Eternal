@@ -6,7 +6,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "../interfaces/IEternal.sol";
 import "../interfaces/IGage.sol";
 
-contract Gage is Context, IGage {
+abstract contract Gage is Context, IGage {
 
     // Holds all possible statuses for a gage
     enum Status {
@@ -21,7 +21,6 @@ contract Gage is Context, IGage {
         uint256 amount;                      // The entry deposit (in tokens) needed to participate in this gage        
         uint8 risk;                          // The percentage that is being risked in this gage  
         bool inGage;                         // Keeps track of whether the user is in the gage or not
-        bool loyalty;                        // Determines whether the gage is a loyalty gage or not
     }
 
     // The eternal platform
@@ -31,80 +30,23 @@ contract Gage is Context, IGage {
     mapping (address => UserData) internal userData;
 
     // The id of the gage
-    uint256 public immutable id;  
+    uint256 internal immutable id;  
     // The maximum number of users in the gage
-    uint32 public immutable  capacity; 
+    uint32 internal immutable  capacity; 
     // Keeps track of the number of users left in the gage
     uint32 internal users;
     // The state of the gage       
-    Status internal status;         
+    Status internal status;
+    // Determines whether the gage is a loyalty gage or not       
+    bool private immutable loyalty;
+    
 
-    constructor (uint256 _id, uint32 _users, address _eternal) {
+    constructor (uint256 _id, uint32 _users, address _eternal, bool _loyalty) {
         id = _id;
         capacity = _users;
         eternal = IEternal(_eternal);
+        loyalty = _loyalty;
     }      
-
-    /**
-     * @dev Adds a stakeholder to this gage and records the initial data.
-     * @param asset The address of the asset used as deposit by this user
-     * @param amount The user's chosen deposit amount 
-     * @param risk The user's chosen risk percentage
-     * @param loyalty Whether the gage is a loyalty gage
-     *
-     * Requirements:
-     *
-     * - Risk must not exceed 100 percent
-     * - User must not already be in the gage
-     */
-    function join(address asset, uint256 amount, uint8 risk, bool loyalty) external override {
-        require(risk <= 100, "Invalid risk percentage");
-        UserData storage data = userData[_msgSender()];
-        require(!data.inGage, "User is already in this gage");
-
-        data.amount = amount;
-        data.asset = asset;
-        data.risk = risk;
-        data.inGage = true;
-        data.loyalty = loyalty;
-        users += 1;
-
-        eternal.deposit(asset, _msgSender(), amount, id);
-        emit UserAdded(id, _msgSender());
-        // If contract is filled, update its status and initiate the gage
-        if (users == capacity) {
-            status = Status.Active;
-            emit GageInitiated(id);
-        }
-    }
-
-    /**
-     * @dev Removes a stakeholder from this gage.
-     *
-     * Requirements:
-     *
-     * - User must be in the gage
-     */
-    function exit() external override {
-        UserData storage data = userData[_msgSender()];
-        require(data.inGage, "User is not in this gage");
-        
-        // Remove user from the gage first (prevent re-entrancy)
-        data.inGage = false;
-
-        if (status != Status.Closed) {
-            users -= 1;
-            emit UserRemoved(id, _msgSender());
-        }
-
-        if (status == Status.Active && users == 1) {
-            // If there is only one user left after this one has left, update the gage's status accordingly
-            status = Status.Closed;
-            emit GageClosed(id);
-        }
-
-        eternal.withdraw(_msgSender(), id);
-    }
 
     /////–––««« Variable state-inspection functions »»»––––\\\\\
 
@@ -138,12 +80,20 @@ contract Gage is Context, IGage {
     }
 
     /**
+     * @dev View whether the gage is a loyalty gage or not
+     * @return True if the gage is a loyalty gage, else false
+     */
+    function viewLoyalty() external view override returns (bool) {
+        return loyalty;
+    }
+
+    /**
      * @dev View a given user's gage data 
      * @param user The address of the specified user
      * @return The asset, amount and risk for this user 
      */
-    function viewUserData(address user) external view override returns (address, uint256, uint256, bool){
+    function viewUserData(address user) external view override returns (address, uint256, uint256){
         UserData storage data = userData[user];
-        return (data.asset, data.amount, data.risk, data.loyalty);
+        return (data.asset, data.amount, data.risk);
     }
 }

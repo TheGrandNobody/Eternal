@@ -17,7 +17,7 @@ interface IGage {
     event GageClosed(uint256 id); 
 
     // Adds a user to the gage
-    function join(address asset, uint256 amount, uint8 risk, bool loyalty) external;
+    function join(address asset, uint256 amount, uint8 risk) external;
     // Removes a user from the gage
     function exit() external;
     // View the user count in the gage whilst it is not Active
@@ -26,6 +26,8 @@ interface IGage {
     function viewCapacity() external view returns (uint256);
     // View the gage's status
     function viewStatus() external view returns (uint);
+    // View whether the gage is a loyalty gage or not
+    function viewLoyalty() external view returns (bool);
     // View a given user's gage data
-    function viewUserData(address user) external view returns (address, uint256, uint256, bool);
+    function viewUserData(address user) external view returns (address, uint256, uint256);
 }

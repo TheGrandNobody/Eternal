@@ -8,11 +8,11 @@ pragma solidity ^0.8.0;
  */
 interface IEternal {
     // Initiates a standard gage
-    function initiateStandardGage(uint32 users) external returns(uint256);
+    function initiateLiquidGage(address user, uint256 percent, bool inflationary) external returns(uint256);
     // Deposit an asset to the platform
     function deposit(address asset, address user, uint256 amount, uint256 id) external;
     // Withdraw an asset from the platform
-    function withdraw(address user, uint256 id) external;
+    function withdraw(address user, uint256 id, bool winner) external;
     // Set the fee rate of the platform
     function setFeeRate(uint16 newRate) external;
     

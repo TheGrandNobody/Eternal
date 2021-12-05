@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import "../interfaces/IEternalToken.sol";
 import "../interfaces/IGageV2.sol";
-import "./Gage.sol";
+import "./LoyaltyGage.sol";
 import "../inheritances/OwnableEnhanced.sol";
 
 /**
@@ -36,12 +36,14 @@ contract Eternal is IEternal, OwnableEnhanced {
 /////–––««« Gage-logic functions »»»––––\\\\\
 
     /**
-     * @dev Creates a standard n-holder gage contract with n users
-     * @param users The desired number of users in the gage
+     * @dev Creates a liquid gage contract for a user
+     * @param user The address of the user entering
+     * @param percent The percent change condition of the liquid gage
+     * @param inflationary Whether the gage is inflationary or deflationary
      */
-    function initiateStandardGage(uint32 users) external override returns(uint256) {
+    function initiateLiquidGage(address user, uint256 percent, bool inflationary) external override returns(uint256) {
         lastId += 1;
-        Gage newGage = new Gage(lastId, users, address(this));
+        Gage newGage = new LoyaltyGage(lastId, percent, 2, inflationary, address(this), user, address(this));
         gages[lastId] = address(newGage);
         emit NewGage(lastId, address(newGage));
 
@@ -62,11 +64,13 @@ contract Eternal is IEternal, OwnableEnhanced {
      * @dev Withdraws a given user's gage return
      * @param id The id of the specified gage contract
      * @param user The address of the specified user
+     * @param winner Whether the gage closed in favor of this user
      */
-    function withdraw(address user, uint256 id) external override {
-        require(msg.sender == gages[id], "msg.sender must be the gage");
+    function withdraw(address user, uint256 id, bool winner) external override {
+        require(_msgSender() == gages[id], "msg.sender must be the gage");
         IGageV2 gage = IGageV2(gages[id]);
-        (address asset, uint256 amount, uint256 risk, bool loyalty) = gage.viewUserData(user);
+        (address asset, uint256 amount, uint256 risk) = gage.viewUserData(user);
+        bool loyalty = gage.viewLoyalty();
 
         // Compute the amount minus the fee rate if using ETRNL
         uint256 netAmount;
@@ -81,16 +85,16 @@ contract Eternal is IEternal, OwnableEnhanced {
         /** Users get the entire entry amount back if the gage wasn't active at the time of departure.
             If the user forfeited, the system substracts the loss incurred. 
             Otherwise, the gage return is awarded to the winner. */
-        if (gage.viewStatus() == 1) {
-            if (loyalty && user != gage.viewBuyer()) {
-                (,uint256 otherAmount,,) = gage.viewUserData(gage.viewBuyer());
+        if (gage.viewStatus() == 1 || (gage.viewStatus() == 2 && !winner)) {
+            if (loyalty && user != gage.viewReceiver()) {
+                (,uint256 otherAmount,) = gage.viewUserData(gage.viewReceiver());
                 finalAmount -= (otherAmount * risk / 100);
             } else {
                 finalAmount -= (finalAmount * risk / 100);
             }
         } else if (gage.viewStatus() == 2) {
-            if (loyalty && user != gage.viewBuyer()) {
-                (,uint256 otherAmount,,) = gage.viewUserData(gage.viewBuyer());
+            if (loyalty && user != gage.viewReceiver()) {
+                (,uint256 otherAmount,) = gage.viewUserData(gage.viewReceiver());
                 finalAmount += (gage.viewCapacity() - 1) * otherAmount * risk / 100;
             } else {
                 finalAmount += (gage.viewCapacity() - 1) * finalAmount * risk / 100;
