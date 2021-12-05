@@ -493,19 +493,19 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
         uint256 oldRate;
 
         if (rate == Rate.Liquidity) {
-            require((newRate + fundingRate + redistributionRate + burnRate) < 25, "Total rate exceeds 25%");
+            require((newRate + fundingRate + redistributionRate + burnRate) <= 25000, "Total rate exceeds 25%");
             oldRate = liquidityProvisionRate;
             liquidityProvisionRate = newRate;
         } else if (rate == Rate.Funding) {
-            require((liquidityProvisionRate + newRate + redistributionRate + burnRate) < 25, "Total rate exceeds 25%");
+            require((liquidityProvisionRate + newRate + redistributionRate + burnRate) <= 25000, "Total rate exceeds 25%");
             oldRate = fundingRate;
             fundingRate = newRate;
         } else if (rate == Rate.Redistribution) {
-            require((liquidityProvisionRate + fundingRate + newRate + burnRate) < 25, "Total rate exceeds 25%");
+            require((liquidityProvisionRate + fundingRate + newRate + burnRate) <=25000, "Total rate exceeds 25%");
             oldRate = redistributionRate;
             redistributionRate = newRate;
         } else {
-            require((liquidityProvisionRate + fundingRate + redistributionRate + newRate) < 25, "Total rate exceeds 25%");
+            require((liquidityProvisionRate + fundingRate + redistributionRate + newRate) <= 25000, "Total rate exceeds 25%");
             oldRate = burnRate;
             burnRate = newRate;
         }
