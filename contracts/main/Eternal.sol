@@ -76,17 +76,17 @@ contract Eternal is IEternal, OwnableEnhanced {
         uint256 netAmount;
         if (asset == address(eternal)) {
             netAmount = amount - (amount * eternal.viewTotalRate() / 100000);
+            netAmount = computeAccruedRewards(amount, user, id);
         } else {
             netAmount = amount - (amount * feeRate / 100000);
             IERC20(asset).transfer(fund(), (amount * feeRate / 100000));
         }
-        // Compute any rewards accrued during the gage
-        uint256 finalAmount = computeAccruedRewards(netAmount, user, id);
+
         /** Users get the entire entry amount back if the gage wasn't active at the time of departure.
             If the user forfeited, the system substracts the loss incurred. 
             Otherwise, the gage return is awarded to the winner. */
         if (!winner) {
-            finalAmount -= (finalAmount * risk / 100);
+            netAmount -= (netAmount * risk / 100);
             if (gage.viewLoyalty()) {
                 if (user == gage.viewReceiver()) {
                     (,uint256 otherAmount, uint256 otherRisk) = gage.viewUserData(gage.viewDistributor());
@@ -94,12 +94,12 @@ contract Eternal is IEternal, OwnableEnhanced {
                 }
             }
         } else {
-            finalAmount += (gage.viewCapacity() - 1) * finalAmount * risk / 100;
+            netAmount += (gage.viewCapacity() - 1) * netAmount * risk / 100;
             if (gage.viewLoyalty()) {
             
             }
         }
-        IERC20(asset).transfer(user, finalAmount);
+        IERC20(asset).transfer(user, netAmount);
     }
 
 /////–––««« Fund-only functions »»»––––\\\\\
