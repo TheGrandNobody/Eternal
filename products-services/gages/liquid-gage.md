@@ -6,7 +6,7 @@ description: A solution to decentralized corporate short-termism.
 
 ### <mark style="color:blue;">Definition</mark>
 
-<mark style="color:purple;">Liquid gages are loyalty gages which provide call warrants for liquidity to a protocol. Thus a liquid gage also involves an entity or individual distributing an asset (</mark><mark style="color:purple;">**the distributor**</mark><mark style="color:purple;">), to another entity or individual receiving said asset (</mark><mark style="color:purple;">**the receiver**</mark><mark style="color:purple;">). The risked percentage of the distributor is always lower than that of the receiver.</mark>
+<mark style="color:purple;">Liquid gages are loyalty gages which provide call warrants for a protocol's liquidity. Thus a liquid gage also involves an entity or individual distributing an asset (</mark><mark style="color:purple;">**the distributor**</mark><mark style="color:purple;">), to another entity or individual receiving said asset (</mark><mark style="color:purple;">**the receiver**</mark><mark style="color:purple;">). The risked percentage of the distributor is always lower than that of the receiver.</mark>
 
 ### Properties
 
