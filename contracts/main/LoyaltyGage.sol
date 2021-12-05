@@ -11,7 +11,7 @@ contract LoyaltyGage is Gage, IGageV2 {
     // Address of the stakeholder which benefits from the discount in a loyalty gage
     address public immutable buyer;
 
-    constructor(uint256 _id, uint32 _users, address _creator, address _buyer) Gage(_id, _users) {
+    constructor(uint256 _id, uint32 _users, address _creator, address _buyer, address _eternal) Gage(_id, _users, _eternal) {
         creator = _creator;
         buyer = _buyer;
     }
