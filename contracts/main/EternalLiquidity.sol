@@ -3,6 +3,7 @@ pragma solidity 0.8.4;
 
 import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoeFactory.sol";
 import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoeRouter02.sol";
+import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
 import "../interfaces/IEternalToken.sol";
 import "../interfaces/IEternalLiquidity.sol";
 import "../inheritances/OwnableEnhanced.sol";
@@ -108,11 +109,17 @@ contract EternalLiquidity is IEternalLiquidity, OwnableEnhanced {
         // Compute the amount of AVAX received from the swap
         uint256 amountAVAX = address(this).balance - initialBalance;
 
+        emit AutomaticLiquidityProvision(amountETRNL, contractBalance, amountAVAX);
+
+        // Pair is created as (ETRNL, AVAX), hence we know the order
+        (uint256 reserveETRNL, uint256 reserveAVAX) = IJoePair(joePair).getReserves();
+
+        uint256 minAVAX = joeRouter.quote(amountETRNL, reserveETRNL, reserveAVAX);
+        uint256 minETRNL = joeRouter.quote(amountAVAX, reserveAVAX, reserveETRNL);
+
         // Add liquidity to the ETRNL/AVAX pair
         eternal.approve(address(joeRouter), amountETRNL);
-        joeRouter.addLiquidityAVAX{value: amountAVAX}(address(this), amountETRNL, 0, 0, address(this), block.timestamp);
-
-        emit AutomaticLiquidityProvision(amountETRNL, contractBalance, amountAVAX);
+        joeRouter.addLiquidityAVAX{value: amountAVAX}(address(this), amountETRNL, minETRNL, minAVAX, address(this), block.timestamp);
     }
 
     /**
@@ -121,9 +128,8 @@ contract EternalLiquidity is IEternalLiquidity, OwnableEnhanced {
      * @param amount The specified amount of AVAX to transfer
      */
     function withdrawAVAX(address payable recipient, uint256 amount) external override onlyFund() {
-        recipient.transfer(amount);
-
         emit AVAXTransferred(amount, recipient);
+        recipient.transfer(amount);
     }
 
     /**
@@ -132,9 +138,8 @@ contract EternalLiquidity is IEternalLiquidity, OwnableEnhanced {
      * @param amount The specified amount of ETRNL to transfer
      */
     function withdrawETRNL(address recipient, uint256 amount) external override onlyFund() {
-        eternal.transfer(recipient, amount);
-
         emit ETRNLTransferred(amount, recipient);
+        eternal.transfer(recipient, amount);
     }
 
     /**
