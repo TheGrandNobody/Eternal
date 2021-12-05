@@ -64,16 +64,16 @@ contract Eternal is IEternal, OwnableEnhanced {
      * @param user The address of the specified user
      */
     function withdraw(address user, uint256 id) external override {
-        require(msg.sender == gages[id], "msg.sender must be the gage");
+        require(_msgSender() == gages[id], "msg.sender must be the gage");
         IGageV2 gage = IGageV2(gages[id]);
         (address asset, uint256 amount, uint256 risk, bool loyalty) = gage.viewUserData(user);
 
         // Compute the amount minus the fee rate if using ETRNL
         uint256 netAmount;
         if (asset == address(eternal)) {
-            netAmount = amount - (amount * eternal.viewTotalRate()) / 100000;
+            netAmount = amount - (amount * eternal.viewTotalRate() / 100000);
         } else {
-            netAmount = amount - (amount * feeRate) / 100000;
+            netAmount = amount - (amount * feeRate / 100000);
             IERC20(asset).transfer(fund(), (amount * feeRate / 100000));
         }
         // Compute any rewards accrued during the gage
@@ -123,7 +123,7 @@ contract Eternal is IEternal, OwnableEnhanced {
         uint256 oldRate = reflectionRates[user][id];
         uint256 currentRate = eternal.isExcludedFromReward(user) ? oldRate : eternal.getReflectionRate();
 
-        return (amount * (currentRate / oldRate));
+        return (amount * (oldRate / currentRate));
     }
 
     function viewGageAddress(uint256 id) external view returns(address) {
