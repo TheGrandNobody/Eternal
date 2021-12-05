@@ -1,5 +1,5 @@
 ---
-description: Simple and efficient
+description: The simplest form of the gage.
 ---
 
 # Standard Gage
@@ -12,7 +12,7 @@ description: Simple and efficient
 
 **Condition:** Non-withdrawal of deposit
 
-**Less **<mark style="color:red;">**Risk**</mark>**, More **<mark style="color:green;">**Reward**</mark>**.** A standard gage's risk to reward is always equal to $$n-1$$ , where $$n$$ is the number of users. There is a mathematical proof for this in _Introduction to Gages_.
+**Less **<mark style="color:red;">**Risk**</mark>**, More **<mark style="color:green;">**Reward:**</mark> A standard gage's risk to reward is always equal to $$n-1$$ , where $$n$$ is the number of users. There is a mathematical proof for this in _Introduction to Gages_.
 
 ### <mark style="color:blue;">**Example**</mark>
 
