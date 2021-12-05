@@ -1,5 +1,5 @@
 //SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity 0.8.4;
 
 import "./Gage.sol";
 import "../interfaces/IGageV2.sol";
@@ -19,9 +19,9 @@ contract LoyaltyGage is Gage, IGageV2 {
     // Whether the token's supply is inflationary or deflationary
     bool private immutable inflationary;
 
-    constructor(uint256 _id, uint256 _percent, uint32 _users, bool _inflationary, address _creator, address _buyer, address _eternal) Gage(_id, _users, _eternal, true) {
-        distributor = _creator;
-        receiver = _buyer;
+    constructor(uint256 _id, uint256 _percent, uint32 _users, bool _inflationary, address _distributor, address _receiver, address _eternal) Gage(_id, _users, _eternal, true) {
+        distributor = _distributor;
+        receiver = _receiver;
         percent = _percent;
         inflationary = _inflationary;
     }
@@ -48,13 +48,13 @@ contract LoyaltyGage is Gage, IGageV2 {
         data.inGage = true;
         users += 1;
 
+        eternal.deposit(deposit, _msgSender(), amount, id);
+        emit UserAdded(id, _msgSender());
+
         if (_msgSender() == distributor) {
             asset = IERC20(deposit);
             totalSupply = asset.totalSupply();
         }
-
-        eternal.deposit(deposit, _msgSender(), amount, id);
-        emit UserAdded(id, _msgSender());
         // If contract is filled, update its status and initiate the gage
         if (users == capacity) {
             status = Status.Active;

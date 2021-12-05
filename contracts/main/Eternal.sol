@@ -1,5 +1,5 @@
 //SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity 0.8.4;
 
 import "../interfaces/IEternalToken.sol";
 import "../interfaces/IGageV2.sol";
@@ -41,7 +41,8 @@ contract Eternal is IEternal, OwnableEnhanced {
      * @param percent The percent change condition of the liquid gage
      * @param inflationary Whether the gage is inflationary or deflationary
      */
-    function initiateLiquidGage(address user, uint256 percent, bool inflationary) external override returns(uint256) {
+    function initiateLiquidGage(address user, bool inflationary) external override returns(uint256) {
+        uint256 percent; 
         lastId += 1;
         Gage newGage = new LoyaltyGage(lastId, percent, 2, inflationary, address(this), user, address(this));
         gages[lastId] = address(newGage);
@@ -70,14 +71,13 @@ contract Eternal is IEternal, OwnableEnhanced {
         require(_msgSender() == gages[id], "msg.sender must be the gage");
         IGageV2 gage = IGageV2(gages[id]);
         (address asset, uint256 amount, uint256 risk) = gage.viewUserData(user);
-        bool loyalty = gage.viewLoyalty();
 
         // Compute the amount minus the fee rate if using ETRNL
         uint256 netAmount;
         if (asset == address(eternal)) {
-            netAmount = amount - (amount * eternal.viewTotalRate()) / 100000;
+            netAmount = amount - (amount * eternal.viewTotalRate() / 100000);
         } else {
-            netAmount = amount - (amount * feeRate) / 100000;
+            netAmount = amount - (amount * feeRate / 100000);
             IERC20(asset).transfer(fund(), (amount * feeRate / 100000));
         }
         // Compute any rewards accrued during the gage
@@ -85,19 +85,18 @@ contract Eternal is IEternal, OwnableEnhanced {
         /** Users get the entire entry amount back if the gage wasn't active at the time of departure.
             If the user forfeited, the system substracts the loss incurred. 
             Otherwise, the gage return is awarded to the winner. */
-        if (gage.viewStatus() == 1 || (gage.viewStatus() == 2 && !winner)) {
-            if (loyalty && user != gage.viewReceiver()) {
-                (,uint256 otherAmount,) = gage.viewUserData(gage.viewReceiver());
-                finalAmount -= (otherAmount * risk / 100);
-            } else {
-                finalAmount -= (finalAmount * risk / 100);
+        if (!winner) {
+            finalAmount -= (finalAmount * risk / 100);
+            if (gage.viewLoyalty()) {
+                if (user == gage.viewReceiver()) {
+                    (,uint256 otherAmount, uint256 otherRisk) = gage.viewUserData(gage.viewDistributor());
+
+                }
             }
-        } else if (gage.viewStatus() == 2) {
-            if (loyalty && user != gage.viewReceiver()) {
-                (,uint256 otherAmount,) = gage.viewUserData(gage.viewReceiver());
-                finalAmount += (gage.viewCapacity() - 1) * otherAmount * risk / 100;
-            } else {
-                finalAmount += (gage.viewCapacity() - 1) * finalAmount * risk / 100;
+        } else {
+            finalAmount += (gage.viewCapacity() - 1) * finalAmount * risk / 100;
+            if (gage.viewLoyalty()) {
+            
             }
         }
         IERC20(asset).transfer(user, finalAmount);
@@ -127,7 +126,7 @@ contract Eternal is IEternal, OwnableEnhanced {
         uint256 oldRate = reflectionRates[user][id];
         uint256 currentRate = eternal.isExcludedFromReward(user) ? oldRate : eternal.getReflectionRate();
 
-        return (amount * (currentRate / oldRate));
+        return (amount * (oldRate / currentRate));
     }
 
     function viewGageAddress(uint256 id) external view returns(address) {

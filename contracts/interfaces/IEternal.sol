@@ -1,5 +1,5 @@
 //SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity 0.8.4;
 
 /**
  * @dev Eternal interface
@@ -8,7 +8,7 @@ pragma solidity ^0.8.0;
  */
 interface IEternal {
     // Initiates a standard gage
-    function initiateLiquidGage(address user, uint256 percent, bool inflationary) external returns(uint256);
+    function initiateLiquidGage(address user, bool inflationary) external returns(uint256);
     // Deposit an asset to the platform
     function deposit(address asset, address user, uint256 amount, uint256 id) external;
     // Withdraw an asset from the platform
