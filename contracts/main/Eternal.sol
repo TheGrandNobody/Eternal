@@ -13,13 +13,6 @@ import "../inheritances/OwnableEnhanced.sol";
  */
 contract Eternal is IEternal, OwnableEnhanced {
 
-    constructor (address _eternal) {
-        // Initialize the ETRNL interface
-        eternal = IEternalToken(_eternal);
-        // Set initial feeRate
-        feeRate = 500;
-    }
-
     // The ETRNL interface
     IEternalToken private immutable eternal;
 
@@ -31,17 +24,24 @@ contract Eternal is IEternal, OwnableEnhanced {
     // Keeps track of the latest Gage ID
     uint256 public lastId;
     // The (percentage) fee rate applied to any gage-reward computations not using ETRNL
-    uint16 public feeRate;
+    uint256 public feeRate;
+
+    constructor (address _eternal) {
+        // Initialize the ETRNL interface
+        eternal = IEternalToken(_eternal);
+        // Set initial feeRate
+        feeRate = 500;
+    }
 
 /////–––««« Gage-logic functions »»»––––\\\\\
 
     /**
      * @dev Creates a liquid gage contract for a user
      * @param user The address of the user entering
-     * @param percent The percent change condition of the liquid gage
      * @param inflationary Whether the gage is inflationary or deflationary
      */
     function initiateLiquidGage(address user, bool inflationary) external override returns(uint256) {
+        // TODO MAKE FUNCTION TO DETERMINE PERCENT
         uint256 percent; 
         lastId += 1;
         Gage newGage = new LoyaltyGage(lastId, percent, 2, inflationary, address(this), user, address(this));
@@ -55,10 +55,11 @@ contract Eternal is IEternal, OwnableEnhanced {
      * @dev Transfers a given user's gage funds to storage or further processing depending on the type of the gage
      */
     function deposit(address asset, address user, uint256 amount, uint256 id) external override {
+        require(_msgSender() == gages[id], "msg.sender must be the gage");
         if (asset == address(eternal)) {
             reflectionRates[user][id] = eternal.getReflectionRate();
         }
-        IERC20(asset).transferFrom(user, address(this), amount);
+        require(IERC20(asset).transferFrom(user, address(this), amount), "Failed to deposit asset");
     }
 
     /**
@@ -74,12 +75,14 @@ contract Eternal is IEternal, OwnableEnhanced {
 
         // Compute the amount minus the fee rate if using ETRNL
         uint256 netAmount;
+        uint256 rewards;
+
         if (asset == address(eternal)) {
             netAmount = amount - (amount * eternal.viewTotalRate() / 100000);
             netAmount = computeAccruedRewards(amount, user, id);
         } else {
             netAmount = amount - (amount * feeRate / 100000);
-            IERC20(asset).transfer(fund(), (amount * feeRate / 100000));
+            require(IERC20(asset).transfer(fund(), (amount * feeRate / 100000)), "Failed to take gaging fee");
         }
 
         /** Users get the entire entry amount back if the gage wasn't active at the time of departure.
@@ -88,10 +91,6 @@ contract Eternal is IEternal, OwnableEnhanced {
         if (!winner) {
             netAmount -= (netAmount * risk / 100);
             if (gage.viewLoyalty()) {
-                if (user == gage.viewReceiver()) {
-                    (,uint256 otherAmount, uint256 otherRisk) = gage.viewUserData(gage.viewDistributor());
-
-                }
             }
         } else {
             netAmount += (gage.viewCapacity() - 1) * netAmount * risk / 100;
@@ -99,7 +98,7 @@ contract Eternal is IEternal, OwnableEnhanced {
             
             }
         }
-        IERC20(asset).transfer(user, netAmount);
+        require(IERC20(asset).transfer(user, netAmount), "Failed to withdraw deposit");
     }
 
 /////–––««« Fund-only functions »»»––––\\\\\
@@ -108,8 +107,8 @@ contract Eternal is IEternal, OwnableEnhanced {
      * @dev Sets the fee rate value that is applied to assets other than ETRNL.
      * @param newRate The new specified fee rate
      */
-    function setFeeRate(uint16 newRate) external override onlyFund() {
-        uint16 oldRate = feeRate;
+    function setFeeRate(uint256 newRate) external override onlyFund() {
+        uint256 oldRate = feeRate;
         feeRate  = newRate;
         emit FeeRateChanged(oldRate, newRate);
     }

@@ -14,8 +14,8 @@ interface IEternal {
     // Withdraw an asset from the platform
     function withdraw(address user, uint256 id, bool winner) external;
     // Set the fee rate of the platform
-    function setFeeRate(uint16 newRate) external;
+    function setFeeRate(uint256 newRate) external;
     
     event NewGage(uint256 id, address indexed gageAddress);
-    event FeeRateChanged(uint16 oldRate, uint16 newRate);
+    event FeeRateChanged(uint256 oldRate, uint256 newRate);
 }

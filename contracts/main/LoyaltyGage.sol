@@ -34,11 +34,11 @@ contract LoyaltyGage is Gage, IGageV2 {
      *
      * Requirements:
      *
-     * - Risk must not exceed 100 percent
+     * - Risk must not exceed 50 percent
      * - User must not already be in the gage
      */
     function join(address deposit, uint256 amount, uint8 risk) external override {
-        require(risk <= 100, "Invalid risk percentage");
+        require(risk <= 50, "Invalid risk percentage");
         UserData storage data = userData[_msgSender()];
         require(!data.inGage, "User is already in this gage");
 
