@@ -37,6 +37,8 @@ interface IEternalToken is IERC20, IERC20Metadata {
     function viewTotalRate() external view returns (uint256);
     // View the rate of deflation of the Eternal token
     function viewBurnRate() external view returns (uint256);
+    // View an estimate of the total number of transactions subject to fees in a 24h period
+    function viewAlpha() external view returns (uint256);
 
     // Signals a change of value of a given rate in the Eternal Token contract
     event UpdateRate(uint256 oldRate, uint256 newRate, Rate rate);

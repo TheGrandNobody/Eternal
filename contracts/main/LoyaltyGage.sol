@@ -12,7 +12,7 @@ contract LoyaltyGage is Gage, IGageV2 {
     address private immutable receiver;
     // The asset used in the condition
     IERC20 private asset;
-    // The percentage change condition for the total token supply (multiplied by 10 ** 9 for decimal precision)
+    // The percentage change condition for the total token supply (x 10 ** 11)
     uint256 private immutable percent;
     // The total supply at the time of the deposit
     uint256 private totalSupply;
@@ -68,7 +68,7 @@ contract LoyaltyGage is Gage, IGageV2 {
         // Remove user from the gage first (prevent re-entrancy)
         data.inGage = false;
         uint256 deltaSupply = inflationary ? (asset.totalSupply() - totalSupply) : (totalSupply - asset.totalSupply());
-        uint256 percentChange = deltaSupply * (10 ** 9) / totalSupply;
+        uint256 percentChange = deltaSupply * (10 ** 11) / totalSupply;
         bool winner = percentChange >= percent;
 
         eternal.withdraw(receiver, id, winner);

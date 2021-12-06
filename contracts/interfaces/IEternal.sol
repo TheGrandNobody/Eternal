@@ -15,7 +15,13 @@ interface IEternal {
     function withdraw(address user, uint256 id, bool winner) external;
     // Set the fee rate of the platform
     function setFeeRate(uint256 newRate) external;
+    // Set the time-constant used in calculating the percent change condition
+    function setTimeConstant(uint256 newConstant) external;
     
+    // Signals the deployment of a new gage
     event NewGage(uint256 id, address indexed gageAddress);
-    event FeeRateChanged(uint256 oldRate, uint256 newRate);
+    // Signals an update of the gage fee rate
+    event FeeRateUpdated(uint256 oldRate, uint256 newRate);
+    // Signals an update of the time-constant
+    event TimeConstantUpdated(uint256 oldConstant, uint256 newConstant);
 }

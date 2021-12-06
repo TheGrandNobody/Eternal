@@ -4,6 +4,7 @@
   "rules": {
     "compiler-version": ["error","0.8.0"],
     "not-rely-on-time": "off",
-    "func-visibility": ["warn",{"ignoreConstructors":true}]
+    "func-visibility": ["warn",{"ignoreConstructors":true}],
+    "max-states-count": ["warn",20]
   }
 }

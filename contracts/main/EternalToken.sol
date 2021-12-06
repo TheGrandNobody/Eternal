@@ -27,7 +27,7 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
     // Keeps track of how much an address allows any other address to spend on its behalf
     mapping (address => mapping (address => uint256)) private allowances;
     // The Eternal automatic liquidity provider interface
-    IEternalLiquidity public eternalLiquidity;
+    IEternalLiquidity private eternalLiquidity;
 
     // The total ETRNL supply after taking reflections into account
     uint256 private totalReflectedSupply;
@@ -45,6 +45,12 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
     uint256 private redistributionRate;
     // The percentage of the fee taken at each transaction, that is used to auto-lock liquidity
     uint256 private liquidityProvisionRate;
+    // The total number of times ETRNL has been transacted with fees in the last full 24h period
+    uint256 private alpha;
+    // The total number of times ETRNL has been transacted with fees in the current 24h period (ongoing)
+    uint256 private transactionCount;
+    // Keeps track of the UNIX time to recalculate the average transaction estimate
+    uint256 private oneDayFromNow;
 
     /**
      * @dev Initialize supplies and routers and create a pair. Mints total supply to the contract deployer. 
@@ -77,6 +83,9 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
         burnRate = 500;
         redistributionRate = 5000;
         liquidityProvisionRate = 1500;
+
+        //Initialize the transaction counter
+        oneDayFromNow = block.timestamp + 86400;
     }
 
 /////–––««« Variable state-inspection functions »»»––––\\\\\
@@ -174,6 +183,13 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
      */
     function viewBurnRate() external view override returns(uint256) {
         return burnRate;
+    }
+
+    /**
+     * @dev View an estimate of the total number of transactions subject to fees in a 24h period
+     */
+    function viewAlpha() external view override returns(uint256) {
+        return alpha;
     }
 
 /////–––««« IERC20/ERC20 functions »»»––––\\\\\
@@ -290,7 +306,7 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
         bool takeFee = (!isExcludedFromFees[sender] && !isExcludedFromFees[recipient]);
 
         (uint256 reflectedAmount, uint256 netReflectedTransferAmount, uint256 netTransferAmount) = getValues(amount, takeFee);
-
+        
         // Always update the reflected balances of sender and recipient
         reflectedBalances[sender] -= reflectedAmount;
         reflectedBalances[recipient] += netReflectedTransferAmount;
@@ -299,20 +315,30 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
         trueBalances[sender] = isExcludedFromRewards[sender] ? (trueBalances[sender] - amount) : trueBalances[sender]; 
         trueBalances[recipient] = isExcludedFromRewards[recipient] ? (trueBalances[recipient] + netTransferAmount) : trueBalances[recipient]; 
 
+        emit Transfer(sender, recipient, netTransferAmount);
+
+        // Update the 24h transaction count if the current 24h period has not elapsed
+        if (takeFee && block.timestamp < oneDayFromNow) {
+            transactionCount += 1;
+        } else if (takeFee && block.timestamp >= oneDayFromNow) {
+            // Else update alpha, and reset the transaction count and 24h period tracker
+            alpha = transactionCount;
+            transactionCount = 1;
+            oneDayFromNow = block.timestamp + 84600;
+        }
+
         // Adjust the total reflected supply for the new fees
         // If the sender or recipient are excluded from fees, we ignore the fee altogether
         if (takeFee) {
             // Perform a burn based on the burn rate 
-            _burn(address(this), amount * burnRate / 1000, reflectedAmount * burnRate / 1000);
+            _burn(address(this), amount * burnRate / 100000, reflectedAmount * burnRate / 100000);
             // Redistribute based on the redistribution rate 
-            totalReflectedSupply -= reflectedAmount * redistributionRate / 1000;
+            totalReflectedSupply -= reflectedAmount * redistributionRate / 100000;
             // Store ETRNL away in the EternalFund based on the funding rate
-            reflectedBalances[fund()] += reflectedAmount * fundingRate / 1000;
+            reflectedBalances[fund()] += reflectedAmount * fundingRate / 100000;
             // Provide liqudity to the ETRNL/AVAX pair on Pangolin based on the liquidity provision rate
-            storeLiquidityFunds(sender, amount * liquidityProvisionRate / 1000, reflectedAmount * liquidityProvisionRate / 1000);
+            storeLiquidityFunds(sender, amount * liquidityProvisionRate / 100000, reflectedAmount * liquidityProvisionRate / 100000);
         }
-
-        emit Transfer(sender, recipient, netTransferAmount);
     }
 
     /**

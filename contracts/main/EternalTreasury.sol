@@ -4,14 +4,14 @@ pragma solidity 0.8.0;
 import "../inheritances/OwnableEnhanced.sol";
 import "../interfaces/IEternal.sol";
 import "../interfaces/IEternalToken.sol";
+import "../interfaces/IEternalTreasury.sol";
 
 /**
  * @dev Contract for the Eternal Fund
  * @author Nobody (me)
  * @notice The Eternal Fund contract holds all treasury logic
  */
- contract EternalTreasury is OwnableEnhanced {
-
+ contract EternalTreasury is IEternalTreasury, OwnableEnhanced {
     IEternal private immutable eternalPlatform;
     IEternalToken private immutable eternal;
 
