@@ -1,5 +1,5 @@
 //SPDX-License-Identifier: MIT
-pragma solidity 0.8.4;
+pragma solidity 0.8.0;
 
 import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoeFactory.sol";
 import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoeRouter02.sol";
@@ -66,13 +66,17 @@ contract EternalLiquidity is IEternalLiquidity, OwnableEnhanced {
      * @dev Swaps a given amount of ETRNL for AVAX using Trader Joe. (Used for auto-liquidity swaps)
      * @param amount The amount of ETRNL to be swapped for AVAX
      */
-    function swapTokensForAVAX(uint256 amount) private {
+    function swapTokensForAVAX(uint256 amount, uint256 reserveETRNL, uint256 reserveAVAX) private {
         address[] memory path = new address[](2);
         path[0] = address(this);
         path[1] = joeRouter.WAVAX();
 
+        // Calculate the minimum amount of AVAX to swap the ETRNL for
+        uint256 minAVAX = joeRouter.getAmountOut(amount, reserveETRNL, reserveAVAX);
+
+        // Swap the ETRNL for AVAX
         eternal.approve(address(joeRouter), amount);
-        joeRouter.swapExactTokensForAVAXSupportingFeeOnTransferTokens(amount, 0, path, address(this), block.timestamp);
+        joeRouter.swapExactTokensForAVAXSupportingFeeOnTransferTokens(amount, minAVAX - 1, path, address(this), block.timestamp);
     }
 
     /**
@@ -104,22 +108,22 @@ contract EternalLiquidity is IEternalLiquidity, OwnableEnhanced {
 
         // Capture the initial balance to later compute the difference
         uint256 initialBalance = address(this).balance;
+
+        // Pair is created as (ETRNL, AVAX), hence we know the order of the reserves
+        (uint256 reserveETRNL, uint256 reserveAVAX, ) = IJoePair(joePair).getReserves();
         // Swap half the contract's ETRNL balance to AVAX
-        swapTokensForAVAX(half);
+        swapTokensForAVAX(half, reserveETRNL, reserveAVAX);
         // Compute the amount of AVAX received from the swap
         uint256 amountAVAX = address(this).balance - initialBalance;
-
-        emit AutomaticLiquidityProvision(amountETRNL, contractBalance, amountAVAX);
-
-        // Pair is created as (ETRNL, AVAX), hence we know the order
-        (uint256 reserveETRNL, uint256 reserveAVAX) = IJoePair(joePair).getReserves();
-
+        
+        // Determine a reasonable minimum amount of ETRNL and AVAX based on current reserves
         uint256 minAVAX = joeRouter.quote(amountETRNL, reserveETRNL, reserveAVAX);
         uint256 minETRNL = joeRouter.quote(amountAVAX, reserveAVAX, reserveETRNL);
 
         // Add liquidity to the ETRNL/AVAX pair
+        emit AutomaticLiquidityProvision(amountETRNL, contractBalance, amountAVAX);
         eternal.approve(address(joeRouter), amountETRNL);
-        joeRouter.addLiquidityAVAX{value: amountAVAX}(address(this), amountETRNL, minETRNL, minAVAX, address(this), block.timestamp);
+        joeRouter.addLiquidityAVAX{value: amountAVAX}(address(this), amountETRNL, minETRNL, minAVAX - 1, address(this), block.timestamp);
     }
 
     /**
@@ -147,8 +151,7 @@ contract EternalLiquidity is IEternalLiquidity, OwnableEnhanced {
      * @param value True if automatic liquidity provision is desired. False otherwise.
      */
     function setAutoLiquidityProvision(bool value) external override onlyAdminAndFund() {
-        autoLiquidityProvision = value;
-
         emit AutomaticLiquidityProvisionUpdated(value);
+        autoLiquidityProvision = value;
     }
 }
