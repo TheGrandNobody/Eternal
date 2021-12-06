@@ -20,7 +20,7 @@ interface IEternalToken is IERC20, IERC20Metadata {
     }
     
     // Sets the value of any given rate
-    function setRate(Rate rate, uint16 newRate) external;
+    function setRate(Rate rate, uint256 newRate) external;
     // Sets the address of the Eternal Liquidity contract
     function setEternalLiquidity(address newContract) external;
     // Sets the liquidity threshold to a given value
@@ -35,6 +35,8 @@ interface IEternalToken is IERC20, IERC20Metadata {
     function isExcludedFromReward(address account) external view returns (bool);
     // View the total fee
     function viewTotalRate() external view returns (uint256);
+    // View the rate of deflation of the Eternal token
+    function viewBurnRate() external view returns (uint256);
 
     // Signals a change of value of a given rate in the Eternal Token contract
     event UpdateRate(uint256 oldRate, uint256 newRate, Rate rate);

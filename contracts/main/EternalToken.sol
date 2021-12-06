@@ -36,15 +36,15 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
     // The true total ETRNL supply 
     uint256 private totalTokenSupply;
 
-    // All fees accept up to three decimal points
+    // All fees accept up to four decimal points
     // The percentage of the fee, taken at each transaction, that is stored in the EternalFund
-    uint16 private fundingRate;
+    uint256 private fundingRate;
     // The percentage of the fee, taken at each transaction, that is burned
-    uint16 private burnRate;
+    uint256 private burnRate;
     // The percentage of the fee, taken at each transaction, that is redistributed to holders
-    uint16 private redistributionRate;
+    uint256 private redistributionRate;
     // The percentage of the fee taken at each transaction, that is used to auto-lock liquidity
-    uint16 private liquidityProvisionRate;
+    uint256 private liquidityProvisionRate;
 
     /**
      * @dev Initialize supplies and routers and create a pair. Mints total supply to the contract deployer. 
@@ -167,6 +167,13 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
      */
     function viewTotalRate() external view override returns(uint256) {
         return fundingRate + burnRate + redistributionRate + liquidityProvisionRate;
+    }
+
+    /**
+     * @dev View the Eternal token's rate of deflation
+     */
+    function viewBurnRate() external view override returns(uint256) {
+        return burnRate;
     }
 
 /////–––««« IERC20/ERC20 functions »»»––––\\\\\
@@ -486,7 +493,7 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
      * - Rate value must be positive
      * - The sum of all rates cannot exceed 25 percent
      */
-    function setRate(Rate rate, uint16 newRate) external override onlyAdminAndFund() {
+    function setRate(Rate rate, uint256 newRate) external override onlyAdminAndFund() {
         require((uint(rate) >= 0 && uint(rate) <= 3), "Invalid rate type");
         require(newRate >= 0, "The new rate must be positive");
 

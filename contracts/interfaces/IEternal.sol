@@ -7,8 +7,8 @@ pragma solidity 0.8.0;
  * @notice Methods are used for all gage-related functioning
  */
 interface IEternal {
-    // Initiates a standard gage
-    function initiateLiquidGage(address user, bool inflationary) external returns(uint256);
+    // Initiates a liquid gage involving an ETRNL liquidity pair
+    function initiateEternalLiquidGage() external returns(uint256);
     // Deposit an asset to the platform
     function deposit(address asset, address user, uint256 amount, uint256 id) external;
     // Withdraw an asset from the platform

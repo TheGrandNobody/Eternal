@@ -23,7 +23,7 @@ contract Eternal is IEternal, OwnableEnhanced {
 
     // Keeps track of the latest Gage ID
     uint256 public lastId;
-    // The (percentage) fee rate applied to any gage-reward computations not using ETRNL
+    // The (percentage) fee rate applied to any gage-reward computations not using ETRNL (4-decimal precision)
     uint256 public feeRate;
 
     constructor (address _eternal) {
@@ -36,15 +36,11 @@ contract Eternal is IEternal, OwnableEnhanced {
 /////–––««« Gage-logic functions »»»––––\\\\\
 
     /**
-     * @dev Creates a liquid gage contract for a user
-     * @param user The address of the user entering
-     * @param inflationary Whether the gage is inflationary or deflationary
+     * @dev Creates an ETRNL liquid gage contract for a user
      */
-    function initiateLiquidGage(address user, bool inflationary) external override returns(uint256) {
-        // TODO MAKE FUNCTION TO DETERMINE PERCENT
-        uint256 percent; 
+    function initiateEternalLiquidGage() external override returns(uint256) {
         lastId += 1;
-        Gage newGage = new LoyaltyGage(lastId, percent, 2, inflationary, address(this), user, address(this));
+        Gage newGage = new LoyaltyGage(lastId, eternal.viewBurnRate(), 2, true, address(this), _msgSender(), address(this));
         gages[lastId] = address(newGage);
         emit NewGage(lastId, address(newGage));
 
