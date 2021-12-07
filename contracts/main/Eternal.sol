@@ -2,7 +2,8 @@
 pragma solidity 0.8.0;
 
 import "../interfaces/IEternalToken.sol";
-import "../interfaces/IGageV2.sol";
+import "../interfaces/IEternalTreasury.sol";
+import "../interfaces/ILoyaltyGage.sol";
 import "./LoyaltyGage.sol";
 import "../inheritances/OwnableEnhanced.sol";
 
@@ -15,6 +16,8 @@ contract Eternal is IEternal, OwnableEnhanced {
 
     // The ETRNL interface
     IEternalToken private immutable eternal;
+    // The Treasury interface
+    IEternalTreasury private immutable treasury;
     // Keeps track of the respective gage tied to any given ID
     mapping (uint256 => address) private gages;
     // Keeps track of the reflection rate for any given address and gage to recalculate rewards earned during the gage
@@ -24,27 +27,35 @@ contract Eternal is IEternal, OwnableEnhanced {
     uint256 private lastId;
     // The holding time-constant used in the percent change condition calculation (decided by the Eternal Fund) (x 10 ** 6)
     uint256 private timeConstant;
+    // The minimum estimate of transactions in 24h, used in case the alpha value for ETRNL is not determined yet
+    uint256 private baseline;
     // The (percentage) fee rate applied to any gage-reward computations not using ETRNL (x 10 ** 5)
     uint256 private feeRate;
 
-    constructor (address _eternal) {
-        // Initialize the ETRNL interface
+    constructor (address _eternal, address _treasury) {
+        // Initialize the interfaces
         eternal = IEternalToken(_eternal);
+        treasury = IEternalTreasury(_treasury);
         // Set initial feeRate
         feeRate = 500;
         // Set initial timeConstant
         timeConstant = 2 * (10 ** 6);
+        // Set initial baseline
+        baseline = 10000;
     }
-
+/////–––««« Variable state-inspection functions »»»––––\\\\\
+    function viewGageAddress(uint256 id) external view returns(address) {
+        return gages[id];
+    }
 /////–––««« Gage-logic functions »»»––––\\\\\
 
     /**
      * @dev Creates an ETRNL liquid gage contract for a user
      */
     function initiateEternalLiquidGage() external override returns(uint256) {
-        uint256 alpha = eternal.viewAlpha() > 0 ? eternal.viewAlpha() : 1000;
         // Compute the percent change condition
-        uint256 percent = (eternal.viewBurnRate() * alpha * (10 ** 9) * timeConstant * 15) / eternal.totalSupply();
+        uint256 alpha = eternal.viewAlpha() > 0 ? eternal.viewAlpha() : baseline;
+        uint256 percent = eternal.viewBurnRate() * alpha * (10 ** 9) * timeConstant * 15 / eternal.totalSupply();
 
         // Incremement the lastId tracker
         lastId += 1;
@@ -53,6 +64,8 @@ contract Eternal is IEternal, OwnableEnhanced {
         Gage newGage = new LoyaltyGage(lastId, percent, 2, true, address(this), _msgSender(), address(this));
         emit NewGage(lastId, address(newGage));
         gages[lastId] = address(newGage);
+
+        treasury.fundGage(address(newGage));
 
         return lastId;
     }
@@ -86,7 +99,7 @@ contract Eternal is IEternal, OwnableEnhanced {
      */
     function withdraw(address user, uint256 id, bool winner) external override {
         require(_msgSender() == gages[id], "msg.sender must be the gage");
-        IGageV2 gage = IGageV2(gages[id]);
+        ILoyaltyGage gage = ILoyaltyGage(gages[id]);
         (address asset, uint256 amount, uint256 risk) = gage.viewUserData(user);
 
         // Compute the amount minus the fee rate if using ETRNL
@@ -152,9 +165,5 @@ contract Eternal is IEternal, OwnableEnhanced {
         uint256 currentRate = eternal.isExcludedFromReward(user) ? oldRate : eternal.getReflectionRate();
 
         return (amount * (oldRate / currentRate));
-    }
-
-    function viewGageAddress(uint256 id) external view returns(address) {
-        return gages[id];
     }
 }

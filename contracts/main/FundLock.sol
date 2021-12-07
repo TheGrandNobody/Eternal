@@ -44,6 +44,6 @@ contract FundLock {
      */
     function withdrawFunds() external {
         uint256 amountWithdrawn = totalAmount - eternal.balanceOf(address(this));
-        eternal.transfer(recipient, viewAmountAvailable() - amountWithdrawn);
+        require(eternal.transfer(recipient, viewAmountAvailable() - amountWithdrawn), "Failed to withdraw funds");
     }
 }

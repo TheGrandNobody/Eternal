@@ -42,6 +42,7 @@ abstract contract Gage is Context, IGage {
     
 
     constructor (uint256 _id, uint32 _users, address _eternal, bool _loyalty) {
+        require(users > 1, "Gage needs at least two users");
         id = _id;
         capacity = _users;
         eternal = IEternal(_eternal);

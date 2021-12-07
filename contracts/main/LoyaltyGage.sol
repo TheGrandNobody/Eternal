@@ -2,9 +2,9 @@
 pragma solidity 0.8.0;
 
 import "./Gage.sol";
-import "../interfaces/IGageV2.sol";
+import "../interfaces/ILoyaltyGage.sol";
 
-contract LoyaltyGage is Gage, IGageV2 {
+contract LoyaltyGage is Gage, ILoyaltyGage {
 
     // Address of the stakeholder which pays the discount in a loyalty gage
     address private immutable distributor;
@@ -25,7 +25,41 @@ contract LoyaltyGage is Gage, IGageV2 {
         percent = _percent;
         inflationary = _inflationary;
     }
+/////–––««« Variable state-inspection functions »»»––––\\\\\
 
+    /**
+     * @dev View the address of the creator
+     * @return The address of the creator
+     */
+    function viewDistributor() external view override returns (address){
+        return distributor;
+    }
+
+    /**
+     * @dev View the address of the buyer
+     * @return The address of the buyer
+     */
+    function viewReceiver() external view override returns (address) {
+        return receiver;
+    }
+
+    /**
+     * @dev View the percent change condition for the total token supply of the deposit
+     * @return The percent change condition for the total token supply
+     */
+    function viewPercent() external view override returns (uint256) {
+        return percent;
+    }
+
+    /**
+     * @dev View whether the deposited token suppply is inflationary or deflationary
+     * @return True if the token is inflationary, False if it is deflationary
+     */
+    function viewInflationary() external view override returns (bool) {
+        return inflationary;
+    }
+    
+/////–––««« Gage-logic functions »»»––––\\\\\
     /**
      * @dev Adds a stakeholder to this gage and records the initial data.
      * @param deposit The address of the asset used as deposit by this user
@@ -41,6 +75,7 @@ contract LoyaltyGage is Gage, IGageV2 {
         require(risk <= 50, "Invalid risk percentage");
         UserData storage data = userData[_msgSender()];
         require(!data.inGage, "User is already in this gage");
+        require(status == Status.Open, "Gage is not open");
 
         data.amount = amount;
         data.asset = deposit;
@@ -73,37 +108,5 @@ contract LoyaltyGage is Gage, IGageV2 {
 
         eternal.withdraw(receiver, id, winner);
         eternal.withdraw(distributor, id, !winner);
-    }
-
-    /**
-     * @dev View the address of the creator
-     * @return The address of the creator
-     */
-    function viewDistributor() external view override returns (address){
-        return distributor;
-    }
-
-    /**
-     * @dev View the address of the buyer
-     * @return The address of the buyer
-     */
-    function viewReceiver() external view override returns (address) {
-        return receiver;
-    }
-
-    /**
-     * @dev View the percent change condition for the total token supply of the deposit
-     * @return The percent change condition for the total token supply
-     */
-    function viewPercent() external view override returns (uint256) {
-        return percent;
-    }
-
-    /**
-     * @dev View whether the deposited token suppply is inflationary or deflationary
-     * @return True if the token is inflationary, False if it is deflationary
-     */
-    function viewInflationary() external view override returns (bool) {
-        return inflationary;
     }
 }

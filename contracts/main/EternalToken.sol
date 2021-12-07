@@ -520,7 +520,7 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
      * - The sum of all rates cannot exceed 25 percent
      */
     function setRate(Rate rate, uint256 newRate) external override onlyAdminAndFund() {
-        require((uint(rate) >= 0 && uint(rate) <= 3), "Invalid rate type");
+        require((uint256(rate) >= 0 && uint256(rate) <= 3), "Invalid rate type");
         require(newRate >= 0, "The new rate must be positive");
 
         uint256 oldRate;

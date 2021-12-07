@@ -8,7 +8,7 @@ import "./IGage.sol";
  * @author Nobody (me)
  * @notice Methods are used for all gage contracts
  */
-interface IGageV2 is IGage {
+interface ILoyaltyGage is IGage {
     // View the distributor of the loyalty gage (usually token distributor)
     function viewDistributor() external view returns (address);
     // View the receiver in the loyalty gage (usually the user)

@@ -5,6 +5,7 @@ import "../inheritances/OwnableEnhanced.sol";
 import "../interfaces/IEternal.sol";
 import "../interfaces/IEternalToken.sol";
 import "../interfaces/IEternalTreasury.sol";
+import "../interfaces/ILoyaltyGage.sol";
 
 /**
  * @dev Contract for the Eternal Fund
@@ -20,7 +21,9 @@ import "../interfaces/IEternalTreasury.sol";
         eternal = IEternalToken(_eternal);
     }
 
-    function fundGage() external override {
+    function fundGage(address _gage, uint256 amount, uint256 risk) external override {
         require(_msgSender() == address(eternalPlatform), "msg.sender must be the platform");
+        ILoyaltyGage gage = ILoyaltyGage(_gage);
+        gage.join(address(eternal), amount, risk);
     }
  }
