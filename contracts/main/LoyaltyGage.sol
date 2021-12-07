@@ -71,11 +71,17 @@ contract LoyaltyGage is Gage, ILoyaltyGage {
      * - Risk must not exceed 50 percent
      * - User must not already be in the gage
      */
-    function join(address deposit, uint256 amount, uint8 risk) external override {
+    function join(address deposit, uint256 amount, uint256 risk) external override {
         require(risk <= 50, "Invalid risk percentage");
         UserData storage data = userData[_msgSender()];
         require(!data.inGage, "User is already in this gage");
         require(status == Status.Open, "Gage is not open");
+        if (_msgSender() == distributor) {
+            asset = IERC20(deposit);
+            totalSupply = asset.totalSupply();
+        } else {
+            require(deposit != eternal.viewETRNL(), "Receiver can't deposit ETRNL");
+        }
 
         data.amount = amount;
         data.asset = deposit;
@@ -83,13 +89,12 @@ contract LoyaltyGage is Gage, ILoyaltyGage {
         data.inGage = true;
         users += 1;
 
-        eternal.deposit(deposit, _msgSender(), amount, id);
         emit UserAdded(id, _msgSender());
 
-        if (_msgSender() == distributor) {
-            asset = IERC20(deposit);
-            totalSupply = asset.totalSupply();
+        if (_msgSender() != distributor) {
+            eternal.deposit(deposit, _msgSender(), amount, id, risk);
         }
+
         // If contract is filled, update its status and initiate the gage
         if (users == capacity) {
             status = Status.Active;

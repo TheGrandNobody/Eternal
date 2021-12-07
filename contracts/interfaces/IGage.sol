@@ -17,7 +17,7 @@ interface IGage {
     event GageClosed(uint256 id); 
 
     // Adds a user to the gage
-    function join(address asset, uint256 amount, uint8 risk) external;
+    function join(address asset, uint256 amount, uint256 risk) external;
     // Removes a user from the gage
     function exit() external;
     // View the user count in the gage whilst it is not Active

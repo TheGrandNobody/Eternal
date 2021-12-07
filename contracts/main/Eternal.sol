@@ -21,13 +21,15 @@ contract Eternal is IEternal, OwnableEnhanced {
     // Keeps track of the respective gage tied to any given ID
     mapping (uint256 => address) private gages;
     // Keeps track of the reflection rate for any given address and gage to recalculate rewards earned during the gage
-    mapping (address => mapping (uint256 => uint256)) private reflectionRates;
+    mapping (uint256 => uint256) private reflectionRates;
 
     // Keeps track of the latest Gage ID
     uint256 private lastId;
-    // The holding time-constant used in the percent change condition calculation (decided by the Eternal Fund) (x 10 ** 6)
+    // The holding time constant used in the percent change condition calculation (decided by the Eternal Fund) (x 10 ** 6)
     uint256 private timeConstant;
-    // The minimum estimate of transactions in 24h, used in case the alpha value for ETRNL is not determined yet
+    // The risk constant used in the calculation of the treasury's risk (x 10 ** 4)
+    uint256 private riskConstant;
+    // The minimum token value estimate of transactions in 24h, used in case the alpha value is not determined yet
     uint256 private baseline;
     // The (percentage) fee rate applied to any gage-reward computations not using ETRNL (x 10 ** 5)
     uint256 private feeRate;
@@ -38,14 +40,29 @@ contract Eternal is IEternal, OwnableEnhanced {
         treasury = IEternalTreasury(_treasury);
         // Set initial feeRate
         feeRate = 500;
-        // Set initial timeConstant
+        // Set initial constants
         timeConstant = 2 * (10 ** 6);
+        riskConstant = 100;
         // Set initial baseline
-        baseline = 10000;
+        baseline = 10 ** 6;
     }
 /////–––««« Variable state-inspection functions »»»––––\\\\\
-    function viewGageAddress(uint256 id) external view returns(address) {
+    
+    /**
+     * @dev View the corresponding address for a given gage id
+     * @param id The id of the specified gage
+     * @return The address of the specified gage
+     */
+    function viewGageAddress(uint256 id) external view override returns(address) {
         return gages[id];
+    }
+
+    /**
+     * @dev Returns the address of the Eternal token
+     * @return The address of ETRNL
+     */
+    function viewETRNL() external view override returns (address) {
+        return address(eternal);
     }
 /////–––««« Gage-logic functions »»»––––\\\\\
 
@@ -61,11 +78,9 @@ contract Eternal is IEternal, OwnableEnhanced {
         lastId += 1;
 
         // Deploy a new Gage
-        Gage newGage = new LoyaltyGage(lastId, percent, 2, true, address(this), _msgSender(), address(this));
+        Gage newGage = new LoyaltyGage(lastId, percent, 2, false, address(treasury), _msgSender(), address(this));
         emit NewGage(lastId, address(newGage));
         gages[lastId] = address(newGage);
-
-        treasury.fundGage(address(newGage));
 
         return lastId;
     }
@@ -80,12 +95,12 @@ contract Eternal is IEternal, OwnableEnhanced {
      * Requirements:
      * - Only callable by a gage contract
      */
-    function deposit(address asset, address user, uint256 amount, uint256 id) external override {
+    function deposit(address asset, address user, uint256 amount, uint256 id, uint256 risk) external override {
         require(_msgSender() == gages[id], "msg.sender must be the gage");
-        if (asset == address(eternal)) {
-            reflectionRates[user][id] = eternal.getReflectionRate();
-        }
+        reflectionRates[id] = eternal.getReflectionRate();
         require(IERC20(asset).transferFrom(user, address(this), amount), "Failed to deposit asset");
+        uint256 treasuryRisk = risk + riskConstant;
+        treasury.fundGage(gages[id], user, asset, amount, treasuryRisk, risk);
     }
 
     /**
@@ -143,13 +158,46 @@ contract Eternal is IEternal, OwnableEnhanced {
     }
 
     /**
-     * @dev Sets the time-constant value used in the percent change condition calculation for any loyalty gage
-     * @param newConstant The value of the new time-constant
+     * @dev Sets the time constant value used in the percent change condition calculation for any loyalty gage
+     * @param newConstant The value of the new time constant
+     *
+     * Requirements:
+     * - Time constant must be greater than 0
      */
     function setTimeConstant(uint256 newConstant) external override onlyFund() {
+        require(timeConstant > 0, "Time constant must be positive");
         uint256 oldConstant = timeConstant;
         emit TimeConstantUpdated(oldConstant, newConstant);
         timeConstant = newConstant;
+    }
+
+    /**
+     * @dev Sets the risk constant used in the calculation of the treasury's risk
+     * @param newConstant The value of the new risk constant
+     *
+     * Requirements:
+     * - Risk constant must be greater than 0
+     * - Risk constant must be less than or equal to 1 (x 10 ** 4) (equivalent to < 100%)
+     */
+    function setRiskConstant(uint256 newConstant) external override onlyFund() {
+        require(riskConstant > 0 && riskConstant <= 10 ** 4, "Invalid risk constant value");
+        uint256 oldConstant = riskConstant;
+        emit RiskConstantUpdated(oldConstant, newConstant);
+        riskConstant = newConstant;
+    }
+
+    /**
+     * @dev Sets the minimum estimate of tokens transacted in a span of 24h
+     * @param newBaseline The value of the new baseline
+     * 
+     * Requirements:
+     * - Baseline must be greater than or equal to 1000
+     */
+    function setBaseline(uint256 newBaseline) external override onlyFund() {
+        require(baseline >= 10 ** 3, "Baseline is below threshold");
+        uint256 oldBaseline = baseline;
+        emit BaselineUpdated(oldBaseline, newBaseline);
+        baseline = newBaseline;
     }
 
 /////–––««« Utility functions »»»––––\\\\\
@@ -161,7 +209,7 @@ contract Eternal is IEternal, OwnableEnhanced {
      * @param id The id of the specified gage
      */
     function computeAccruedRewards(uint256 amount, address user, uint256 id) private view returns (uint256) {
-        uint256 oldRate = reflectionRates[user][id];
+        uint256 oldRate = reflectionRates[id];
         uint256 currentRate = eternal.isExcludedFromReward(user) ? oldRate : eternal.getReflectionRate();
 
         return (amount * (oldRate / currentRate));

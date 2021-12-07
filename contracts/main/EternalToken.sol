@@ -319,11 +319,11 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
 
         // Update the 24h transaction count if the current 24h period has not elapsed
         if (takeFee && block.timestamp < oneDayFromNow) {
-            transactionCount += 1;
+            transactionCount += amount;
         } else if (takeFee && block.timestamp >= oneDayFromNow) {
             // Else update alpha, and reset the transaction count and 24h period tracker
             alpha = transactionCount;
-            transactionCount = 1;
+            transactionCount = amount;
             oneDayFromNow = block.timestamp + 84600;
         }
 
@@ -521,7 +521,7 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
      */
     function setRate(Rate rate, uint256 newRate) external override onlyAdminAndFund() {
         require((uint256(rate) >= 0 && uint256(rate) <= 3), "Invalid rate type");
-        require(newRate >= 0, "The new rate must be positive");
+        require(newRate >= 0, "New rate cannot be negative");
 
         uint256 oldRate;
 

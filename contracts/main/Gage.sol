@@ -19,7 +19,7 @@ abstract contract Gage is Context, IGage {
     struct UserData {
         address asset;                       // The AVAX address of the asset used as deposit     
         uint256 amount;                      // The entry deposit (in tokens) needed to participate in this gage        
-        uint8 risk;                          // The percentage that is being risked in this gage  
+        uint256 risk;                        // The percentage (in decimal form) that is being risked in this gage (x 10 ** 4) 
         bool inGage;                         // Keeps track of whether the user is in the gage or not
     }
 
@@ -60,7 +60,6 @@ abstract contract Gage is Context, IGage {
      * - Gage status cannot be 'Active'
      */
     function viewGageUserCount() external view override returns (uint32) {
-        require(status != Status.Active, "Gage can't be active");
         return users;
     }
 
@@ -76,8 +75,8 @@ abstract contract Gage is Context, IGage {
      * @dev View the status of the gage
      * @return An integer indicating the status of the gage
      */
-    function viewStatus() external view override returns (uint) {
-        return uint(status);
+    function viewStatus() external view override returns (uint256) {
+        return uint256(status);
     }
 
     /**

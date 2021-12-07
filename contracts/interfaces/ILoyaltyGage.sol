@@ -4,9 +4,9 @@ pragma solidity 0.8.0;
 import "./IGage.sol";
 
 /**
- * @dev Gage V2 interface
+ * @dev Loyalty Gage interface
  * @author Nobody (me)
- * @notice Methods are used for all gage contracts
+ * @notice Methods are used for all loyalty gage contracts
  */
 interface ILoyaltyGage is IGage {
     // View the distributor of the loyalty gage (usually token distributor)
