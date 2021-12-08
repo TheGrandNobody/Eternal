@@ -33,6 +33,10 @@ contract Eternal is IEternal, OwnableEnhanced {
     uint256 private baseline;
     // The (percentage) fee rate applied to any gage-reward computations not using ETRNL (x 10 ** 5)
     uint256 private feeRate;
+    // The total number of active liquid gages
+    uint256 private totalLiquidGages;
+    // The number of liquid gages that can possibly be active at a time
+    uint256 private liquidGageLimit;
 
     constructor (address _eternal, address _treasury) {
         // Initialize the interfaces
@@ -70,12 +74,14 @@ contract Eternal is IEternal, OwnableEnhanced {
      * @dev Creates an ETRNL liquid gage contract for a user
      */
     function initiateEternalLiquidGage() external override returns(uint256) {
+        require(totalLiquidGages < liquidGageLimit, "Liquid gage limit is reached");
         // Compute the percent change condition
         uint256 alpha = eternal.viewAlpha() > 0 ? eternal.viewAlpha() : baseline;
         uint256 percent = eternal.viewBurnRate() * alpha * (10 ** 9) * timeConstant * 15 / eternal.totalSupply();
 
-        // Incremement the lastId tracker
+        // Incremement the lastId tracker and the number of active liquid gages
         lastId += 1;
+        totalLiquidGages += 1;
 
         // Deploy a new Gage
         Gage newGage = new LoyaltyGage(lastId, percent, 2, false, address(treasury), _msgSender(), address(this));
@@ -98,7 +104,7 @@ contract Eternal is IEternal, OwnableEnhanced {
     function deposit(address asset, address user, uint256 amount, uint256 id, uint256 risk) external override {
         require(_msgSender() == gages[id], "msg.sender must be the gage");
         reflectionRates[id] = eternal.getReflectionRate();
-        require(IERC20(asset).transferFrom(user, address(this), amount), "Failed to deposit asset");
+        require(IERC20(asset).transferFrom(user, address(treasury), amount), "Failed to deposit asset");
         uint256 treasuryRisk = risk + riskConstant;
         treasury.fundGage(gages[id], user, asset, amount, treasuryRisk, risk);
     }
@@ -199,6 +205,8 @@ contract Eternal is IEternal, OwnableEnhanced {
         emit BaselineUpdated(oldBaseline, newBaseline);
         baseline = newBaseline;
     }
+
+    function 
 
 /////–––««« Utility functions »»»––––\\\\\
 

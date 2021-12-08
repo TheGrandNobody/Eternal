@@ -130,7 +130,7 @@ contract EternalLiquidity is IEternalLiquidity, OwnableEnhanced {
         emit AutomaticLiquidityProvision(amountETRNL, contractBalance, amountAVAX);
         eternal.approve(address(joeRouter), amountETRNL);
         // Update the total liquidity 
-        (,,uint256 liquidity) = joeRouter.addLiquidityAVAX{value: amountAVAX}(address(this), amountETRNL, minETRNL, minAVAX, address(this), block.timestamp);
+        (,,uint256 liquidity) = joeRouter.addLiquidityAVAX{value: amountAVAX}(address(eternal), amountETRNL, minETRNL, minAVAX, address(this), block.timestamp);
         totalLiquidity += liquidity;
     }
 

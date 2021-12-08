@@ -16,12 +16,15 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
  * @notice The Eternal Fund contract holds all treasury logic
  */
  contract EternalTreasury is IEternalTreasury, OwnableEnhanced {
+
     IEternal private immutable eternalPlatform;
     IEternalToken private immutable eternal;
     IJoeFactory private immutable joeFactory;
     IJoeRouter02 private immutable joeRouter;
 
-    mapping (address => uint256) stakingBalances;
+    mapping (address => uint256) private stakingBalances;
+    mapping (address => uint256) private providedDeposits;
+    mapping (address => uint256) private treasuryLiquidity;
 
     constructor (address _eternalPlatform, address _eternal) {
         eternalPlatform = IEternal(_eternalPlatform);
@@ -49,12 +52,21 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
         // Add liquidity to the ETRNL/Asset pair
         eternal.approve(address(joeRouter), amountETRNL);
         if (asset == joeRouter.WAVAX()) {
-            (providedETRNL, providedAsset, liquidity) = joeRouter.addLiquidityAVAX{value: userAmount}(address(this), amountETRNL, minETRNL, minAsset, address(this), block.timestamp);
+            (providedETRNL, providedAsset, liquidity) = joeRouter.addLiquidityAVAX{value: userAmount}(address(eternal), amountETRNL, minETRNL, minAsset, address(this), block.timestamp);
         } else {
             (providedETRNL, providedAsset, liquidity) = joeRouter.addLiquidity(address(eternal), asset, amountETRNL, userAmount, minETRNL, minAsset, address(this), block.timestamp);
         }
-    
+
+        providedDeposits[user] = providedAsset;
+        treasuryLiquidity[asset] += liquidity;
+
         ILoyaltyGage(_gage).join(address(eternal), providedETRNL, risk);
         eternal.transfer(user, providedETRNL * bonus / (10 ** 4));
+    }
+
+    function stake(uint256 amount) {
+        require(amount > 0, "Amount must be greater than 0");
+        stakingBalances[_msgSender()] += amount;
+        
     }
  }
