@@ -17,7 +17,7 @@ abstract contract Gage is Context, IGage {
 
     // Holds user-specific information with regards to the gage
     struct UserData {
-        address asset;                       // The AVAX address of the asset used as deposit     
+        address asset;                       // The address of the asset used as deposit     
         uint256 amount;                      // The entry deposit (in tokens) needed to participate in this gage        
         uint256 risk;                        // The percentage (in decimal form) that is being risked in this gage (x 10 ** 4) 
         bool inGage;                         // Keeps track of whether the user is in the gage or not

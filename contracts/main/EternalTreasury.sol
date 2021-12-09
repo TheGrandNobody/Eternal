@@ -30,13 +30,13 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
     IJoeRouter02 private immutable joeRouter;
 
     // The amount of ETRNL staked by any given individual user
-    mapping (address => uint256) private stakingBalances;
-    // Contains user data related to gaging and staking rewards
+    mapping (address => uint256) private stakedBalances;
+    // Holds all user data related to gaging and staking rewards
     mapping (address => mapping(address => TreasuryNote)) private treasuryFiles;
-
-
+    // Holds all addresses of tokens held by the treasury
     address[] private tokenTreasury;
 
+    // The total number of ETRNL staked by users 
     uint256 private totalStakedBalances;
     // The amount by which the treasury's stake is reduced (x 10 ** 4)
     uint256 private treasuryShare;
@@ -52,9 +52,24 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
         treasuryShare = 5000;
     }
 
-    function fundGage(address _gage, address user, address asset, uint256 userAmount, uint256 risk, uint256 bonus) external override {
+    /**
+     * @dev Funds a given liquidity gage with ETRNL, provides liquidity using ETRNL and the receiver's asset and transfers a bonus to the receiver
+     * @param gage The address of the specified liquidity gage
+     * @param receiver The address of the receiver
+     * @param asset The address of the asset provided by the receiver
+     * @param userAmount The amount of the asset provided by the receiver
+     * @param risk The treasury's (distributor) risk percentage 
+     * @param bonus The receiver's bonus percentage
+     * 
+     * Requirements:
+     *
+     * - Only callable by the Eternal Platform
+     * - Does not work with non-existent liquidity pairs
+     */
+    function fundLiquidityGage(address gage, address receiver, address asset, uint256 userAmount, uint256 risk, uint256 bonus) external override {
         require(_msgSender() == address(eternalPlatform), "msg.sender must be the platform");
         require(joeFactory.getPair(address(eternal), asset) != address(0), "Unable to find pair on DEX");
+
         uint256 providedETRNL;
         uint256 providedAsset;
 
@@ -74,19 +89,31 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
             (providedETRNL, providedAsset,) = joeRouter.addLiquidity(address(eternal), asset, amountETRNL, userAmount, minETRNL, minAsset, address(this), block.timestamp);
         }
 
-        TreasuryNote storage note = treasuryFiles[user][asset];
+        TreasuryNote storage note = treasuryFiles[receiver][asset];
         note.amountProvided = providedAsset;
 
-        ILoyaltyGage(_gage).join(address(eternal), providedETRNL, risk);
-        eternal.transfer(user, providedETRNL * bonus / (10 ** 4));
+        ILoyaltyGage(gage).join(address(eternal), providedETRNL, risk);
+        eternal.transfer(receiver, providedETRNL * bonus / (10 ** 4));
     }
 
-    function stake(uint256 amount) external {
+    /**
+     * @dev Stakes a given amount of ETRNL into the treasury
+     * @param amount The specified amount of ETRNL being staked
+     * 
+     * Requirements:
+     * 
+     * - Staked amount must be greater than 0
+     */
+    function stake(uint256 amount) external override {
         require(amount > 0, "Amount must be greater than 0");
-        if (stakingBalances[_msgSender()] > 0) { 
+
+        eternal.transferFrom(_msgSender(), address(this), amount);
+        emit Stake(_msgSender(), amount);
+        // If user has already staked ETRNL, save his previous rewards into the system
+        if (stakedBalances[_msgSender()] > 0) { 
             TreasuryNote storage note;
-            uint256 netTreasuryShare = eternal.balanceOf(address(this)) * treasuryShare / (10 ** 4);
-            uint256 feeShare = stakingBalances[_msgSender()] * (10 ** 9) / (totalStakedBalances + netTreasuryShare);
+            uint256 netTreasuryShare = sub(eternal.balanceOf(address(this)), totalStakedBalances) * treasuryShare / (10 ** 4);
+            uint256 feeShare = stakedBalances[_msgSender()] * (10 ** 9) / (totalStakedBalances + netTreasuryShare);
             for (uint256 i = 0; i < tokenTreasury.length; i++) {
                 uint256 treasuryBalance = IERC20(tokenTreasury[i]).balanceOf(address(this));
                 note = treasuryFiles[_msgSender()][tokenTreasury[i]];
@@ -94,12 +121,29 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
                 note.balanceSnapshot = treasuryBalance;
             }
         }
-        eternal.transferFrom(_msgSender(), address(this), amount); //TODO Need to make re-entrancy proof
-        stakingBalances[_msgSender()] += amount;
+        stakedBalances[_msgSender()] += amount;
         totalStakedBalances += amount;
+    }
+
+    /**
+     * @dev Unstakes a user's given amount of ETRNL and transfers the user's accumulated rewards
+     * @param amount The specified amount of ETRNL being unstaked
+     */
+    function unstake(uint256 amount) external override {
+        require(amount <= stakedBalances[_msgSender()] , "Amount exceeds staked balance");
+
+        stakedBalances[_msgSender()] -= amount;
+        totalStakedBalances -= amount;
+
+        // TODO think about how someone can use stake and then unstake and somehow get more rewards then allowed
         
     }
 
+    /**
+     * @dev Subtracts a given number from another and returns the absolute value of the result
+     * @param a The first specified number
+     * @param b The other specified number
+     */
     function sub(uint256 a, uint256 b) private pure returns(uint256) {
         return a > b ? a - b : b - a;
     }
