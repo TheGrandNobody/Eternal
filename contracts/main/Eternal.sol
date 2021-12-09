@@ -22,6 +22,7 @@ contract Eternal is IEternal, OwnableEnhanced {
     mapping (uint256 => address) private gages;
     // Keeps track of the reflection rate for any given address and gage to recalculate rewards earned during the gage
     mapping (uint256 => uint256) private reflectionRates;
+    mapping (address => mapping (address => bool)) private inLiquidGage;
 
     // Keeps track of the latest Gage ID
     uint256 private lastId;
@@ -73,8 +74,9 @@ contract Eternal is IEternal, OwnableEnhanced {
     /**
      * @dev Creates an ETRNL liquid gage contract for a user
      */
-    function initiateEternalLiquidGage() external override returns(uint256) {
+    function initiateEternalLiquidGage(address asset) external override returns(uint256) {
         require(totalLiquidGages < liquidGageLimit, "Liquid gage limit is reached");
+        require(!inLiquidGage[_msgSender()][asset], "Per-asset gaging limit reached");
         // Compute the percent change condition
         uint256 alpha = eternal.viewAlpha() > 0 ? eternal.viewAlpha() : baseline;
         uint256 percent = eternal.viewBurnRate() * alpha * (10 ** 9) * timeConstant * 15 / eternal.totalSupply();
