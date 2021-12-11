@@ -12,4 +12,5 @@ interface IEternalTreasury {
     function unstake(uint256 amount) external;
 
     event Stake(address user, uint256 amount);
+    event Unstake(address user, uint256 amount);
 }

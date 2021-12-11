@@ -12,9 +12,9 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoeFactory.sol";
 import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
 
 /**
- * @dev Contract for the Eternal Fund
+ * @dev Contract for the Eternal Treasury
  * @author Nobody (me)
- * @notice The Eternal Fund contract holds all treasury logic
+ * @notice The Eternal Treasury contract holds all treasury logic
  */
  contract EternalTreasury is IEternalTreasury, OwnableEnhanced {
 
@@ -109,18 +109,7 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
 
         eternal.transferFrom(_msgSender(), address(this), amount);
         emit Stake(_msgSender(), amount);
-        // If user has already staked ETRNL, save his previous rewards into the system
-        if (stakedBalances[_msgSender()] > 0) { 
-            TreasuryNote storage note;
-            uint256 netTreasuryShare = sub(eternal.balanceOf(address(this)), totalStakedBalances) * treasuryShare / (10 ** 4);
-            uint256 feeShare = stakedBalances[_msgSender()] * (10 ** 9) / (totalStakedBalances + netTreasuryShare);
-            for (uint256 i = 0; i < tokenTreasury.length; i++) {
-                uint256 treasuryBalance = IERC20(tokenTreasury[i]).balanceOf(address(this));
-                note = treasuryFiles[_msgSender()][tokenTreasury[i]];
-                note.savedFees += feeShare * sub(treasuryBalance, note.balanceSnapshot);
-                note.balanceSnapshot = treasuryBalance;
-            }
-        }
+
         stakedBalances[_msgSender()] += amount;
         totalStakedBalances += amount;
     }
@@ -132,19 +121,27 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
     function unstake(uint256 amount) external override {
         require(amount <= stakedBalances[_msgSender()] , "Amount exceeds staked balance");
 
+        emit Unstake(_msgSender(), amount);
+
         stakedBalances[_msgSender()] -= amount;
         totalStakedBalances -= amount;
 
-        // TODO think about how someone can use stake and then unstake and somehow get more rewards then allowed
-        
+        eternal.transfer(_msgSender(), amount);
     }
 
-    /**
-     * @dev Subtracts a given number from another and returns the absolute value of the result
-     * @param a The first specified number
-     * @param b The other specified number
-     */
-    function sub(uint256 a, uint256 b) private pure returns(uint256) {
-        return a > b ? a - b : b - a;
+    function updateTreasuryFiles(address user) private {
+        TreasuryNote storage note;
+        uint256 netTreasuryShare = (eternal.balanceOf(address(this)) - totalStakedBalances) * treasuryShare / (10 ** 4);
+        uint256 feeShare = stakedBalances[user] * (10 ** 9) / (totalStakedBalances + netTreasuryShare);
+
+        for (uint256 i = 0; i < tokenTreasury.length; i++) {
+            uint256 treasuryBalance = IERC20(tokenTreasury[i]).balanceOf(address(this));
+            note = treasuryFiles[user][tokenTreasury[i]];
+            if (stakedBalances[user] > 0) { 
+                note.savedFees += feeShare * sub(treasuryBalance, note.balanceSnapshot) / (10 ** 9);
+            }
+            note.balanceSnapshot = treasuryBalance;
+        }
+
     }
  }

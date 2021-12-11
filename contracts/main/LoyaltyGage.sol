@@ -79,8 +79,6 @@ contract LoyaltyGage is Gage, ILoyaltyGage {
         if (_msgSender() == distributor) {
             asset = IERC20(deposit);
             totalSupply = asset.totalSupply();
-        } else {
-            require(deposit != eternal.viewETRNL(), "Receiver can't deposit ETRNL");
         }
 
         data.amount = amount;

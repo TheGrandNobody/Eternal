@@ -8,7 +8,7 @@ pragma solidity 0.8.0;
  */
 interface IEternal {
     // Initiates a liquid gage involving an ETRNL liquidity pair
-    function initiateEternalLiquidGage() external returns(uint256);
+    function initiateEternalLiquidGage(address asset) external returns(uint256);
     // Deposit an asset to the platform
     function deposit(address asset, address user, uint256 amount, uint256 id, uint256 risk) external;
     // Withdraw an asset from the platform
@@ -23,8 +23,6 @@ interface IEternal {
     function setBaseline(uint256 newBaseline) external;
     // View the address of a gage for a given id
     function viewGageAddress(uint256 id) external returns(address);
-    // View the address of ETRNL
-    function viewETRNL() external returns(address);
     
     // Signals the deployment of a new gage
     event NewGage(uint256 id, address indexed gageAddress);

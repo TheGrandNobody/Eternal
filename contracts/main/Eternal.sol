@@ -20,8 +20,6 @@ contract Eternal is IEternal, OwnableEnhanced {
     IEternalTreasury private immutable treasury;
     // Keeps track of the respective gage tied to any given ID
     mapping (uint256 => address) private gages;
-    // Keeps track of the reflection rate for any given address and gage to recalculate rewards earned during the gage
-    mapping (uint256 => uint256) private reflectionRates;
     mapping (address => mapping (address => bool)) private inLiquidGage;
 
     // Keeps track of the latest Gage ID
@@ -61,20 +59,14 @@ contract Eternal is IEternal, OwnableEnhanced {
     function viewGageAddress(uint256 id) external view override returns(address) {
         return gages[id];
     }
-
-    /**
-     * @dev Returns the address of the Eternal token
-     * @return The address of ETRNL
-     */
-    function viewETRNL() external view override returns (address) {
-        return address(eternal);
-    }
+    
 /////–––««« Gage-logic functions »»»––––\\\\\
 
     /**
      * @dev Creates an ETRNL liquid gage contract for a user
      */
     function initiateEternalLiquidGage(address asset) external override returns(uint256) {
+        require(asset != address(eternal), "Receiver can't deposit ETRNL");
         require(totalLiquidGages < liquidGageLimit, "Liquid gage limit is reached");
         require(!inLiquidGage[_msgSender()][asset], "Per-asset gaging limit reached");
         // Compute the percent change condition
@@ -105,10 +97,9 @@ contract Eternal is IEternal, OwnableEnhanced {
      */
     function deposit(address asset, address user, uint256 amount, uint256 id, uint256 risk) external override {
         require(_msgSender() == gages[id], "msg.sender must be the gage");
-        reflectionRates[id] = eternal.getReflectionRate();
         require(IERC20(asset).transferFrom(user, address(treasury), amount), "Failed to deposit asset");
         uint256 treasuryRisk = risk + riskConstant;
-        treasury.fundGage(gages[id], user, asset, amount, treasuryRisk, risk);
+        treasury.fundLiquidityGage(gages[id], user, asset, amount, treasuryRisk, risk);
     }
 
     /**
@@ -125,32 +116,17 @@ contract Eternal is IEternal, OwnableEnhanced {
         ILoyaltyGage gage = ILoyaltyGage(gages[id]);
         (address asset, uint256 amount, uint256 risk) = gage.viewUserData(user);
 
-        // Compute the amount minus the fee rate if using ETRNL
-        uint256 netAmount;
-        uint256 rewards;
+        uint256 fee = amount * feeRate / 100000;
+        uint256 netAmount = amount - fee;
 
-        if (asset == address(eternal)) {
-            netAmount = amount - (amount * eternal.viewTotalRate() / 100000);
-            netAmount = computeAccruedRewards(amount, user, id);
-        } else {
-            netAmount = amount - (amount * feeRate / 100000);
-            require(IERC20(asset).transfer(fund(), (amount * feeRate / 100000)), "Failed to take gaging fee");
-        }
-
-        /** Users get the entire entry amount back if the gage wasn't active at the time of departure.
-            If the user forfeited, the system substracts the loss incurred. 
-            Otherwise, the gage return is awarded to the winner. */
         if (!winner) {
             netAmount -= (netAmount * risk / 100);
-            if (gage.viewLoyalty()) {
-            }
+            
         } else {
             netAmount += (gage.viewCapacity() - 1) * netAmount * risk / 100;
-            if (gage.viewLoyalty()) {
             
-            }
         }
-        require(IERC20(asset).transfer(user, netAmount), "Failed to withdraw deposit");
+        treasury.reimburse(_msgSender(), fee);
     }
 
 /////–––««« Fund-only functions »»»––––\\\\\
@@ -206,22 +182,5 @@ contract Eternal is IEternal, OwnableEnhanced {
         uint256 oldBaseline = baseline;
         emit BaselineUpdated(oldBaseline, newBaseline);
         baseline = newBaseline;
-    }
-
-    function 
-
-/////–––««« Utility functions »»»––––\\\\\
-
-    /**
-     * @dev Calculates any redistribution rewards accrued during a given gage a given user participated in.
-     * @param amount The specified entry deposit
-     * @param user The address of the user who we calculate rewards for
-     * @param id The id of the specified gage
-     */
-    function computeAccruedRewards(uint256 amount, address user, uint256 id) private view returns (uint256) {
-        uint256 oldRate = reflectionRates[id];
-        uint256 currentRate = eternal.isExcludedFromReward(user) ? oldRate : eternal.getReflectionRate();
-
-        return (amount * (oldRate / currentRate));
     }
 }
