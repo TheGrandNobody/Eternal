@@ -84,43 +84,59 @@ constructor () {
     }    
 
     /**
-     * @dev Sets a uin256 array's element's value for a given key and index
+     * @dev Sets or pushes a uin256 array's element's value for a given key and index
      * @param key The specified mapping key
      * @param index The specified index of the array's element being modified
      * @param value The specified uint256 value
      */
     function setUintArrayValue(bytes32 key, uint256 index, uint256 value) external override onlyLatestVersion() {
-        manyUints[key][index] = value;
+        if (index == 0) {
+            manyUints[key].push(value);
+        } else {
+            manyUints[key][index] = value;
+        }
     }
 
     /**
-     * @dev Sets an address array's element's value for a given key and index
+     * @dev Sets or pushes an address array's element's value for a given key and index
      * @param key The specified mapping key
      * @param index The specified index of the array's element being modified
      * @param value The specified address value
      */
     function setAddressArrayValue(bytes32 key, uint256 index, address value) external override onlyLatestVersion() {
-        manyAddresses[key][index] = value;
+        if (index == 0) {
+            manyAddresses[key].push(value);
+        } else {
+            manyAddresses[key][index] = value;
+        }
     }   
 
     /**
-     * @dev Sets a boolean array's element's value for a given key and index
+     * @dev Sets or pushes a boolean array's element's value for a given key and index
      * @param key The specified mapping key
      * @param index The specified index of the array's element being modified
      * @param value The specified boolean value
      */
     function setBoolArrayValue(bytes32 key, uint256 index, bool value) external override onlyLatestVersion() {
-        manyBools[key][index] = value;
+        if (index == 0) {
+            manyBools[key].push(value);
+        } else {
+            manyBools[key][index] = value;
+        }
     }    
 
     /**
-     * @dev Sets a bytes32 array's element's value for a given key and index
+     * @dev Sets or pushes a bytes32 array's element's value for a given key and index
      * @param key The specified mapping key
      * @param index The specified index of the array's element being modified
      * @param value The specified bytes32value
      */
     function setBytesArrayValue(bytes32 key, uint256 index, bytes32 value) external override onlyLatestVersion() {
-        manyBytes[key][index] = value;
+        if (index == 0) {
+            manyBytes[key].push(value);
+        } else {
+            manyBytes[key][index] = value;
+        }
     }   
 
 /////–––««« Getters »»»––––\\\\\
@@ -130,7 +146,7 @@ constructor () {
      * @param key The specified mapping key
      * @return The uint256 value mapped to the key
      */
-    function getUint(bytes32 key, bytes32 entity) external view override returns (uint256) {
+    function getUint(bytes32 entity, bytes32 key) external view override returns (uint256) {
         return uints[entity][key];
     }
 
