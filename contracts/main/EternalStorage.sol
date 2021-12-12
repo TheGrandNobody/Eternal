@@ -2,13 +2,14 @@
 pragma solidity 0.8.0;
 
 import "@openzeppelin/contracts/utils/Context.sol";
+import "../interfaces/IEternalStorage.sol";
 
 /**
- * @title Contract for the shared Eternal storage
+ * @title Contract for Eternal's shared eternal storage
  * @author Nobody (me)
- * @notice The Shared Eternal Storage contract holds all variables of all other Eternal contracts
+ * @notice The Eternal Storage contract holds all variables of all other Eternal contracts
  */
-contract SharedEternalStorage is Context {
+contract EternalStorage is IEternalStorage, Context {
 
     // Scalars
     mapping (bytes32 => mapping (bytes32 => uint256)) private uints;
@@ -48,7 +49,7 @@ constructor () {
      * @param key The specified mapping key
      * @param value The specified uint256 value
      */
-    function setUint(bytes32 entity, bytes32 key, uint256 value) external onlyLatestVersion() {
+    function setUint(bytes32 entity, bytes32 key, uint256 value) external override onlyLatestVersion() {
         uints[entity][key] = value;
     }
 
@@ -58,7 +59,7 @@ constructor () {
      * @param key The specified mapping key
      * @param value The specified address value
      */
-    function setAddress(bytes32 entity, bytes32 key, address value) external onlyLatestVersion() {
+    function setAddress(bytes32 entity, bytes32 key, address value) external override onlyLatestVersion() {
         addresses[entity][key] = value;
     }
 
@@ -68,7 +69,7 @@ constructor () {
      * @param key The specified mapping key
      * @param value The specified boolean value
      */
-    function setBool(bytes32 entity, bytes32 key, bool value) external onlyLatestVersion() {
+    function setBool(bytes32 entity, bytes32 key, bool value) external override onlyLatestVersion() {
         bools[entity][key] = value;
     }    
 
@@ -78,7 +79,7 @@ constructor () {
      * @param key The specified mapping key
      * @param value The specified bytes32 value
      */
-    function setBytes(bytes32 entity, bytes32 key, bytes32 value) external onlyLatestVersion() {
+    function setBytes(bytes32 entity, bytes32 key, bytes32 value) external override onlyLatestVersion() {
         bytes32s[entity][key] = value;
     }    
 
@@ -88,7 +89,7 @@ constructor () {
      * @param index The specified index of the array's element being modified
      * @param value The specified uint256 value
      */
-    function setUintArrayValue(bytes32 key, uint256 index, uint256 value) external onlyLatestVersion() {
+    function setUintArrayValue(bytes32 key, uint256 index, uint256 value) external override onlyLatestVersion() {
         manyUints[key][index] = value;
     }
 
@@ -98,7 +99,7 @@ constructor () {
      * @param index The specified index of the array's element being modified
      * @param value The specified address value
      */
-    function setAddressArrayValue(bytes32 key, uint256 index, address value) external onlyLatestVersion() {
+    function setAddressArrayValue(bytes32 key, uint256 index, address value) external override onlyLatestVersion() {
         manyAddresses[key][index] = value;
     }   
 
@@ -108,7 +109,7 @@ constructor () {
      * @param index The specified index of the array's element being modified
      * @param value The specified boolean value
      */
-    function setBoolArrayValue(bytes32 key, uint256 index, bool value) external onlyLatestVersion() {
+    function setBoolArrayValue(bytes32 key, uint256 index, bool value) external override onlyLatestVersion() {
         manyBools[key][index] = value;
     }    
 
@@ -118,7 +119,7 @@ constructor () {
      * @param index The specified index of the array's element being modified
      * @param value The specified bytes32value
      */
-    function setBytesArrayValue(bytes32 key, bytes32 value, uint256 index) external onlyLatestVersion() {
+    function setBytesArrayValue(bytes32 key, uint256 index, bytes32 value) external override onlyLatestVersion() {
         manyBytes[key][index] = value;
     }   
 
@@ -129,7 +130,7 @@ constructor () {
      * @param key The specified mapping key
      * @return The uint256 value mapped to the key
      */
-    function getUint(bytes32 key, bytes32 entity) external view returns (uint256) {
+    function getUint(bytes32 key, bytes32 entity) external view override returns (uint256) {
         return uints[entity][key];
     }
 
@@ -139,7 +140,7 @@ constructor () {
      * @param key The specified mapping key
      * @return The address value mapped to the key
      */
-    function getAddress(bytes32 entity, bytes32 key) external view returns (address) {
+    function getAddress(bytes32 entity, bytes32 key) external view override returns (address) {
         return addresses[entity][key];
     }
 
@@ -149,7 +150,7 @@ constructor () {
      * @param key The specified mapping key
      * @return The boolean value mapped to the key
      */    
-    function getBool(bytes32 entity, bytes32 key) external view returns (bool) {
+    function getBool(bytes32 entity, bytes32 key) external view override returns (bool) {
         return bools[entity][key];
     }
 
@@ -159,7 +160,7 @@ constructor () {
      * @param key The specified mapping key
      * @return The bytes32 value mapped to the key
      */
-    function getBytes(bytes32 entity, bytes32 key) external view returns (bytes32) {
+    function getBytes(bytes32 entity, bytes32 key) external view override returns (bytes32) {
         return bytes32s[entity][key];
     }  
 
@@ -169,7 +170,7 @@ constructor () {
      * @param index The specified index of the desired element
      * @return The uint256 value at the specified index for the specified array
      */
-    function getUintArrayValue(bytes32 key, uint256 index) external view returns (uint256) {
+    function getUintArrayValue(bytes32 key, uint256 index) external view override returns (uint256) {
         return manyUints[key][index];
     }
 
@@ -179,7 +180,7 @@ constructor () {
      * @param index The specified index of the desired element
      * @return The address value at the specified index for the specified array
      */
-    function getAddressArrayValue(bytes32 key, uint256 index) external view returns (address) {
+    function getAddressArrayValue(bytes32 key, uint256 index) external view override returns (address) {
         return manyAddresses[key][index];
     }
 
@@ -189,7 +190,7 @@ constructor () {
      * @param index The specified index of the desired element
      * @return The boolean value at the specified index for the specified array
      */
-    function getBoolArrayValue(bytes32 key, uint256 index) external view returns (bool) {
+    function getBoolArrayValue(bytes32 key, uint256 index) external view override returns (bool) {
         return manyBools[key][index];
     }
 
@@ -199,18 +200,18 @@ constructor () {
      * @param index The specified index of the desired element
      * @return The bytes32 value at the specified index for the specified array
      */
-    function getBytes32ArrayValue(bytes32 key, uint256 index) external view returns (bytes32) {
+    function getBytesArrayValue(bytes32 key, uint256 index) external view override returns (bytes32) {
         return manyBytes[key][index];
     }
 
-/////–––««« Array Deletion »»»––––\\\\\
+/////–––««« Array Deleters »»»––––\\\\\
 
     /** 
      * @dev Deletes a uint256 array's element for a given key and index
      * @param key The specified mapping key
      * @param index The specified index of the desired element
      */
-    function deleteUint(bytes32 key, uint256 index) external onlyLatestVersion() {
+    function deleteUint(bytes32 key, uint256 index) external override onlyLatestVersion() {
         uint256 length = manyUints[key].length;
         manyUints[key][index] = manyUints[key][length - 1];
         manyUints[key].pop();
@@ -221,7 +222,7 @@ constructor () {
      * @param key The specified mapping key
      * @param index The specified index of the desired element
      */
-    function deleteAddress(bytes32 key, uint256 index) external onlyLatestVersion() {
+    function deleteAddress(bytes32 key, uint256 index) external override onlyLatestVersion() {
         uint256 length = manyAddresses[key].length;
         manyAddresses[key][index] = manyAddresses[key][length - 1];
         manyAddresses[key].pop();
@@ -232,7 +233,7 @@ constructor () {
      * @param key The specified mapping key
      * @param index The specified index of the desired element
      */
-    function deleteBool(bytes32 key, uint256 index) external onlyLatestVersion() {
+    function deleteBool(bytes32 key, uint256 index) external override onlyLatestVersion() {
         uint256 length = manyBools[key].length;
         manyBools[key][index] = manyBools[key][length - 1];
         manyBools[key].pop();
@@ -243,10 +244,48 @@ constructor () {
      * @param key The specified mapping key
      * @param index The specified index of the desired element
      */
-    function deleteBytes32(bytes32 key, uint256 index) external onlyLatestVersion() {
+    function deleteBytes(bytes32 key, uint256 index) external override onlyLatestVersion() {
         uint256 length = manyBytes[key].length;
         manyBytes[key][index] = manyBytes[key][length - 1];
         manyBytes[key].pop();
+    }
+
+/////–––««« Array Length »»»––––\\\\\
+
+    /**
+     * @dev Returns the length of a uint256 array for a given key
+     * @param key The specified mapping key
+     * @return The length of the array mapped to the key
+     */
+    function lengthUint(bytes32 key) external view override returns (uint256) {
+        return manyUints[key].length;
+    }
+
+    /**
+     * @dev Returns the length of an address array for a given key
+     * @param key The specified mapping key
+     * @return The length of the array mapped to the key
+     */
+    function lengthAddress(bytes32 key) external view override returns (uint256) {
+        return manyAddresses[key].length;
+    }
+
+    /**
+     * @dev Returns the length of a boolean array for a given key
+     * @param key The specified mapping key
+     * @return The length of the array mapped to the key
+     */
+    function lengthBool(bytes32 key) external view override returns (uint256) {
+        return manyBools[key].length;
+    }
+
+    /**
+     * @dev Returns the length of a bytes32 array for a given key
+     * @param key The specified mapping key
+     * @return The length of the array mapped to the key
+     */
+    function lengthBytes(bytes32 key) external view override returns (uint256) {
+        return manyBytes[key].length;
     }
 
 }

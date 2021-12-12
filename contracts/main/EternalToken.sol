@@ -3,6 +3,7 @@ pragma solidity 0.8.0;
 
 import "../interfaces/IEternalToken.sol";
 import "../interfaces/IEternalLiquidity.sol";
+import "../interfaces/IEternalStorage.sol";
 import "../inheritances/OwnableEnhanced.sol";
 
 /**
@@ -12,7 +13,7 @@ import "../inheritances/OwnableEnhanced.sol";
  * @notice The Eternal Token contract holds all the deflationary, burn, reflect, funding and auto-liquidity provision mechanics
  */
 contract EternalToken is IEternalToken, OwnableEnhanced {
-
+ /*
     // Keeps track of all reward-excluded addresses
     address[] private excludedAddresses;
 
@@ -26,66 +27,91 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
     mapping (address => bool) private isExcludedFromFees;
     // Keeps track of how much an address allows any other address to spend on its behalf
     mapping (address => mapping (address => uint256)) private allowances;
+    */
+
     // The Eternal automatic liquidity provider interface
     IEternalLiquidity private eternalLiquidity;
+    // The Eternal shared storage interface
+    IEternalStorage private eternalStorage;
+    address eternalTreasury;
 
+    // The keccak256 hash of this contract's address
+    bytes32 private entity;
+
+    // The true total ETRNL supply
+    bytes32 private totalTokenSupply;
     // The total ETRNL supply after taking reflections into account
-    uint256 private totalReflectedSupply;
+    bytes32 private totalReflectedSupply;
     // Threshold at which the contract swaps its ETRNL balance to provide liquidity (0.1% of total supply by default)
-    uint256 private tokenLiquidityThreshold;
-    // The true total ETRNL supply 
-    uint256 private totalTokenSupply;
+    bytes32 private tokenLiquidityThreshold;
 
     // All fees accept up to four decimal points
-    // The percentage of the fee, taken at each transaction, that is stored in the EternalFund
-    uint256 private fundingRate;
+    // The percentage of the fee, taken at each transaction, that is stored in the Eternal Treasury
+    bytes32 private fundingRate;
     // The percentage of the fee, taken at each transaction, that is burned
-    uint256 private burnRate;
+    bytes32 private burnRate;
     // The percentage of the fee, taken at each transaction, that is redistributed to holders
-    uint256 private redistributionRate;
+    bytes32 private redistributionRate;
     // The percentage of the fee taken at each transaction, that is used to auto-lock liquidity
-    uint256 private liquidityProvisionRate;
+    bytes32 private liquidityProvisionRate;
+    
     // The total number of times ETRNL has been transacted with fees in the last full 24h period
-    uint256 private alpha;
+    bytes32 private alpha;
     // The total number of times ETRNL has been transacted with fees in the current 24h period (ongoing)
-    uint256 private transactionCount;
+    bytes32 private transactionCount;
     // Keeps track of the UNIX time to recalculate the average transaction estimate
-    uint256 private oneDayFromNow;
+    bytes32 private oneDayFromNow;
+
+    constructor (address _eternalStorage) {
+        eternalStorage = IEternalStorage(_eternalStorage);
+
+        entity = keccak256(abi.encodePacked(address(this)));
+        totalTokenSupply = keccak256(abi.encodePacked("totalTokenSupply"));
+        totalReflectedSupply = keccak256(abi.encodePacked("totalReflectedSupply"));
+        tokenLiquidityThreshold = keccak256(abi.encodePacked("tokenLiquidityThreshold"));
+
+        fundingRate = keccak256(abi.encodePacked("fundingRate"));
+        burnRate = keccak256(abi.encodePacked("burnRate"));
+        redistributionRate = keccak256(abi.encodePacked("redistributionRate"));
+        liquidityProvisionRate = keccak256(abi.encodePacked("liquidityProvisionRate"));
+
+        alpha = keccak256(abi.encodePacked("alpha"));
+        transactionCount = keccak256(abi.encodePacked("transactionCount"));
+        oneDayFromNow = keccak256(abi.encodePacked("oneDayFromNow"));
+    } 
 
     /**
      * @dev Initialize supplies and routers and create a pair. Mints total supply to the contract deployer. 
      * Exclude some addresses from fees and/or rewards. Sets initial rate values.
      */
-    constructor () {
+    function initialize() external onlyAdmin() {
 
         // The largest possible number in a 256-bit integer
         uint256 max = ~uint256(0);
 
         // Initialize total supplies, liquidity threshold and transfer total supply to the owner
-        totalTokenSupply = (10**10) * (10**9);
-        totalReflectedSupply = (max - (max % totalTokenSupply));
-        tokenLiquidityThreshold = totalTokenSupply / 1000;
-        reflectedBalances[admin()] = totalReflectedSupply;
+        eternalStorage.setUint(entity, totalTokenSupply, (10**10) * (10**9));
+        eternalStorage.setUint(entity, totalReflectedSupply, (max - (max % ((10**10) * (10**9)))));
+        eternalStorage.setUint(entity, tokenLiquidityThreshold, (10**10) * (10**9) / 1000);
+        eternalStorage.setUint(entity, keccak256(abi.encodePacked("reflectedBalances", admin())), (max - (max % ((10**10) * (10**9)))));
 
-        // Exclude the owner from rewards and fees
+        // Exclude the temporary admin address from rewards and fees
         excludeFromReward(admin());
-        isExcludedFromFees[admin()] = true;
-
+        eternalStorage.setBool(entity, keccak256(abi.encodePacked("isExcludedFromFees", admin())), true);
         // Exclude this contract from rewards and fees
         excludeFromReward(address(this));
-        isExcludedFromFees[address(this)] = true;
-
+        eternalStorage.setBool(entity, keccak256(abi.encodePacked("isExcludedFromFees", address(this))), true);
         // Exclude the burn address from rewards
-        isExcludedFromRewards[address(0)];
+        excludeFromReward(address(0));
 
         // Set initial rates for fees
-        fundingRate = 500;
-        burnRate = 500;
-        redistributionRate = 5000;
-        liquidityProvisionRate = 1500;
+        eternalStorage.setUint(entity, fundingRate, 500);
+        eternalStorage.setUint(entity, burnRate, 500);
+        eternalStorage.setUint(entity, redistributionRate, 5000);
+        eternalStorage.setUint(entity, liquidityProvisionRate, 1500);
 
-        //Initialize the transaction counter
-        oneDayFromNow = block.timestamp + 86400;
+        //Initialize the transaction count time tracker
+        eternalStorage.setUint(entity, oneDayFromNow, block.timestamp + 86400);
     }
 
 /////–––««« Variable state-inspection functions »»»––––\\\\\
@@ -119,7 +145,7 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
      * @return Returns the total ETRNL supply.
      */
     function totalSupply() external view override returns (uint256){
-        return totalTokenSupply;
+        return eternalStorage.getUint(totalTokenSupply, entity);
     }
 
     /**
@@ -128,10 +154,10 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
      * @return The balance of the account
      */
     function balanceOf(address account) public view override returns (uint256){
-        if (isExcludedFromRewards[account]) {
-            return trueBalances[account];
+        if (eternalStorage.getBool(keccak256(abi.encodePacked("isExcludedFromRewards", account)), entity)) {
+            return eternalStorage.getUint(keccak256(abi.encodePacked("trueBalances", account)), entity);
         }
-        return convertFromReflectedToTrueAmount(reflectedBalances[account]);
+        return convertFromReflectedToTrueAmount(eternalStorage.getUint(keccak256(abi.encodePacked("reflectedBalances", account)), entity));
     }
 
     /**
@@ -141,25 +167,7 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
      * @return The allowance of the owner for the spender
      */
     function allowance(address owner, address spender) external view override returns (uint256){
-        return allowances[owner][spender];
-    }
-
-    /**
-     * @dev View whether a given wallet or contract's address is excluded from transaction fees.
-     * @param account The wallet or contract's address
-     * @return Whether the account is excluded from transaction fees.
-     */
-    function isExcludedFromFee(address account) external view override returns (bool) {
-        return isExcludedFromFees[account];
-    }
-
-    /**
-     * @dev View whether a given wallet or contract's address is excluded from rewards.
-     * @param account The wallet or contract's address
-     * @return Whether the account is excluded from rewards.
-     */
-    function isExcludedFromReward(address account) external view override returns (bool) {
-        return isExcludedFromRewards[account];
+        return eternalStorage.getUint(keccak256(abi.encodePacked("allowances", owner, spender)), entity);
     }
 
     /**
@@ -171,52 +179,7 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
         return netReflectedSupply / netTokenSupply;
     }
 
-    /**
-     * @dev View the current total fee rate
-     */
-    function viewTotalRate() external view override returns(uint256) {
-        return fundingRate + burnRate + redistributionRate + liquidityProvisionRate;
-    }
-
-    /**
-     * @dev View the Eternal token's rate of deflation
-     */
-    function viewBurnRate() external view override returns(uint256) {
-        return burnRate;
-    }
-
-    /**
-     * @dev View an estimate of the total number of transactions subject to fees in a 24h period
-     */
-    function viewAlpha() external view override returns(uint256) {
-        return alpha;
-    }
-
 /////–––««« IERC20/ERC20 functions »»»––––\\\\\
-    
-    /**
-     * @dev Increases the allowance for a given spender address by a given amount.
-     * @param spender The address whom we are increasing the allowance for
-     * @param addedValue The amount by which we increase the allowance
-     * @return True if the increase in allowance is successful
-     */
-    function increaseAllowance(address spender, uint256 addedValue) external virtual returns (bool) {
-        _approve(_msgSender(), spender, (allowances[_msgSender()][spender] + addedValue));
-
-        return true;
-    }
-    
-    /**
-     * @dev Decreases the allowance for a given spender address by a given amount.
-     * @param spender The address whom we are decrease the allowance for
-     * @param subtractedValue The amount by which we decrease the allowance
-     * @return True if the decrease in allowance is successful
-     */
-    function decreaseAllowance(address spender, uint256 subtractedValue) external virtual returns (bool) {
-        _approve(_msgSender(), spender, (allowances[_msgSender()][spender] - subtractedValue));
-
-        return true;
-    }
 
     /**
      * @dev Tranfers a given amount of ETRNL to a given receiver address.
@@ -256,7 +219,7 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
     function transferFrom(address sender, address recipient, uint256 amount) external override returns (bool) {
         _transfer(sender, recipient, amount);
 
-        uint256 currentAllowance = allowances[sender][_msgSender()];
+        uint256 currentAllowance = eternalStorage.getUint(keccak256(abi.encodePacked("allowances", sender, _msgSender())), entity);
         require(currentAllowance >= amount, "Not enough allowance");
         _approve(sender, _msgSender(), currentAllowance - amount);
 
@@ -278,7 +241,7 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
         require(owner != address(0), "Approve from the zero address");
         require(spender != address(0), "Approve to the zero address");
 
-        allowances[owner][spender] = amount;
+        eternalStorage.setUint(entity, keccak256(abi.encodePacked("allowances", owner, spender)), amount);
 
         emit Approval(owner, spender, amount);
     }
@@ -303,41 +266,62 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
         require(amount > 0, "Transfer amount must exceed zero");
 
         // We only take fees if both the sender and recipient are susceptible to fees
-        bool takeFee = (!isExcludedFromFees[sender] && !isExcludedFromFees[recipient]);
+        bool senderExcludedFromFees = eternalStorage.getBool(keccak256(abi.encodePacked("isExcludedFromFees", sender)), entity);
+        bool recipientExcludedFromFees = eternalStorage.getBool(keccak256(abi.encodePacked("isExcludedFromFees", recipient)), entity);
+        bool takeFee = (!senderExcludedFromFees && !recipientExcludedFromFees);
 
         (uint256 reflectedAmount, uint256 netReflectedTransferAmount, uint256 netTransferAmount) = getValues(amount, takeFee);
         
         // Always update the reflected balances of sender and recipient
-        reflectedBalances[sender] -= reflectedAmount;
-        reflectedBalances[recipient] += netReflectedTransferAmount;
+        uint256 senderReflectedBalance = eternalStorage.getUint(keccak256(abi.encodePacked("reflectedBalances", sender)), entity);
+        uint256 recipientReflectedBalance = eternalStorage.getUint(keccak256(abi.encodePacked("reflectedBalances", recipient)), entity);
+        eternalStorage.setUint(keccak256(entity, abi.encodePacked("reflectedBalances", sender)), senderReflectedBalance - reflectedAmount);
+        eternalStorage.setUint(keccak256(entity, abi.encodePacked("reflectedBalances", sender)), recipientReflectedBalance + netReflectedTransferAmount);
 
         // Update true balances for any non-reward-accruing accounts 
-        trueBalances[sender] = isExcludedFromRewards[sender] ? (trueBalances[sender] - amount) : trueBalances[sender]; 
-        trueBalances[recipient] = isExcludedFromRewards[recipient] ? (trueBalances[recipient] + netTransferAmount) : trueBalances[recipient]; 
+        bool senderExcludedFromRewards = eternalStorage.getBool(keccak256(abi.encodePacked("isExcludedFromRewards", sender)), entity);
+        bool recipientExcludedFromRewards = eternalStorage.getBool(keccak256(abi.encodePacked("isExcludedFromRewards", recipient)), entity);
+
+        if (senderExcludedFromRewards) {
+            uint256 senderTrueBalance = eternalStorage.getUint(keccak256(abi.encodePacked("trueBalances", sender)), entity);
+            eternalStorage.setUint(keccak256(entity, abi.encodePacked("trueBalances", sender)), senderTrueBalance - amount);
+        }
+        if (recipientExcludedFromRewards) {
+            uint256 recipientTrueBalance = eternalStorage.getUint(keccak256(abi.encodePacked("trueBalances", recipient)), entity);
+            eternalStorage.setUint(keccak256(entity, abi.encodePacked("trueBalances", recipient)), recipientTrueBalance + netTransferAmount);
+        }
 
         emit Transfer(sender, recipient, netTransferAmount);
 
         // Update the 24h transaction count if the current 24h period has not elapsed
-        if (takeFee && block.timestamp < oneDayFromNow) {
-            transactionCount += amount;
-        } else if (takeFee && block.timestamp >= oneDayFromNow) {
+        uint256 currentCount = eternalStorage.getUint(transactionCount, entity);
+        uint256 aDayFromNow = eternalStorage.getUint(oneDayFromNow, entity);
+        if (takeFee && block.timestamp < aDayFromNow) {
+            eternalStorage.setUint(entity, transactionCount, currentCount + 1);
+        } else if (takeFee && block.timestamp >= aDayFromNow) {
             // Else update alpha, and reset the transaction count and 24h period tracker
-            alpha = transactionCount;
-            transactionCount = amount;
-            oneDayFromNow = block.timestamp + 84600;
+            eternalStorage.setUint(entity, alpha, currentCount);
+            eternalStorage.setUint(entity, transactionCount, amount);
+            eternalStorage.setUint(entity, oneDayFromNow, block.timestamp + 84600);
         }
 
         // Adjust the total reflected supply for the new fees
         // If the sender or recipient are excluded from fees, we ignore the fee altogether
         if (takeFee) {
             // Perform a burn based on the burn rate 
-            _burn(address(this), amount * burnRate / 100000, reflectedAmount * burnRate / 100000);
+            uint256 deflationRate = eternalStorage.getUint(burnRate, entity);
+            _burn(address(this), amount * deflationRate / 100000, reflectedAmount * deflationRate / 100000);
             // Redistribute based on the redistribution rate 
-            totalReflectedSupply -= reflectedAmount * redistributionRate / 100000;
-            // Store ETRNL away in the EternalFund based on the funding rate
-            reflectedBalances[fund()] += reflectedAmount * fundingRate / 100000;
-            // Provide liqudity to the ETRNL/AVAX pair on Pangolin based on the liquidity provision rate
-            storeLiquidityFunds(sender, amount * liquidityProvisionRate / 100000, reflectedAmount * liquidityProvisionRate / 100000);
+            uint256 reflectedSupply = eternalStorage.getUint(totalReflectedSupply, entity);
+            uint256 rewardRate = eternalStorage.getUint(redistributionRate, entity);
+            eternalStorage.setUint(entity, totalReflectedSupply, reflectedSupply - (reflectedAmount * rewardRate / 100000));
+            // Store ETRNL away in the treasury based on the funding rate
+            uint256 fundBalance = eternalStorage.getUint(keccak256(abi.encodePacked("reflectedBalances", eternalTreasury)), entity);
+            uint256 fundRate = eternalStorage.getUint(fundingRate, entity);
+            eternalStorage.setUint(entity, keccak256(abi.encodePacked("reflectedBalances", eternalTreasury)), fundBalance + (reflectedAmount * fundRate / 100000));
+            // Provide liquidity to the ETRNL/AVAX pair on TraderJoe based on the liquidity provision rate
+            uint256 liquidityRate = eternalStorage.getUint(liquidityProvisionRate, entity);
+            storeLiquidityFunds(sender, amount * liquidityRate / 100000, reflectedAmount * liquidityRate / 100000);
         }
     }
 
@@ -352,18 +336,24 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
      * - Burn amount cannot be greater than the msgSender's balance
      */
     function burn(uint256 amount) external returns (bool) {
-        address sender = _msgSender();
-        require(sender != address(0), "Burn from the zero address");
-        uint256 balance = balanceOf(sender);
+        require(_msgSender() != address(0), "Burn from the zero address");
+        uint256 balance = balanceOf(_msgSender());
         require(balance >= amount, "Burn amount exceeds balance");
 
         // Subtract the amounts from the sender before so we can reuse _burn elsewhere
         uint256 reflectedAmount;
-        (,reflectedAmount,) = getValues(amount, !isExcludedFromFees[sender]);
-        reflectedBalances[sender] -= reflectedAmount;
-        trueBalances[sender] = isExcludedFromRewards[sender] ? (trueBalances[sender] - amount) : trueBalances[sender];
+        bool senderExcludedFromFees = eternalStorage.getBool(keccak256(abi.encodePacked("isExcludedFromFees", _msgSender())), entity);
+        bool senderExcludedFromRewards = eternalStorage.getBool(keccak256(abi.encodePacked("isExcludedFromRewards", _msgSender())), entity);
+        (,reflectedAmount,) = getValues(amount, !senderExcludedFromFees);
+        uint256 senderReflectedBalance = eternalStorage.getUint(keccak256(abi.encodePacked("reflectedBalances", _msgSender())), entity);
+        eternalStorage.setUint(keccak256(entity, abi.encodePacked("reflectedBalances", _msgSender())), senderReflectedBalance - reflectedAmount);
 
-        _burn(sender, amount, reflectedAmount);
+        if (senderExcludedFromRewards) {
+            uint256 senderTrueBalance = eternalStorage.getUint(keccak256(abi.encodePacked("trueBalances", _msgSender())), entity);
+            eternalStorage.setUint(keccak256(entity, abi.encodePacked("trueBalances", _msgSender())), senderTrueBalance - amount);
+        }
+        
+        _burn(_msgSender(), amount, reflectedAmount);
 
         return true;
     }
@@ -376,12 +366,16 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
      */
     function _burn(address sender, uint256 amount, uint256 reflectedAmount) private {
         // Send tokens to the 0x0 address
-        reflectedBalances[address(0)] += reflectedAmount;
-        trueBalances[address(0)] += amount;
+        uint256 reflectedZeroBalance = eternalStorage.getUint(keccak256(abi.encodePacked("reflectedBalances", address(0))), entity);
+        uint256 trueZeroBalance = eternalStorage.getUint(keccak256(abi.encodePacked("trueBalances", address(0))), entity);
+        eternalStorage.setUint(keccak256(entity, abi.encodePacked("trueBalances", address(0))), reflectedZeroBalance + reflectedAmount);
+        eternalStorage.setUint(keccak256(entity, abi.encodePacked("trueBalances", address(0))), trueZeroBalance + amount);
 
         // Update supplies accordingly
-        totalTokenSupply -= amount;
-        totalReflectedSupply -= reflectedAmount;
+        uint256 tokenSupply = eternalStorage.getUint(totalTokenSupply, entity);
+        uint256 reflectedSupply = eternalStorage.getUint(totalReflectedSupply, entity);
+        eternalStorage.setUint(entity, totalTokenSupply, tokenSupply - amount);
+        eternalStorage.setUint(entity, totalReflectedSupply, reflectedSupply - reflectedAmount);
 
         emit Transfer(sender, address(0), amount);
     }
@@ -405,8 +399,13 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
      * @return The reflected amount, the net reflected transfer amount, the actual net transfer amount, and the total reflected fees
      */
     function getValues(uint256 trueAmount, bool takeFee) private view returns (uint256, uint256, uint256) {
+        
+        uint256 liquidityRate = eternalStorage.getUint(liquidityProvisionRate, entity);
+        uint256 deflationRate = eternalStorage.getUint(burnRate, entity);
+        uint256 fundRate = eternalStorage.getUint(fundingRate, entity);
+        uint256 rewardRate = eternalStorage.getUint(redistributionRate, entity);
 
-        uint256 feeRate = takeFee ? (liquidityProvisionRate + burnRate + fundingRate + redistributionRate) : 0;
+        uint256 feeRate = takeFee ? (liquidityRate + deflationRate + fundRate + rewardRate) : 0;
 
         // Calculate the total fees and transfered amount after fees
         uint256 totalFees = (trueAmount * feeRate) / 100000;
