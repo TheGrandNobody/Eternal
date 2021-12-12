@@ -16,8 +16,8 @@ interface IEternalLiquidity {
     function provideLiquidity(uint256 contractBalance) external;
     // Allows the withdrawal of AVAX in the contract
     function withdrawAVAX(address payable recipient, uint256 amount) external;
-    // Allows the withdrawal of ETRNL in the contract
-    function withdrawETRNL(address recipient, uint256 amount) external;
+    // Allows the withdrawal of an asset present in the contract
+    function withdrawAsset(address asset, address recipient, uint256 amount) external;
 
     // Signals a disabling/enabling of the automatic liquidity provision
     event AutomaticLiquidityProvisionUpdated(bool value);
@@ -26,5 +26,5 @@ interface IEternalLiquidity {
     // Signals that part of the locked AVAX balance has been cleared to a given address
     event AVAXTransferred(uint256 amount, address recipient);
     // Signals that part of the ETRNL balance has been sent to a given address
-    event ETRNLTransferred(uint256 amount, address recipient);
+    event TokenTransferred(uint256 amount, address recipient);
 }

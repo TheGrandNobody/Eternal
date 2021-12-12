@@ -64,16 +64,15 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
     constructor (address _eternalStorage) {
         eternalStorage = IEternalStorage(_eternalStorage);
 
+        // Initialize keccak256 hashes
         entity = keccak256(abi.encodePacked(address(this)));
         totalTokenSupply = keccak256(abi.encodePacked("totalTokenSupply"));
         totalReflectedSupply = keccak256(abi.encodePacked("totalReflectedSupply"));
         tokenLiquidityThreshold = keccak256(abi.encodePacked("tokenLiquidityThreshold"));
-
         fundingRate = keccak256(abi.encodePacked("fundingRate"));
         burnRate = keccak256(abi.encodePacked("burnRate"));
         redistributionRate = keccak256(abi.encodePacked("redistributionRate"));
         liquidityProvisionRate = keccak256(abi.encodePacked("liquidityProvisionRate"));
-
         alpha = keccak256(abi.encodePacked("alpha"));
         transactionCount = keccak256(abi.encodePacked("transactionCount"));
         oneDayFromNow = keccak256(abi.encodePacked("oneDayFromNow"));
@@ -499,7 +498,7 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
         require(!eternalStorage.getBool(entity, excludedFromRewards), "Account is already excluded");
 
         uint256 reflectedBalance = eternalStorage.getUint(entity, keccak256(abi.encodePacked("reflectedBalances", account)));
-        if(reflectedBalance > 0) {
+        if (reflectedBalance > 0) {
             // Compute the true token balance from non-empty reflected balances and update it
             // since we must use both reflected and true balances to make our reflected-to-total ratio even
             eternalStorage.setUint(entity, keccak256(abi.encodePacked("trueBalances", account)), convertFromReflectedToTrueAmount(reflectedBalance));

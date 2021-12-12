@@ -5,6 +5,7 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoeFactory.sol";
 import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoeRouter02.sol";
 import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
 import "../interfaces/IEternalToken.sol";
+import "../interfaces/IEternalStorage.sol";
 import "../interfaces/IEternalLiquidity.sol";
 import "../inheritances/OwnableEnhanced.sol";
 
@@ -17,31 +18,44 @@ contract EternalLiquidity is IEternalLiquidity, OwnableEnhanced {
 
     // The ETRNL token
     IEternalToken private immutable eternal;
+    // The Eternal Storage interface
+    IEternalStorage private eternalStorage;
     // Trader Joe Router interface to swap tokens for AVAX and add liquidity
     IJoeRouter02 private immutable joeRouter;
     // The address of the ETRNL/AVAX pair
-    address private immutable joePair;
-
-    // The total amount of liquidity provided by ETRNL
-    uint256 private totalLiquidity;
-
+    address private joePair;
     // Determines whether an auto-liquidity provision process is undergoing
     bool private undergoingSwap;
+
+    // The keccak256 hash of this contract's address
+    bytes32 private entity;
+    // The total amount of liquidity provided by ETRNL
+    bytes32 private totalLiquidity;
     // Determines whether the contract is tasked with providing liquidity using part of the transaction fees
-    bool private autoLiquidityProvision;
+    bytes32 private autoLiquidityProvision;
 
     // Allows contract to receive AVAX tokens
     // solhint-disable-next-line no-empty-blocks
     receive() external payable {}
 
-    constructor (address _eternal) {
+    constructor (address _eternal, address _eternalStorage) {
         // Initialize router
         IJoeRouter02 _joeRouter= IJoeRouter02(0x60aE616a2155Ee3d9A68541Ba4544862310933d4);
         joeRouter = _joeRouter;
-        // Create pair address
-        joePair = IJoeFactory(_joeRouter.factory()).createPair(_eternal, _joeRouter.WAVAX());
-        // Initialize the Eternal Token
+
+        // Initialize the Eternal Token and storage
         eternal = IEternalToken(_eternal);
+        eternalStorage = IEternalStorage(_eternalStorage);
+
+        // Initialize keccak256 hashes
+        entity = keccak256(abi.encodePacked(address(this)));
+        totalLiquidity = keccak256(abi.encodePacked("totalLiquidity"));
+        autoLiquidityProvision = keccak256(abi.encodePacked("autoLiquidityProvision"));
+    }
+
+    function initialize() external onlyAdmin() {
+        // Create pair address
+        joePair = IJoeFactory(joeRouter.factory()).createPair(address(eternal), joeRouter.WAVAX());
     }
 
 /////–––««« Modifiers »»»––––\\\\\
@@ -95,7 +109,7 @@ contract EternalLiquidity is IEternalLiquidity, OwnableEnhanced {
      */
     function provideLiquidity(uint256 contractBalance) external override {
         require(_msgSender() == address(eternal), "Only callable by ETRNL contract");
-        require(autoLiquidityProvision, "Auto-liquidity is disabled");
+        require(eternalStorage.getBool(entity, autoLiquidityProvision), "Auto-liquidity is disabled");
         require(!undergoingSwap, "A liquidity swap is in progress");
 
         _provideLiquidity(contractBalance);
@@ -131,27 +145,38 @@ contract EternalLiquidity is IEternalLiquidity, OwnableEnhanced {
         eternal.approve(address(joeRouter), amountETRNL);
         // Update the total liquidity 
         (,,uint256 liquidity) = joeRouter.addLiquidityAVAX{value: amountAVAX}(address(eternal), amountETRNL, minETRNL, minAVAX, address(this), block.timestamp);
-        totalLiquidity += liquidity;
+        uint256 entireLiquidity = eternalStorage.getUint(entity, totalLiquidity);
+        eternalStorage.setUint(entity, totalLiquidity, entireLiquidity + liquidity);
     }
 
+/////–––««« Fund-only functions »»»––––\\\\\
+
     /**
-     * @dev Transfers a given amount of AVAX from the contract to an address. (Admin and Fund only)
+     * @dev Transfers a given amount of AVAX from the contract to an address. (Fund only)
      * @param recipient The address to which the AVAX is to be sent
      * @param amount The specified amount of AVAX to transfer
+     * 
+     * Requirements:
+     * 
+     * - The contract's balance must have enough funds to accomodate the withdrawal
      */
     function withdrawAVAX(address payable recipient, uint256 amount) external override onlyFund() {
+        require(amount < address(this).balance, "Insufficient balance");
+
         emit AVAXTransferred(amount, recipient);
-        recipient.transfer(amount);
+        (bool success, ) = recipient.call{value: amount}("");
+        require(success, "Failed to transfer AVAX");
     }
 
     /**
-     * @dev Transfers a given amount of ETRNL from the contract to an address. (Admin and Fund only)
+     * @dev Transfers a given amount of a token from the contract to an address. (Fund only)
+     * @param asset The address of the asset being withdrawn
      * @param recipient The address to which the ETRNL is to be sent
      * @param amount The specified amount of ETRNL to transfer
      */
-    function withdrawETRNL(address recipient, uint256 amount) external override onlyFund() {
-        emit ETRNLTransferred(amount, recipient);
-        eternal.transfer(recipient, amount);
+    function withdrawAsset(address asset, address recipient, uint256 amount) external override onlyFund() {
+        emit TokenTransferred(amount, recipient);
+        require(IERC20(asset).transfer(recipient, amount), "Asset withdrawal failed");
     }
 
     /**
@@ -160,6 +185,7 @@ contract EternalLiquidity is IEternalLiquidity, OwnableEnhanced {
      */
     function setAutoLiquidityProvision(bool value) external override onlyAdminAndFund() {
         emit AutomaticLiquidityProvisionUpdated(value);
-        autoLiquidityProvision = value;
+        eternalStorage.setBool(entity, autoLiquidityProvision, value);
     }
+
 }
