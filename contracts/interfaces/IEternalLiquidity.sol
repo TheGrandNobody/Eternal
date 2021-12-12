@@ -25,6 +25,6 @@ interface IEternalLiquidity {
     event AutomaticLiquidityProvision(uint256 amountETRNL, uint256 totalSwappedETRNL, uint256 amountAVAX);
     // Signals that part of the locked AVAX balance has been cleared to a given address
     event AVAXTransferred(uint256 amount, address recipient);
-    // Signals that part of the ETRNL balance has been sent to a given address
-    event TokenTransferred(uint256 amount, address recipient);
+    // Signals that some of an asset balance has been sent to a given address
+    event AssetTransferred(address asset, uint256 amount, address recipient);
 }

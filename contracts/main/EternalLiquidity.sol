@@ -175,7 +175,7 @@ contract EternalLiquidity is IEternalLiquidity, OwnableEnhanced {
      * @param amount The specified amount of ETRNL to transfer
      */
     function withdrawAsset(address asset, address recipient, uint256 amount) external override onlyFund() {
-        emit TokenTransferred(amount, recipient);
+        emit AssetTransferred(asset, amount, recipient);
         require(IERC20(asset).transfer(recipient, amount), "Asset withdrawal failed");
     }
 
