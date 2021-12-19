@@ -19,40 +19,50 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
  */
  contract EternalTreasury is IEternalTreasury, OwnableEnhanced {
 
+    // The Trader Joe router interface
+    IJoeRouter02 public immutable joeRouter;
+    // The Eternal shared storage interface
     IEternalStorage public immutable eternalStorage;
+    // The Eternal factory interface
     IEternalFactory private eternalFactory;
+    // The Eternal token interface
     IEternalToken private eternal;
+    // The Trader Joe factory interface
     IJoeFactory private joeFactory;
-    IJoeRouter02 private joeRouter;
-
-    /**
-    The amount of ETRNL staked by any given individual user, converted to the "reserve" number space for fee distribution
-    mapping (address => uint256) reserveBalances
-    The amount of ETRNL staked by any given individual user, converted to the regular number space (raw number, no fees)
-    mapping (address => uint256) stakedBalances
-    The amount of a given asset provided by a user in a liquid gage of said asset
-    mapping (address => mapping (address => uint256)) amountProvided;
-    The amount of liquidity tokens provided for a given ETRNL/Asset pair
-    mapping (address => mapping (address => uint256)) liquidityProvided;
-    */
 
     // The address of the ETRNL/AVAX pair
     address private joePair;
     // Determines whether an auto-liquidity provision process is undergoing
     bool private undergoingSwap;
-
     // The keccak256 hash of this contract's address
     bytes32 public immutable entity;
+
+/**
+///---*****  Variables: Hidden Mappings *****---\\\ 
+    // The amount of ETRNL staked by any given individual user, converted to the "reserve" number space for fee distribution
+    mapping (address => uint256) reserveBalances
+
+    // The amount of ETRNL staked by any given individual user, converted to the regular number space (raw number, no fees)
+    mapping (address => uint256) stakedBalances
+
+    // The amount of a given asset provided by a user in a liquid gage of said asset
+    mapping (address => mapping (address => uint256)) amountProvided
+
+    // The amount of liquidity tokens provided for a given ETRNL/Asset pair
+    mapping (address => mapping (address => uint256)) liquidityProvided
+*/
+
+///---*****  Variables: Automatic Liquidity Provision *****---\\\ 
     // The total amount of liquidity provided by ETRNL
     bytes32 public immutable totalLiquidity;
     // Determines whether the contract is tasked with providing liquidity using part of the transaction fees
     bytes32 public immutable autoLiquidityProvision;
+
+///---*****  Variables: Gaging/Staking *****---\\\ 
     // The total number of ETRNL staked by users 
     bytes32 public immutable totalStakedBalances;
     // Used to increase or decrease everyone's accumulated fees
     bytes32 public immutable reserveStakedBalances;
-    // Holds all addresses of tokens held by the treasury
-    bytes32 public immutable tokenTreasury;
     // The (percentage) fee rate applied to any gage-reward computations not using ETRNL (x 10 ** 5)
     bytes32 public immutable feeRate;
 
@@ -78,7 +88,6 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
         autoLiquidityProvision = keccak256(abi.encodePacked("autoLiquidityProvision"));
         totalStakedBalances = keccak256(abi.encodePacked("totalStakedBalances"));
         reserveStakedBalances = keccak256(abi.encodePacked("reserveStakedBalances"));
-        tokenTreasury = keccak256(abi.encodePacked("tokenTreasury"));
         feeRate = keccak256(abi.encodePacked("feeRate"));
     }
 

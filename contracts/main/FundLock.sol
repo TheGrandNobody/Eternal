@@ -11,7 +11,7 @@ import "../interfaces/IEternalToken.sol";
 contract FundLock {
 
     // The Eternal Token interface
-    IEternalToken private eternal;
+    IEternalToken public immutable eternal;
 
     // The address of the recipient
     address public immutable recipient;

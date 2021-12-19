@@ -16,23 +16,30 @@ import "../inheritances/OwnableEnhanced.sol";
  */
 contract EternalFactory is IEternalFactory, OwnableEnhanced {
 
-    // The Eternal Storage interface
+    // The Eternal shared storage interface
     IEternalStorage public immutable eternalStorage;
-    // The ETRNL interface
+    // The Eternal token interface
     IEternalToken private eternal;
-    // The Treasury interface
+    // The Eternal treasury interface
     IEternalTreasury private treasury;
-    
-    /**
-    // Keeps track of the respective gage tied to any given ID
-    mapping (uint256 => address) private gages;
-    // Keeps track of the risk percentage for any given asset's liquidity gage
-    mapping (address => uint256) private risk;
-    mapping (address => mapping (address => bool)) private inLiquidGage;
-    */
 
     // The keccak256 hash of this address
     bytes32 public immutable entity;
+
+/**
+///---*****  Variables: Hidden Mappings *****---\\\ 
+    
+    // Keeps track of the respective gage tied to any given ID
+    mapping (uint256 => address) gages
+
+    // Keeps track of the risk percentage for any given asset's liquidity gage
+    mapping (address => uint256) risk;
+
+    // Keeps track of whether a user is in a liquid gage for a given asset
+    mapping (address => mapping (address => bool)) inLiquidGage
+*/
+
+///---*****  Variables: Gage Bookkeeping *****---\\\ 
     // Keeps track of the latest Gage ID
     bytes32 public immutable lastId;
     // The total number of active liquid gages
@@ -40,6 +47,7 @@ contract EternalFactory is IEternalFactory, OwnableEnhanced {
     // The number of liquid gages that can possibly be active at a time
     bytes32 public immutable liquidGageLimit;
 
+///---*****  Variables: Constants *****---\\\ 
     // The holding time constant used in the percent change condition calculation (decided by the Eternal Fund) (x 10 ** 6)
     bytes32 public immutable timeConstant;
     // The risk constant used in the calculation of the treasury's risk (x 10 ** 4)
@@ -49,10 +57,9 @@ contract EternalFactory is IEternalFactory, OwnableEnhanced {
 
 /////–––««« Constructors & Initializers »»»––––\\\\\
 
-    constructor (address _eternal, address _treasury, address _eternalStorage) {
-        // Initialize the interfaces
+    constructor (address _eternal, address _eternalStorage) {
+        // Set the initial Eternal token and storage interfaces
         eternal = IEternalToken(_eternal);
-        treasury = IEternalTreasury(_treasury);
         eternalStorage = IEternalStorage(_eternalStorage);
 
         // Initialize keccak256 hashes
@@ -65,7 +72,9 @@ contract EternalFactory is IEternalFactory, OwnableEnhanced {
         liquidGageLimit = keccak256(abi.encodePacked("liquidGageLimit"));
     }
 
-    function initialize() external onlyAdmin() {
+    function initialize(address _treasury) external onlyAdmin() {
+        // Set the initial treasury interface
+        treasury = IEternalTreasury(_treasury);
         // Set initial constants
         eternalStorage.setUint(entity, timeConstant, 2 * (10 ** 6));
         eternalStorage.setUint(entity, riskConstant, 100);

@@ -13,30 +13,35 @@ import "../inheritances/OwnableEnhanced.sol";
  * @notice The Eternal Token contract holds all the deflationary, burn, reflect, funding and auto-liquidity provision mechanics
  */
 contract EternalToken is IEternalToken, OwnableEnhanced {
- /*
-    // The reflected balances used to track reward-accruing users' total balances
-    mapping (address => uint256) reflectedBalances;
-
-    // The true balances used to track non-reward-accruing addresses' total balances
-    mapping (address => uint256) trueBalances;
-
-    // Keeps track of whether an address is excluded from rewards
-    mapping (address => bool) isExcludedFromRewards;
-
-    // Keeps track of whether an address is excluded from transfer fees
-    mapping (address => bool) isExcludedFromFees;
-    
-    // Keeps track of how much an address allows any other address to spend on its behalf
-    mapping (address => mapping (address => uint256)) allowances;
-    */
 
     // The Eternal shared storage interface
     IEternalStorage public immutable eternalStorage;
-    // The Eternal automatic liquidity provider interface
+    // The Eternal treasury interface
     IEternalTreasury private eternalTreasury;
 
     // The keccak256 hash of this contract's address
     bytes32 public immutable entity;
+
+ /*
+    ///---*****  Variables: Hidden Mappings *****---\\\
+
+    // The reflected balances used to track reward-accruing users' total balances
+    mapping (address => uint256) reflectedBalances
+
+    // The true balances used to track non-reward-accruing addresses' total balances
+    mapping (address => uint256) trueBalances
+
+    // Keeps track of whether an address is excluded from rewards
+    mapping (address => bool) isExcludedFromRewards
+
+    // Keeps track of whether an address is excluded from transfer fees
+    mapping (address => bool) isExcludedFromFees
+    
+    // Keeps track of how much an address allows any other address to spend on its behalf
+    mapping (address => mapping (address => uint256)) allowances
+*/
+
+///---*****  Variables: Token Information *****---\\\
     // Keeps track of all reward-excluded addresses
     bytes32 public immutable excludedAddresses;
     // The true total ETRNL supply
@@ -46,6 +51,7 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
     // Threshold at which the contract swaps its ETRNL balance to provide liquidity (0.1% of total supply by default)
     bytes32 public immutable tokenLiquidityThreshold;
 
+///---*****  Variables: Token Fee Rates *****---\\\
     // The percentage of the fee, taken at each transaction, that is stored in the Eternal Treasury (x 10 ** 5)
     bytes32 public immutable fundingRate;
     // The percentage of the fee, taken at each transaction, that is burned (x 10 ** 5)
@@ -54,7 +60,8 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
     bytes32 public immutable redistributionRate;
     // The percentage of the fee taken at each transaction, that is used to auto-lock liquidity (x 10 ** 5)
     bytes32 public immutable liquidityProvisionRate;
-    
+
+///---*****  Variables: Transaction Counting *****---\\\
     // The total number of times ETRNL has been transacted with fees in the last full 24h period
     bytes32 public immutable alpha;
     // The total number of times ETRNL has been transacted with fees in the current 24h period (ongoing)
