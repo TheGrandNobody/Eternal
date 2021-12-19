@@ -11,7 +11,7 @@ contract LoyaltyGage is Gage, ILoyaltyGage {
     // Address of the stakeholder which benefits from the discount in a loyalty gage
     address private immutable receiver;
     // The asset used in the condition
-    IERC20 private asset;
+    IERC20 private assetOfReference;
     // The percentage change condition for the total token supply (x 10 ** 11)
     uint256 private immutable percent;
     // The total supply at the time of the deposit
@@ -19,7 +19,7 @@ contract LoyaltyGage is Gage, ILoyaltyGage {
     // Whether the token's supply is inflationary or deflationary
     bool private immutable inflationary;
 
-    constructor(uint256 _id, uint256 _percent, uint32 _users, bool _inflationary, address _distributor, address _receiver, address _eternal) Gage(_id, _users, _eternal, true) {
+    constructor(uint256 _id, uint256 _percent, uint256 _users, bool _inflationary, address _distributor, address _receiver, address _storage) Gage(_id, _users, _storage, true) {
         distributor = _distributor;
         receiver = _receiver;
         percent = _percent;
@@ -61,55 +61,56 @@ contract LoyaltyGage is Gage, ILoyaltyGage {
     
 /////–––««« Gage-logic functions »»»––––\\\\\
     /**
-     * @dev Adds a stakeholder to this gage and records the initial data.
-     * @param deposit The address of the asset used as deposit by this user
-     * @param amount The user's chosen deposit amount 
-     * @param risk The user's chosen risk percentage
+     * @dev Initializes a loyalty gage for the receiver and distributor
+     * @param rAsset The address of the asset used as deposit by the receiver
+     * @param dAsset The address of the asset used as deposit by the distributor
+     * @param rAmount The receiver's chosen deposit amount 
+     * @param dAmount The distributor's chosen deposit amount
+     * @param rRisk The receiver's risk
+     * @param dRisk The distributor's risk
      *
      * Requirements:
      *
-     * - Risk must not exceed 50 percent
-     * - User must not already be in the gage
+     * - Only callable by an Eternal contract
      */
-    function join(address deposit, uint256 amount, uint256 risk) external override {
-        require(risk <= 50, "Invalid risk percentage");
-        UserData storage data = userData[_msgSender()];
-        require(!data.inGage, "User is already in this gage");
-        require(status == Status.Open, "Gage is not open");
-        if (_msgSender() == distributor) {
-            asset = IERC20(deposit);
-            totalSupply = asset.totalSupply();
-        }
+    function initialize(address rAsset, address dAsset, uint256 rAmount, uint256 dAmount, uint256 rRisk, uint256 dRisk) external override {
+        bytes32 entity = keccak256(abi.encodePacked(address(eternalStorage)));
+        bytes32 sender = keccak256(abi.encodePacked(_msgSender()));
+        require(_msgSender() == eternalStorage.getAddress(entity, sender), "msg.sender must be from Eternal");
 
-        data.amount = amount;
-        data.asset = deposit;
-        data.risk = risk;
-        data.inGage = true;
-        users += 1;
+        treasury = IEternalTreasury(_msgSender());
 
-        emit UserAdded(id, _msgSender());
+        // Save receiver parameters and data
+        userData[receiver].inGage = true;
+        userData[receiver].amount = rAmount;
+        userData[receiver].asset = rAsset;
+        userData[receiver].risk = rRisk;
 
-        if (_msgSender() != distributor) {
-            eternal.deposit(deposit, _msgSender(), amount, id, risk);
-        }
+        // Save distributor parameters and data
+        userData[distributor].inGage = true;
+        userData[distributor].amount = dAmount;
+        userData[distributor].asset = dAsset;
+        userData[distributor].risk = dRisk;
 
-        // If contract is filled, update its status and initiate the gage
-        if (users == capacity) {
-            status = Status.Active;
-            emit GageInitiated(id);
-        }
+        // Save liquid gage parameters
+        assetOfReference = IERC20(dAsset);
+        totalSupply = assetOfReference.totalSupply();
+
+        users = 2;
+
+        status = Status.Active;
+        emit GageInitiated(id);
     }
 
     function exit() external override {
-        UserData storage data = userData[_msgSender()];
-        require(data.inGage, "User is not in this gage");
+        require(_msgSender() == receiver, "Only the receiver may exit");
         // Remove user from the gage first (prevent re-entrancy)
-        data.inGage = false;
-        uint256 deltaSupply = inflationary ? (asset.totalSupply() - totalSupply) : (totalSupply - asset.totalSupply());
+        userData[receiver].inGage = false;
+        userData[distributor].inGage = false;
+        uint256 deltaSupply = inflationary ? (assetOfReference.totalSupply() - totalSupply) : (totalSupply - assetOfReference.totalSupply());
         uint256 percentChange = deltaSupply * (10 ** 11) / totalSupply;
         bool winner = percentChange >= percent;
 
-        eternal.withdraw(receiver, id, winner);
-        eternal.withdraw(distributor, id, !winner);
+        treasury.settleEternalLiquidGage(receiver, id, winner);
     }
 }

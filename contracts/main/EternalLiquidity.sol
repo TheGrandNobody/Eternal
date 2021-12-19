@@ -16,27 +16,29 @@ import "../inheritances/OwnableEnhanced.sol";
  */
 contract EternalLiquidity is IEternalLiquidity, OwnableEnhanced {
 
-    // The ETRNL token
-    IEternalToken private immutable eternal;
-    // The Eternal Storage interface
-    IEternalStorage private eternalStorage;
     // Trader Joe Router interface to swap tokens for AVAX and add liquidity
     IJoeRouter02 private immutable joeRouter;
+    // The Eternal Storage interface
+    IEternalStorage public immutable eternalStorage;
+    // The ETRNL token
+    IEternalToken private eternal;
     // The address of the ETRNL/AVAX pair
     address private joePair;
     // Determines whether an auto-liquidity provision process is undergoing
     bool private undergoingSwap;
 
     // The keccak256 hash of this contract's address
-    bytes32 private entity;
+    bytes32 public immutable entity;
     // The total amount of liquidity provided by ETRNL
-    bytes32 private totalLiquidity;
+    bytes32 public immutable totalLiquidity;
     // Determines whether the contract is tasked with providing liquidity using part of the transaction fees
-    bytes32 private autoLiquidityProvision;
+    bytes32 public immutable autoLiquidityProvision;
 
     // Allows contract to receive AVAX tokens
     // solhint-disable-next-line no-empty-blocks
     receive() external payable {}
+
+/////–––««« Constructors & Initializers »»»––––\\\\\
 
     constructor (address _eternal, address _eternalStorage) {
         // Initialize router
@@ -56,6 +58,7 @@ contract EternalLiquidity is IEternalLiquidity, OwnableEnhanced {
     function initialize() external onlyAdmin() {
         // Create pair address
         joePair = IJoeFactory(joeRouter.factory()).createPair(address(eternal), joeRouter.WAVAX());
+        eternalStorage.setBool(entity, autoLiquidityProvision, true);
     }
 
 /////–––««« Modifiers »»»––––\\\\\
@@ -93,7 +96,7 @@ contract EternalLiquidity is IEternalLiquidity, OwnableEnhanced {
         minAVAX -= minAVAX / 100;
 
         // Swap the ETRNL for AVAX
-        eternal.approve(address(joeRouter), amount);
+        require(eternal.approve(address(joeRouter), amount), "Approve failed");
         joeRouter.swapExactTokensForAVAXSupportingFeeOnTransferTokens(amount, minAVAX, path, address(this), block.timestamp);
     }
 
@@ -178,14 +181,4 @@ contract EternalLiquidity is IEternalLiquidity, OwnableEnhanced {
         emit AssetTransferred(asset, amount, recipient);
         require(IERC20(asset).transfer(recipient, amount), "Asset withdrawal failed");
     }
-
-    /**
-     * @dev Determines whether the contract should automatically provide liquidity from part of the transaction fees. (Admin and Fund only)
-     * @param value True if automatic liquidity provision is desired. False otherwise.
-     */
-    function setAutoLiquidityProvision(bool value) external override onlyAdminAndFund() {
-        emit AutomaticLiquidityProvisionUpdated(value);
-        eternalStorage.setBool(entity, autoLiquidityProvision, value);
-    }
-
 }

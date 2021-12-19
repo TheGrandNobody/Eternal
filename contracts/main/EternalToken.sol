@@ -9,57 +9,61 @@ import "../inheritances/OwnableEnhanced.sol";
 /**
  * @title Contract for the Eternal Token (ETRNL)
  * @author Nobody (me)
- * (credits to OpenZeppelin for initial framework and RFI for figuring out by far the most efficient way of implementing reward-distributing tokens)
+ * (credits to OpenZeppelin for initial framework and RFI for by far the most efficient way of implementing reward-distributing tokens)
  * @notice The Eternal Token contract holds all the deflationary, burn, reflect, funding and auto-liquidity provision mechanics
  */
 contract EternalToken is IEternalToken, OwnableEnhanced {
  /*
     // The reflected balances used to track reward-accruing users' total balances
-    mapping (address => uint256) private reflectedBalances;
+    mapping (address => uint256) reflectedBalances;
+
     // The true balances used to track non-reward-accruing addresses' total balances
-    mapping (address => uint256) private trueBalances;
+    mapping (address => uint256) trueBalances;
+
     // Keeps track of whether an address is excluded from rewards
-    mapping (address => bool) private isExcludedFromRewards;
+    mapping (address => bool) isExcludedFromRewards;
+
     // Keeps track of whether an address is excluded from transfer fees
-    mapping (address => bool) private isExcludedFromFees;
+    mapping (address => bool) isExcludedFromFees;
+    
     // Keeps track of how much an address allows any other address to spend on its behalf
-    mapping (address => mapping (address => uint256)) private allowances;
+    mapping (address => mapping (address => uint256)) allowances;
     */
 
+    // The Eternal shared storage interface
+    IEternalStorage public immutable eternalStorage;
     // The Eternal automatic liquidity provider interface
     IEternalLiquidity private eternalLiquidity;
-    // The Eternal shared storage interface
-    IEternalStorage private eternalStorage;
     address private eternalTreasury;
 
     // The keccak256 hash of this contract's address
-    bytes32 private entity;
-    
+    bytes32 public immutable entity;
     // Keeps track of all reward-excluded addresses
-    bytes32 private excludedAddresses;
+    bytes32 public immutable excludedAddresses;
     // The true total ETRNL supply
-    bytes32 private totalTokenSupply;
+    bytes32 public immutable totalTokenSupply;
     // The total ETRNL supply after taking reflections into account
-    bytes32 private totalReflectedSupply;
+    bytes32 public immutable totalReflectedSupply;
     // Threshold at which the contract swaps its ETRNL balance to provide liquidity (0.1% of total supply by default)
-    bytes32 private tokenLiquidityThreshold;
+    bytes32 public immutable tokenLiquidityThreshold;
 
-    // All fees accept up to four decimal points
-    // The percentage of the fee, taken at each transaction, that is stored in the Eternal Treasury
-    bytes32 private fundingRate;
-    // The percentage of the fee, taken at each transaction, that is burned
-    bytes32 private burnRate;
-    // The percentage of the fee, taken at each transaction, that is redistributed to holders
-    bytes32 private redistributionRate;
-    // The percentage of the fee taken at each transaction, that is used to auto-lock liquidity
-    bytes32 private liquidityProvisionRate;
+    // The percentage of the fee, taken at each transaction, that is stored in the Eternal Treasury (x 10 ** 5)
+    bytes32 public immutable fundingRate;
+    // The percentage of the fee, taken at each transaction, that is burned (x 10 ** 5)
+    bytes32 public immutable burnRate;
+    // The percentage of the fee, taken at each transaction, that is redistributed to holders (x 10 ** 5)
+    bytes32 public immutable redistributionRate;
+    // The percentage of the fee taken at each transaction, that is used to auto-lock liquidity (x 10 ** 5)
+    bytes32 public immutable liquidityProvisionRate;
     
     // The total number of times ETRNL has been transacted with fees in the last full 24h period
-    bytes32 private alpha;
+    bytes32 public immutable alpha;
     // The total number of times ETRNL has been transacted with fees in the current 24h period (ongoing)
-    bytes32 private transactionCount;
+    bytes32 public immutable transactionCount;
     // Keeps track of the UNIX time to recalculate the average transaction estimate
-    bytes32 private oneDayFromNow;
+    bytes32 public immutable oneDayFromNow;
+
+/////–––««« Constructors & Initializers »»»––––\\\\\
 
     constructor (address _eternalStorage) {
         eternalStorage = IEternalStorage(_eternalStorage);
@@ -526,58 +530,6 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
                 break;
             }
         }
-    }
-
-    /**
-     * @dev Sets the value of a given rate to a given rate type. (Admin and Fund only)
-     * @param rate The type of the specified rate
-     * @param newRate The specified new rate value
-     *
-     * Requirements:
-     *
-     * - Rate type must be either Liquidity, Funding, Redistribution or Burn
-     * - Rate value must be positive
-     * - The sum of all rates cannot exceed 25 percent
-     */
-    function setRate(Rate rate, uint256 newRate) external override onlyAdminAndFund() {
-        require((uint256(rate) >= 0 && uint256(rate) <= 3), "Invalid rate type");
-        require(newRate >= 0, "New rate cannot be negative");
-
-        uint256 oldRate;
-        uint256 liquidityRate = eternalStorage.getUint(entity, liquidityProvisionRate);
-        uint256 fundRate = eternalStorage.getUint(entity, fundingRate);
-        uint256 rewardRate = eternalStorage.getUint(entity, redistributionRate);
-        uint256 deflationRate = eternalStorage.getUint(entity, burnRate);
-
-        if (rate == Rate.Liquidity) {
-            require((newRate + fundRate + rewardRate + deflationRate) <= 25000, "Total rate exceeds 25%");
-            oldRate = liquidityRate;
-            eternalStorage.setUint(entity, liquidityProvisionRate, newRate);
-        } else if (rate == Rate.Funding) {
-            require((liquidityRate + newRate + rewardRate + deflationRate) <= 25000, "Total rate exceeds 25%");
-            oldRate = fundRate;
-            eternalStorage.setUint(entity, fundingRate, newRate);
-        } else if (rate == Rate.Redistribution) {
-            require((liquidityRate + fundRate + newRate + deflationRate) <= 25000, "Total rate exceeds 25%");
-            oldRate = rewardRate;
-            eternalStorage.setUint(entity, redistributionRate, newRate);
-        } else {
-            require((liquidityRate + fundRate + rewardRate + newRate) <= 25000, "Total rate exceeds 25%");
-            oldRate = deflationRate;
-            eternalStorage.setUint(entity, burnRate, newRate);
-        }
-
-        emit UpdateRate(oldRate, newRate, rate);
-    }
-
-    /**
-     * @dev Updates the threshold of ETRNL at which the contract provides liquidity to a given value.
-     * @param value The new token liquidity threshold
-     */
-    function setLiquidityThreshold(uint256 value) external override onlyFund() {
-        uint256 oldThreshold = eternalStorage.getUint(entity, tokenLiquidityThreshold);
-        emit UpdateLiquidityThreshold(oldThreshold, value);
-        eternalStorage.setUint(entity, tokenLiquidityThreshold, value);
     }
 
     /**

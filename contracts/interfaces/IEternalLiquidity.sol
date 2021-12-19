@@ -10,8 +10,6 @@ interface IEternalLiquidity {
 
     // View the ETRNL/AVAX pair address
     function viewPair() external view returns(address);
-    // Enables/Disables automatic liquidity provision
-    function setAutoLiquidityProvision(bool value) external;
     // Provides liquidity for the ETRNL/AVAX pair for the ETRNL token contract
     function provideLiquidity(uint256 contractBalance) external;
     // Allows the withdrawal of AVAX in the contract

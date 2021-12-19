@@ -303,5 +303,4 @@ constructor () {
     function lengthBytes(bytes32 key) external view override returns (uint256) {
         return manyBytes[key].length;
     }
-
 }

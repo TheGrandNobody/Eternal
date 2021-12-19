@@ -11,7 +11,7 @@ import "../interfaces/IEternalToken.sol";
 contract FundLock {
 
     // The Eternal Token interface
-    IEternalToken private immutable eternal;
+    IEternalToken private eternal;
 
     // The address of the recipient
     address public immutable recipient;
@@ -26,7 +26,7 @@ contract FundLock {
     constructor (address _eternal, address _recipient, uint256 _totalAmount, uint256 _maxSupply, uint256 _gamma) {
         eternal = IEternalToken(_eternal);
         recipient = _recipient;
-        totalAmount = _totalAmount * (10 ** 9);
+        totalAmount = _totalAmount * (10 ** 18);
         maxSupply = _maxSupply;
         gamma = _gamma;
     }

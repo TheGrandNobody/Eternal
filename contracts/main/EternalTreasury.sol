@@ -2,9 +2,10 @@
 pragma solidity 0.8.0;
 
 import "../inheritances/OwnableEnhanced.sol";
-import "../interfaces/IEternal.sol";
+import "../interfaces/IEternalFactory.sol";
 import "../interfaces/IEternalToken.sol";
 import "../interfaces/IEternalTreasury.sol";
+import "../interfaces/IEternalStorage.sol";
 import "../interfaces/ILoyaltyGage.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoeRouter02.sol";
@@ -18,39 +19,96 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
  */
  contract EternalTreasury is IEternalTreasury, OwnableEnhanced {
 
-    struct TreasuryNote {
-        uint256 amountProvided;      // The amount of a given asset provided by the user in a liquid gage
-        uint256 savedFees;           // The amount of fees in a given asset collected by the user
-        uint256 balanceSnapshot;     // The treasury's balance for a given asset when the collected fees were last calculated
-    }
+    IEternalStorage public immutable eternalStorage;
+    IEternalFactory private eternalFactory;
+    IEternalToken private eternal;
+    IJoeFactory private joeFactory;
+    IJoeRouter02 private joeRouter;
 
-    IEternal private immutable eternalPlatform;
-    IEternalToken private immutable eternal;
-    IJoeFactory private immutable joeFactory;
-    IJoeRouter02 private immutable joeRouter;
+    /** 
+    // The amount of ETRNL staked by any given individual user, converted to the "reserve" number space for fee distribution
+    mapping (address => uint256) reserveBalances
+    // The amount of ETRNL staked by any given individual user, converted to the regular number space (raw number, no fees)
+    mapping (address => uint256) stakedBalances
+    // The amount of a given asset provided by a user in a liquid gage of said asset
+    mapping (address => mapping (address => uint256)) amountProvided;
+    // The amount of liquidity tokens provided for a given ETRNL/Asset pair
+    mapping (address => mapping (address => uint256)) liquidityProvided;
+    */
 
-    // The amount of ETRNL staked by any given individual user
-    mapping (address => uint256) private stakedBalances;
-    // Holds all user data related to gaging and staking rewards
-    mapping (address => mapping(address => TreasuryNote)) private treasuryFiles;
-    // Holds all addresses of tokens held by the treasury
-    address[] private tokenTreasury;
-
+    // The keccak256 hash of this contract's address
+    bytes32 public immutable entity;
     // The total number of ETRNL staked by users 
-    uint256 private totalStakedBalances;
-    // The amount by which the treasury's stake is reduced (x 10 ** 4)
-    uint256 private treasuryShare;
+    bytes32 public immutable totalStakedBalances;
+    // Used to increase or decrease everyone's accumulated fees
+    bytes32 public immutable reserveStakedBalances;
+    // Holds all addresses of tokens held by the treasury
+    bytes32 public immutable tokenTreasury;
+    // The (percentage) fee rate applied to any gage-reward computations not using ETRNL (x 10 ** 5)
+    bytes32 public immutable feeRate;
 
-    constructor (address _eternalPlatform, address _eternal) {
-        eternalPlatform = IEternal(_eternalPlatform);
+/////–––««« Constructors & Initializers »»»––––\\\\\
+
+    constructor (address _eternalStorage, address _eternalFactory, address _eternal) {
+        eternalStorage = IEternalStorage(_eternalStorage);
+        eternalFactory = IEternalFactory(_eternalFactory);
         eternal = IEternalToken(_eternal);
         IJoeRouter02 _joeRouter = IJoeRouter02(0x60aE616a2155Ee3d9A68541Ba4544862310933d4);
         joeRouter = _joeRouter;
-        joeFactory = IJoeFactory(_joeRouter.factory());
 
-        // Initialize the treasury share
-        treasuryShare = 5000;
+        entity = keccak256(abi.encodePacked(address(this)));
+        totalStakedBalances = keccak256(abi.encodePacked("totalStakedBalances"));
+        reserveStakedBalances = keccak256(abi.encodePacked("reserveStakedBalances"));
+        tokenTreasury = keccak256(abi.encodePacked("tokenTreasury"));
+        feeRate = keccak256(abi.encodePacked("feeRate"));
     }
+
+    function initialize() external onlyAdmin {
+        // The largest possible number in a 256-bit integer 
+        uint256 max = ~uint256(0);
+        // Set initial staking balances
+        uint256 totalStake = eternal.balanceOf(address(this));
+        eternalStorage.setUint(entity, totalStakedBalances, totalStake);
+        eternalStorage.setUint(entity, reserveStakedBalances, (max - (max % totalStake)));
+        // Set initial feeRate
+        eternalStorage.setUint(entity, feeRate, 500);
+        joeFactory = IJoeFactory(joeRouter.factory());
+    }
+
+/////–––««« Reserve Utility functions »»»––––\\\\\
+
+    /**
+     * @dev Converts a given staked amount to the "reserve" number space
+     * @param amount The specified staked amount
+     */
+    function convertToReserve(uint256 amount) private view returns(uint256) {
+        uint256 currentRate = eternalStorage.getUint(entity, reserveStakedBalances) / eternalStorage.getUint(entity, totalStakedBalances);
+        return amount * currentRate;
+    }
+
+    /**
+     * @dev Converts a given reserve amount to the regular number space (staked)
+     * @param reserveAmount The specified reserve amount
+     */
+    function convertToStaked(uint256 reserveAmount) private view returns(uint256) {
+        uint256 currentRate = eternalStorage.getUint(entity, reserveStakedBalances) / eternalStorage.getUint(entity, totalStakedBalances);
+        return reserveAmount / currentRate;
+    }
+
+    function computeMinAmounts(address asset, uint256 amountAsset, uint256 uncertainty) private view returns(uint256, uint256, uint256) {
+        // Get the reserve ratios for the ETRNL-Asset pair
+        (uint256 reserveA, uint256 reserveB,) = IJoePair(joeFactory.getPair(address(eternal), asset)).getReserves();
+        (uint256 reserveETRNL, uint256 reserveAsset) = address(eternal) < asset ? (reserveA, reserveB) : (reserveB, reserveA);
+        // Determine a reasonable minimum amount of ETRNL and Asset based on current reserves (with a tolerance of 0.5%)
+        uint256 amountETRNL = joeRouter.quote(amountAsset, reserveAsset, reserveETRNL);
+        uint256 minAsset = joeRouter.quote(amountETRNL, reserveETRNL, reserveAsset);
+        uint256 minETRNL = amountETRNL - (amountETRNL / uncertainty);
+        minAsset -= minAsset / uncertainty;
+
+        return (minETRNL, minAsset, amountETRNL);
+    }
+
+/////–––««« Gage-logic functions »»»––––\\\\\
 
     /**
      * @dev Funds a given liquidity gage with ETRNL, provides liquidity using ETRNL and the receiver's asset and transfers a bonus to the receiver
@@ -58,43 +116,69 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
      * @param receiver The address of the receiver
      * @param asset The address of the asset provided by the receiver
      * @param userAmount The amount of the asset provided by the receiver
-     * @param risk The treasury's (distributor) risk percentage 
-     * @param bonus The receiver's bonus percentage
+     * @param rRisk The treasury's (distributor) risk percentage 
+     * @param dRisk The receiver's bonus percentage
      * 
      * Requirements:
      *
      * - Only callable by the Eternal Platform
      * - Does not work with non-existent liquidity pairs
      */
-    function fundLiquidityGage(address gage, address receiver, address asset, uint256 userAmount, uint256 risk, uint256 bonus) external override {
-        require(_msgSender() == address(eternalPlatform), "msg.sender must be the platform");
-        require(joeFactory.getPair(address(eternal), asset) != address(0), "Unable to find pair on DEX");
+    function fundEternalLiquidGage(address gage, address receiver, address asset, uint256 userAmount, uint256 rRisk, uint256 dRisk) external override {
+        require(_msgSender() == address(eternalFactory), "msg.sender must be the platform");
+        require(joeFactory.getPair(address(eternal), asset) != address(0), "Unable to find pair on Dex");
 
         uint256 providedETRNL;
         uint256 providedAsset;
-
-        // Get the reserve ratios for the ETRNL-Asset pair
-        (uint256 reserveA, uint256 reserveB,) = IJoePair(joeFactory.getPair(address(eternal), asset)).getReserves();
-        (uint256 reserveETRNL, uint256 reserveAsset) = address(eternal) < asset ? (reserveA, reserveB) : (reserveB, reserveA);
-        // Determine a reasonable minimum amount of ETRNL and Asset based on current reserves (with a tolerance of 0.5%)
-        uint256 amountETRNL = joeRouter.quote(userAmount, reserveAsset, reserveETRNL);
-        uint256 minAsset = joeRouter.quote(amountETRNL, reserveETRNL, reserveAsset);
-        uint256 minETRNL = amountETRNL - (amountETRNL / 200);
-        minAsset -= minAsset / 200;
+        uint256 liquidity;
+        (uint256 minETRNL, uint256 minAsset, uint256 amountETRNL) = computeMinAmounts(asset, userAmount, 200);
         // Add liquidity to the ETRNL/Asset pair
-        eternal.approve(address(joeRouter), amountETRNL);
+        require(eternal.approve(address(joeRouter), amountETRNL), "Approve failed");
         if (asset == joeRouter.WAVAX()) {
-            (providedETRNL, providedAsset,) = joeRouter.addLiquidityAVAX{value: userAmount}(address(eternal), amountETRNL, minETRNL, minAsset, address(this), block.timestamp);
+            (providedETRNL, providedAsset, liquidity) = joeRouter.addLiquidityAVAX{value: userAmount}(address(eternal), amountETRNL, minETRNL, minAsset, address(this), block.timestamp);
         } else {
-            (providedETRNL, providedAsset,) = joeRouter.addLiquidity(address(eternal), asset, amountETRNL, userAmount, minETRNL, minAsset, address(this), block.timestamp);
+            (providedETRNL, providedAsset, liquidity) = joeRouter.addLiquidity(address(eternal), asset, amountETRNL, userAmount, minETRNL, minAsset, address(this), block.timestamp);
         }
-
-        TreasuryNote storage note = treasuryFiles[receiver][asset];
-        note.amountProvided = providedAsset;
-
-        ILoyaltyGage(gage).join(address(eternal), providedETRNL, risk);
-        eternal.transfer(receiver, providedETRNL * bonus / (10 ** 4));
+        // Save the true amount provided as liquidity by the receiver and the actual liquidity amount
+        eternalStorage.setUint(entity, keccak256(abi.encodePacked("amountProvided", receiver, asset)), providedAsset);
+        eternalStorage.setUint(entity, keccak256(abi.encodePacked("liquidity", receiver, asset)), liquidity);
+        // Initialize the liquid gage and transfer the user's instant reward
+        ILoyaltyGage(gage).initialize(asset, address(eternal), userAmount, providedETRNL, rRisk, dRisk);
+        eternal.transfer(receiver, providedETRNL * dRisk / (10 ** 4));
     }
+
+    function settleEternalLiquidGage(address receiver, uint256 id, bool winner) external override {
+        bytes32 factory = keccak256(abi.encodePacked(address(eternalFactory)));
+        address gageAddress = eternalStorage.getAddress(factory, keccak256(abi.encodePacked("gages", id)));
+        require(_msgSender() == gageAddress, "msg.sender must be the gage");
+        ILoyaltyGage gage = ILoyaltyGage(gageAddress);
+        (address rAsset,, uint256 rRisk) = gage.viewUserData(receiver);
+        (,uint256 dAmount, uint256 dRisk) = gage.viewUserData(address(this));
+        uint256 liquidity = eternalStorage.getUint(entity, keccak256(abi.encodePacked("liquidity", receiver, rAsset)));
+        uint256 providedAsset = eternalStorage.getUint(entity, keccak256(abi.encodePacked("amountProvided", receiver, rAsset)));
+
+        // Remove the liquidity for this gage
+        (uint256 minETRNL, uint256 minAsset,) = computeMinAmounts(rAsset, providedAsset, 200);
+        (uint256 amountETRNL, uint256 amountAsset) = joeRouter.removeLiquidity(address(eternal), rAsset, liquidity, minETRNL, minAsset, address(this), block.timestamp);
+        // Compute and transfer the net gage deposit + any rewards due to the receiver
+        uint256 eternalRewards = amountETRNL > dAmount ? amountETRNL - dAmount : 0;
+        uint256 eternalFee = eternalStorage.getUint(entity, feeRate) * providedAsset / (10 ** 5);
+        if (winner) {
+            eternal.transfer(receiver, amountETRNL * dRisk / (10 ** 4));
+            // Compute the net liquidity rewards left to distribute to stakers
+            eternalRewards -= eternalRewards * dRisk / (10 ** 4);
+        } else {
+            amountAsset -= amountAsset * rRisk / (10 ** 4);
+            // Compute the net liquidity rewards + gage deposit left to distribute to staker
+            eternalRewards = amountETRNL * rRisk / (10 ** 4);
+        }
+        IERC20(rAsset).transfer(receiver, amountAsset - eternalFee);
+        // Update staker's fees w.r.t the gage fee, gage rewards and liquidity rewards
+        uint256 totalFee = eternalRewards + (dAmount * eternalStorage.getUint(entity, feeRate) / (10 ** 5));
+        eternalStorage.setUint(entity, reserveStakedBalances, eternalStorage.getUint(entity, reserveStakedBalances) - convertToReserve(totalFee));
+    }
+
+/////–––««« Staking-logic functions »»»––––\\\\\
 
     /**
      * @dev Stakes a given amount of ETRNL into the treasury
@@ -110,38 +194,42 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
         eternal.transferFrom(_msgSender(), address(this), amount);
         emit Stake(_msgSender(), amount);
 
-        stakedBalances[_msgSender()] += amount;
-        totalStakedBalances += amount;
+        // Update user/total staked and reserve balances
+        bytes32 reserveBalances = keccak256(abi.encodePacked("reserveBalances", _msgSender()));
+        bytes32 stakedBalances = keccak256(abi.encodePacked("stakedBalances", _msgSender()));
+        uint256 reserveAmount = convertToReserve(amount);
+        uint256 reserveBalance = eternalStorage.getUint(entity, reserveBalances);
+        uint256 stakedBalance = eternalStorage.getUint(entity, stakedBalances);
+        eternalStorage.setUint(entity, reserveBalances, reserveBalance + reserveAmount);
+        eternalStorage.setUint(entity, stakedBalances, stakedBalance + amount);
+        eternalStorage.setUint(entity, reserveStakedBalances, eternalStorage.getUint(entity, reserveStakedBalances) + reserveAmount);
+        eternalStorage.setUint(entity, totalStakedBalances, eternalStorage.getUint(entity, totalStakedBalances) + amount);
     }
 
     /**
      * @dev Unstakes a user's given amount of ETRNL and transfers the user's accumulated rewards
      * @param amount The specified amount of ETRNL being unstaked
+     * 
+     * Requirements:
+     *
+     * - User staked balance must have enough tokens to support the withdrawal 
      */
     function unstake(uint256 amount) external override {
-        require(amount <= stakedBalances[_msgSender()] , "Amount exceeds staked balance");
+        bytes32 stakedBalances = keccak256(abi.encodePacked("stakedBalances", _msgSender()));
+        uint256 stakedBalance = eternalStorage.getUint(entity, stakedBalances);
+        require(amount <= stakedBalance , "Amount exceeds staked balance");
 
         emit Unstake(_msgSender(), amount);
+        // Update user/total staked and reserve balances
+        bytes32 reserveBalances = keccak256(abi.encodePacked("reserveBalances", _msgSender()));
+        uint256 reserveBalance = eternalStorage.getUint(entity, reserveBalances);
+        // Reward user with percentage of fees proportional to the amount he is withdrawing
+        uint256 reserveAmount = amount * reserveBalance / stakedBalance;
+        eternalStorage.setUint(entity, reserveBalances, reserveBalance - reserveAmount);
+        eternalStorage.setUint(entity, stakedBalances, stakedBalance - amount);
+        eternalStorage.setUint(entity, reserveStakedBalances, eternalStorage.getUint(entity, reserveStakedBalances) - reserveAmount);
+        eternalStorage.setUint(entity, totalStakedBalances, eternalStorage.getUint(entity, totalStakedBalances) - amount);
 
-        stakedBalances[_msgSender()] -= amount;
-        totalStakedBalances -= amount;
-
-        eternal.transfer(_msgSender(), amount);
-    }
-
-    function updateTreasuryFiles(address user) private {
-        TreasuryNote storage note;
-        uint256 netTreasuryShare = (eternal.balanceOf(address(this)) - totalStakedBalances) * treasuryShare / (10 ** 4);
-        uint256 feeShare = stakedBalances[user] * (10 ** 9) / (totalStakedBalances + netTreasuryShare);
-
-        for (uint256 i = 0; i < tokenTreasury.length; i++) {
-            uint256 treasuryBalance = IERC20(tokenTreasury[i]).balanceOf(address(this));
-            note = treasuryFiles[user][tokenTreasury[i]];
-            if (stakedBalances[user] > 0) { 
-                note.savedFees += feeShare * sub(treasuryBalance, note.balanceSnapshot) / (10 ** 9);
-            }
-            note.balanceSnapshot = treasuryBalance;
-        }
-
+        eternal.transfer(_msgSender(), convertToStaked(reserveAmount));
     }
  }
