@@ -2,7 +2,7 @@
 pragma solidity 0.8.0;
 
 import "../interfaces/IEternalToken.sol";
-import "../interfaces/IEternalLiquidity.sol";
+import "../interfaces/IEternalTreasury.sol";
 import "../interfaces/IEternalStorage.sol";
 import "../inheritances/OwnableEnhanced.sol";
 
@@ -33,8 +33,7 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
     // The Eternal shared storage interface
     IEternalStorage public immutable eternalStorage;
     // The Eternal automatic liquidity provider interface
-    IEternalLiquidity private eternalLiquidity;
-    address private eternalTreasury;
+    IEternalTreasury private eternalTreasury;
 
     // The keccak256 hash of this contract's address
     bytes32 public immutable entity;
@@ -323,7 +322,7 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
             uint256 rewardRate = eternalStorage.getUint(entity, redistributionRate);
             eternalStorage.setUint(entity, totalReflectedSupply, reflectedSupply - (reflectedAmount * rewardRate / 100000));
             // Store ETRNL away in the treasury based on the funding rate
-            bytes32 treasuryBalance = keccak256(abi.encodePacked("reflectedBalances", eternalTreasury));
+            bytes32 treasuryBalance = keccak256(abi.encodePacked("reflectedBalances", address(eternalTreasury)));
             uint256 fundBalance = eternalStorage.getUint(entity, treasuryBalance);
             uint256 fundRate = eternalStorage.getUint(entity, fundingRate);
             eternalStorage.setUint(entity, treasuryBalance, fundBalance + (reflectedAmount * fundRate / 100000));
@@ -482,9 +481,9 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
         
         // Check whether the contract's balance threshold is reached; if so, initiate a liquidity swap
         uint256 contractBalance = balanceOf(address(this));
-        if ((contractBalance >= eternalStorage.getUint(entity, tokenLiquidityThreshold)) && (sender != eternalLiquidity.viewPair())) {
-            _transfer(address(this), address(eternalLiquidity), contractBalance);
-            eternalLiquidity.provideLiquidity(contractBalance);
+        if ((contractBalance >= eternalStorage.getUint(entity, tokenLiquidityThreshold)) && (sender != eternalTreasury.viewPair())) {
+            _transfer(address(this), address(eternalTreasury), contractBalance);
+            eternalTreasury.provideLiquidity(contractBalance);
         }
     }
 
@@ -536,10 +535,10 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
      * @dev Updates the address of the Eternal Liquidity contract
      * @param newContract The new address for the Eternal Liquidity contract
      */
-    function setEternalLiquidity(address newContract) external override onlyAdminAndFund() {
-        address oldContract = address(eternalLiquidity);
-        emit UpdateEternalLiquidity(oldContract, newContract);
-        eternalLiquidity = IEternalLiquidity(newContract);
+    function setEternalTreasury(address newContract) external override onlyAdminAndFund() {
+        address oldContract = address(eternalTreasury);
+        emit UpdateEternalTreasury(oldContract, newContract);
+        eternalTreasury = IEternalTreasury(newContract);
     }
 
     /**
