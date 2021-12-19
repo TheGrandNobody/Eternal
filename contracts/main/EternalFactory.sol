@@ -95,7 +95,7 @@ contract EternalFactory is IEternalFactory, OwnableEnhanced {
             alpha = eternalStorage.getUint(entity, baseline);
         }
         uint256 burnRate = eternalStorage.getUint(eternalToken, keccak256(abi.encodePacked("burnRate")));
-        uint256 percent = burnRate * alpha * (10 ** 9) * eternalStorage.getUint(entity, timeConstant) * 15 / eternal.totalSupply();
+        uint256 percent = burnRate * alpha * (10 ** 18) * eternalStorage.getUint(entity, timeConstant) * 15 / eternal.totalSupply();
 
         // Incremement the lastId tracker and the number of active liquid gages
         uint256 idLast = eternalStorage.getUint(entity, lastId) + 1;

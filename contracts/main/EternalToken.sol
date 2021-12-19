@@ -93,10 +93,10 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
         uint256 max = ~uint256(0);
 
         // Initialize total supplies, liquidity threshold and transfer total supply to the owner
-        eternalStorage.setUint(entity, totalTokenSupply, (10**10) * (10**9));
-        eternalStorage.setUint(entity, totalReflectedSupply, (max - (max % ((10**10) * (10**9)))));
-        eternalStorage.setUint(entity, tokenLiquidityThreshold, (10**10) * (10**9) / 1000);
-        eternalStorage.setUint(entity, keccak256(abi.encodePacked("reflectedBalances", admin())), (max - (max % ((10**10) * (10**9)))));
+        eternalStorage.setUint(entity, totalTokenSupply, (10 ** 10) * (10 ** 18));
+        eternalStorage.setUint(entity, totalReflectedSupply, (max - (max % ((10 ** 10) * (10 ** 18)))));
+        eternalStorage.setUint(entity, tokenLiquidityThreshold, (10 ** 10) * (10 ** 18) / 1000);
+        eternalStorage.setUint(entity, keccak256(abi.encodePacked("reflectedBalances", admin())), (max - (max % ((10**10) * (10 ** 18)))));
 
         // Exclude the temporary admin address from rewards and fees
         excludeFromReward(admin());
@@ -140,7 +140,7 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
      * @return The number of decimals
      */
     function decimals() external pure override returns (uint8) {
-        return 9;
+        return 18;
     }
     
     /**
