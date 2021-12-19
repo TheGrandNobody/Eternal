@@ -384,4 +384,20 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
         emit AssetTransferred(asset, amount, recipient);
         require(IERC20(asset).transfer(recipient, amount), "Asset withdrawal failed");
     }
+
+    /**
+     * @dev Updates the address of the Eternal Factory contract
+     * @param newContract The new address for the Eternal Factory contract
+     */
+    function setEternalFactory(address newContract) external override onlyFund() {
+        eternalFactory = IEternalFactory(newContract);
+    }
+
+    /**
+     * @dev Updates the address of the Eternal Token contract
+     * @param newContract The new address for the Eternal Token contract
+     */
+    function setEternalToken(address newContract) external override onlyFund() {
+        eternal = IEternalToken(newContract);
+    }
  }

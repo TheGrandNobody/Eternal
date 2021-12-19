@@ -19,7 +19,7 @@ interface IEternalToken is IERC20, IERC20Metadata {
         Burn
     }
     
-    // Sets the address of the Eternal Liquidity contract
+    // Sets the address of the Eternal Treasury contract
     function setEternalTreasury(address newContract) external;
     // Designates a new Eternal Fund address
     function designateFund(address fund) external;
@@ -28,8 +28,6 @@ interface IEternalToken is IERC20, IERC20Metadata {
 
     // Signals a change of value of a given rate in the Eternal Token contract
     event UpdateRate(uint256 oldRate, uint256 newRate, Rate rate);
-    // Signals a change of address for the Eternal Treasury contract
-    event UpdateEternalTreasury(address indexed oldContract, address indexed newContract);
     // Signals a change of value of the token liquidity threshold
     event UpdateLiquidityThreshold(uint256 oldThreshold, uint256 newThreshold);
 }

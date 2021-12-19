@@ -539,12 +539,10 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
     }
 
     /**
-     * @dev Updates the address of the Eternal Liquidity contract
-     * @param newContract The new address for the Eternal Liquidity contract
+     * @dev Updates the address of the Eternal Treasury contract
+     * @param newContract The new address for the Eternal Treasury contract
      */
     function setEternalTreasury(address newContract) external override onlyAdminAndFund() {
-        address oldContract = address(eternalTreasury);
-        emit UpdateEternalTreasury(oldContract, newContract);
         eternalTreasury = IEternalTreasury(newContract);
     }
 
@@ -553,8 +551,6 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
      * @param _fund The specified address of the designated fund
      */
     function designateFund(address _fund) external override onlyAdminAndFund() {
-        eternalStorage.setBool(entity, keccak256(abi.encodePacked("isExcludedFromFees", fund())), false);
-        eternalStorage.setBool(entity, keccak256(abi.encodePacked("isExcludedFromFees", _fund)), true);
         attributeFundRights(_fund);
     }
 }

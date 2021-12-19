@@ -23,6 +23,10 @@ interface IEternalTreasury {
     function withdrawAVAX(address payable recipient, uint256 amount) external;
     // Allows the withdrawal of an asset present in the contract
     function withdrawAsset(address asset, address recipient, uint256 amount) external;
+    // Sets the address of the Eternal Factory contract
+    function setEternalFactory(address newContract) external;
+    // Sets the address of the Eternal Token contract
+    function setEternalToken(address newContract) external;
 
     // Signals a disabling/enabling of the automatic liquidity provision
     event AutomaticLiquidityProvisionUpdated(bool value);

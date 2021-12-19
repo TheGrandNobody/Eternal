@@ -21,7 +21,7 @@ contract EternalFactory is IEternalFactory, OwnableEnhanced {
     // The Eternal token interface
     IEternalToken private eternal;
     // The Eternal treasury interface
-    IEternalTreasury private treasury;
+    IEternalTreasury private eternalTreasury;
 
     // The keccak256 hash of this address
     bytes32 public immutable entity;
@@ -74,7 +74,7 @@ contract EternalFactory is IEternalFactory, OwnableEnhanced {
 
     function initialize(address _treasury) external onlyAdmin() {
         // Set the initial treasury interface
-        treasury = IEternalTreasury(_treasury);
+        eternalTreasury = IEternalTreasury(_treasury);
         // Set initial constants
         eternalStorage.setUint(entity, timeConstant, 2 * (10 ** 6));
         eternalStorage.setUint(entity, riskConstant, 100);
@@ -113,17 +113,36 @@ contract EternalFactory is IEternalFactory, OwnableEnhanced {
         eternalStorage.setUint(entity, totalLiquidGages, totalGagesLiquid + 1);
 
         // Deploy a new Gage
-        LoyaltyGage newGage = new LoyaltyGage(idLast, percent, 2, false, address(treasury), _msgSender(), address(this));
+        LoyaltyGage newGage = new LoyaltyGage(idLast, percent, 2, false, address(eternalTreasury), _msgSender(), address(this));
         emit NewGage(idLast, address(newGage));
         eternalStorage.setAddress(entity, keccak256(abi.encodePacked("gages", idLast)), address(newGage));
 
         //Transfer the deposit to the treasury
-        require(IERC20(asset).transferFrom(_msgSender(), address(treasury), amount), "Failed to deposit asset");
+        require(IERC20(asset).transferFrom(_msgSender(), address(eternalTreasury), amount), "Failed to deposit asset");
         // Calculate risk and join the gage for the user and the treasury
         uint256 userRisk = eternalStorage.getUint(entity, keccak256(abi.encodePacked("risk", asset)));
         uint256 treasuryRisk = userRisk - eternalStorage.getUint(entity, riskConstant);
-        treasury.fundEternalLiquidGage(address(newGage), _msgSender(), asset, amount, userRisk, treasuryRisk);
+        eternalTreasury.fundEternalLiquidGage(address(newGage), _msgSender(), asset, amount, userRisk, treasuryRisk);
 
         return idLast;
     }
+
+/////–––««« Fund-only functions »»»––––\\\\\
+    /**
+     * @dev Updates the address of the Eternal Treasury contract
+     * @param newContract The new address for the Eternal Treasury contract
+     */
+    function setEternalTreasury(address newContract) external override onlyFund() {
+        eternalTreasury = IEternalTreasury(newContract);
+    }
+
+    /**
+     * @dev Updates the address of the Eternal Token contract
+     * @param newContract The new address for the Eternal Token contract
+     */
+    function setEternalToken(address newContract) external override onlyFund() {
+        eternal = IEternalToken(newContract);
+    }
+
+
 }

@@ -8,4 +8,6 @@ import "../interfaces/IEternalFund.sol";
  * @author Nobody (me)
  * @notice The Eternal Fund contract holds all governance logic
  */
- contract EternalFund is IEternalFund {}
+ contract EternalFund is IEternalFund {
+     
+ }
