@@ -25,6 +25,10 @@ interface IEternalToken is IERC20, IERC20Metadata {
     function designateFund(address fund) external;
     // View the rate used to convert between the reflection and true token space
     function getReflectionRate() external view returns (uint256);
+    // Delegates the message sender's vote balance to a given user
+    function delegate(address delegatee) external;
+    // Determine the number of votes of a given account prior to a given block
+    function getPriorVotes(address account, uint256 blockNumber) external view returns (uint256);
 
     // Signals a change of value of a given rate in the Eternal Token contract
     event UpdateRate(uint256 oldRate, uint256 newRate, Rate rate);

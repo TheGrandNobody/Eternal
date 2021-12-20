@@ -18,13 +18,13 @@ import "../interfaces/ITimelock.sol";
     uint256 public constant MAXIMUM_DELAY = 30 days;
     
     // The address of this contract's fund
-    address public fund;
+    address private fund;
     // The address of the next fund (stored here until it accepts the role)
-    address public pendingFund;
+    address private pendingFund;
     // The minimum amount of time the contract must wait before queuing a proposal
-    uint256 public delay;
+    uint256 private delay;
     // Determines whether a given transaction hash is queued or not
-    mapping (bytes32 => bool) public queuedTransactions;
+    mapping (bytes32 => bool) private queuedTransactions;
 
 
     constructor(address _fund, uint256 _delay) {
@@ -38,6 +38,46 @@ import "../interfaces/ITimelock.sol";
     // Fallback function
     // solhint-disable-next-line no-empty-blocks
     receive() external payable {}
+
+    /**
+     * @notice View the period of time any proposal action is given to be executed once the queuing period is over
+     * @return The grace period constant
+     */
+    function viewGracePeriod() external pure override returns (uint256){
+        return GRACE_PERIOD;
+    }
+
+    /**
+     * @notice View the minimum amount of time the contract must wait before queuing a proposal
+     * @return The delay variable
+     */
+    function viewDelay() external view override returns(uint256) {
+        return delay;
+    }
+
+    /**
+     * @notice View the current fund 
+     * @return The current fund address
+     */
+    function viewFund() external view override returns (address) {
+        return fund;
+    }
+
+    /**
+     * @notice View the current pending fund
+     * @return The current pending fund address
+     */
+    function viewPendingFund() external view override returns(address) {
+        return pendingFund;
+    }
+
+    /**
+     * @notice View whether a given transaction hash is queued or not
+     * @return True if the transaction is queued, otherwise false
+     */
+    function queuedTransaction(bytes32 hash) external view override returns (bool) {
+        return queuedTransactions[hash];
+    }
 
     /**
      * @notice Updates the amount of time the contract must wait before queuing a proposal
@@ -65,7 +105,7 @@ import "../interfaces/ITimelock.sol";
      *
      * - Only callable by an an address who was offered the role of fund
      */
-    function acceptFund() public {
+    function acceptFund() public override {
         require(msg.sender == pendingFund, "Only callable by a pending Fund");
         fund = msg.sender;
         pendingFund = address(0);
@@ -81,7 +121,7 @@ import "../interfaces/ITimelock.sol";
      *
      * - Only callable by this contract
      */
-    function setPendingAdmin(address _pendingFund) public {
+    function setPendingFund(address _pendingFund) public {
         require(msg.sender == address(this), "Call must come from Timelock");
         pendingFund = _pendingFund;
 
@@ -102,7 +142,7 @@ import "../interfaces/ITimelock.sol";
      * - Only callable by the fund
      * - The estimated time of action must be greater than or equal to the minimum delay time
      */
-    function queueTransaction(address target, uint256 value, string memory signature, bytes memory data, uint256 eta) public returns (bytes32) {
+    function queueTransaction(address target, uint256 value, string memory signature, bytes memory data, uint256 eta) public override returns (bytes32) {
         require(msg.sender == fund, "Call must come from the fund");
         require(eta >= block.timestamp + delay, "Delay is not over yet");
 
@@ -125,7 +165,7 @@ import "../interfaces/ITimelock.sol";
      *
      * - Only callable by the fund
      */
-    function cancelTransaction(address target, uint256 value, string memory signature, bytes memory data, uint256 eta) public {
+    function cancelTransaction(address target, uint256 value, string memory signature, bytes memory data, uint256 eta) public override {
         require(msg.sender == fund, "Call must come from the fund");
 
         bytes32 txHash = keccak256(abi.encode(target, value, signature, data, eta));
@@ -150,7 +190,7 @@ import "../interfaces/ITimelock.sol";
      * - The delay period of execution must be over
      * - The transaction must be executed within the grace period
      */
-    function executeTransaction(address target, uint256 value, string memory signature, bytes memory data, uint256 eta) public payable returns (bytes memory) {
+    function executeTransaction(address target, uint256 value, string memory signature, bytes memory data, uint256 eta) public payable override returns (bytes memory) {
         require(msg.sender == fund, "Call must come from the fund");
 
         bytes32 txHash = keccak256(abi.encode(target, value, signature, data, eta));
