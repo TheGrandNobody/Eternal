@@ -6,6 +6,7 @@
     "not-rely-on-time": "off",
     "avoid-low-level-calls": "off",
     "func-visibility": ["warn",{"ignoreConstructors":true}],
-    "max-states-count": ["warn",20]
+    "max-states-count": ["warn",20],
+    "reason-string": ["error",{"maxLength":32}]
   }
 }

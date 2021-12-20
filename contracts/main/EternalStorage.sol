@@ -32,7 +32,7 @@ constructor () {
 /////–––««« Modifiers »»»––––\\\\\
 
     /**
-     * @dev Ensures that only the latest contracts can modify variables' states
+     * @notice Ensures that only the latest contracts can modify variables' states
      */
     modifier onlyLatestVersion() {
         bytes32 eternalStorage = keccak256(abi.encodePacked(address(this)));
@@ -44,7 +44,7 @@ constructor () {
 /////–––««« Setters »»»––––\\\\\
 
     /**
-     * @dev Sets a uint256 value for a given contract and key
+     * @notice Sets a uint256 value for a given contract and key
      * @param entity The keccak256 hash of the contract's address
      * @param key The specified mapping key
      * @param value The specified uint256 value
@@ -54,7 +54,7 @@ constructor () {
     }
 
     /**
-     * @dev Sets an address value for a given contract and key
+     * @notice Sets an address value for a given contract and key
      * @param entity The keccak256 hash of the contract's address
      * @param key The specified mapping key
      * @param value The specified address value
@@ -64,7 +64,7 @@ constructor () {
     }
 
     /**
-     * @dev Sets a boolean value for a given contract and key
+     * @notice Sets a boolean value for a given contract and key
      * @param entity The keccak256 hash of the contract's address
      * @param key The specified mapping key
      * @param value The specified boolean value
@@ -74,7 +74,7 @@ constructor () {
     }    
 
     /**
-     * @dev Sets a bytes32 value for a given contract and key
+     * @notice Sets a bytes32 value for a given contract and key
      * @param entity The keccak256 hash of the contract's address
      * @param key The specified mapping key
      * @param value The specified bytes32 value
@@ -84,7 +84,7 @@ constructor () {
     }    
 
     /**
-     * @dev Sets or pushes a uin256 array's element's value for a given key and index
+     * @notice Sets or pushes a uin256 array's element's value for a given key and index
      * @param key The specified mapping key
      * @param index The specified index of the array's element being modified
      * @param value The specified uint256 value
@@ -98,7 +98,7 @@ constructor () {
     }
 
     /**
-     * @dev Sets or pushes an address array's element's value for a given key and index
+     * @notice Sets or pushes an address array's element's value for a given key and index
      * @param key The specified mapping key
      * @param index The specified index of the array's element being modified
      * @param value The specified address value
@@ -112,7 +112,7 @@ constructor () {
     }   
 
     /**
-     * @dev Sets or pushes a boolean array's element's value for a given key and index
+     * @notice Sets or pushes a boolean array's element's value for a given key and index
      * @param key The specified mapping key
      * @param index The specified index of the array's element being modified
      * @param value The specified boolean value
@@ -126,7 +126,7 @@ constructor () {
     }    
 
     /**
-     * @dev Sets or pushes a bytes32 array's element's value for a given key and index
+     * @notice Sets or pushes a bytes32 array's element's value for a given key and index
      * @param key The specified mapping key
      * @param index The specified index of the array's element being modified
      * @param value The specified bytes32value
@@ -141,7 +141,7 @@ constructor () {
 
 /////–––««« Getters »»»––––\\\\\
     /**
-     * @dev Returns a uint256 value for a given contract and key
+     * @notice Returns a uint256 value for a given contract and key
      * @param entity The keccak256 hash of the specified contract
      * @param key The specified mapping key
      * @return The uint256 value mapped to the key
@@ -151,7 +151,7 @@ constructor () {
     }
 
     /**
-     * @dev Returns an address value for a given contract and key
+     * @notice Returns an address value for a given contract and key
      * @param entity The keccak256 hash of the specified contract
      * @param key The specified mapping key
      * @return The address value mapped to the key
@@ -161,7 +161,7 @@ constructor () {
     }
 
     /**
-     * @dev Returns a boolean value for a given contract and key
+     * @notice Returns a boolean value for a given contract and key
      * @param entity The keccak256 hash of the specified contract
      * @param key The specified mapping key
      * @return The boolean value mapped to the key
@@ -171,7 +171,7 @@ constructor () {
     }
 
     /**
-     * @dev Returns a bytes32 value for a given contract and key
+     * @notice Returns a bytes32 value for a given contract and key
      * @param entity The keccak256 hash of the specified contract
      * @param key The specified mapping key
      * @return The bytes32 value mapped to the key
@@ -181,7 +181,7 @@ constructor () {
     }  
 
     /**
-     * @dev Returns a uint256 array's element's value for a given key and index
+     * @notice Returns a uint256 array's element's value for a given key and index
      * @param key The specified mapping key
      * @param index The specified index of the desired element
      * @return The uint256 value at the specified index for the specified array
@@ -191,7 +191,7 @@ constructor () {
     }
 
     /**
-     * @dev Returns an address array's element's value for a given key and index
+     * @notice Returns an address array's element's value for a given key and index
      * @param key The specified mapping key
      * @param index The specified index of the desired element
      * @return The address value at the specified index for the specified array
@@ -201,7 +201,7 @@ constructor () {
     }
 
     /**
-     * @dev Returns a boolean array's element's value for a given key and index
+     * @notice Returns a boolean array's element's value for a given key and index
      * @param key The specified mapping key
      * @param index The specified index of the desired element
      * @return The boolean value at the specified index for the specified array
@@ -211,7 +211,7 @@ constructor () {
     }
 
     /**
-     * @dev Returns a bytes32 array's element's value for a given key and index
+     * @notice Returns a bytes32 array's element's value for a given key and index
      * @param key The specified mapping key
      * @param index The specified index of the desired element
      * @return The bytes32 value at the specified index for the specified array
@@ -223,7 +223,7 @@ constructor () {
 /////–––««« Array Deleters »»»––––\\\\\
 
     /** 
-     * @dev Deletes a uint256 array's element for a given key and index
+     * @notice Deletes a uint256 array's element for a given key and index
      * @param key The specified mapping key
      * @param index The specified index of the desired element
      */
@@ -234,7 +234,7 @@ constructor () {
     }
 
     /** 
-     * @dev Deletes an address array's element for a given key and index
+     * @notice Deletes an address array's element for a given key and index
      * @param key The specified mapping key
      * @param index The specified index of the desired element
      */
@@ -245,7 +245,7 @@ constructor () {
     }
 
     /** 
-     * @dev Deletes a boolean array's element for a given key and index
+     * @notice Deletes a boolean array's element for a given key and index
      * @param key The specified mapping key
      * @param index The specified index of the desired element
      */
@@ -256,7 +256,7 @@ constructor () {
     }
 
     /** 
-     * @dev Deletes a bytes32 array's element for a given key and index
+     * @notice Deletes a bytes32 array's element for a given key and index
      * @param key The specified mapping key
      * @param index The specified index of the desired element
      */
@@ -269,7 +269,7 @@ constructor () {
 /////–––««« Array Length »»»––––\\\\\
 
     /**
-     * @dev Returns the length of a uint256 array for a given key
+     * @notice Returns the length of a uint256 array for a given key
      * @param key The specified mapping key
      * @return The length of the array mapped to the key
      */
@@ -278,7 +278,7 @@ constructor () {
     }
 
     /**
-     * @dev Returns the length of an address array for a given key
+     * @notice Returns the length of an address array for a given key
      * @param key The specified mapping key
      * @return The length of the array mapped to the key
      */
@@ -287,7 +287,7 @@ constructor () {
     }
 
     /**
-     * @dev Returns the length of a boolean array for a given key
+     * @notice Returns the length of a boolean array for a given key
      * @param key The specified mapping key
      * @return The length of the array mapped to the key
      */
@@ -296,7 +296,7 @@ constructor () {
     }
 
     /**
-     * @dev Returns the length of a bytes32 array for a given key
+     * @notice Returns the length of a bytes32 array for a given key
      * @param key The specified mapping key
      * @return The length of the array mapped to the key
      */
