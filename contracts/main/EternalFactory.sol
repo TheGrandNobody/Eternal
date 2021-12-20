@@ -85,7 +85,7 @@ contract EternalFactory is IEternalFactory, OwnableEnhanced {
 /////–––««« Gage-logic functions »»»––––\\\\\
 
     /**
-     * @dev Creates an ETRNL liquid gage contract for a given user, asset and amount
+     * @notice Creates an ETRNL liquid gage contract for a given user, asset and amount
      * @param asset The address of the asset being deposited in the liquid gage by the receiver
      * @param amount The amount of the asset being deposited in the liquid gage by the receiver
      */
@@ -129,7 +129,7 @@ contract EternalFactory is IEternalFactory, OwnableEnhanced {
 
 /////–––««« Fund-only functions »»»––––\\\\\
     /**
-     * @dev Updates the address of the Eternal Treasury contract
+     * @notice Updates the address of the Eternal Treasury contract
      * @param newContract The new address for the Eternal Treasury contract
      */
     function setEternalTreasury(address newContract) external override onlyFund() {
@@ -137,7 +137,7 @@ contract EternalFactory is IEternalFactory, OwnableEnhanced {
     }
 
     /**
-     * @dev Updates the address of the Eternal Token contract
+     * @notice Updates the address of the Eternal Token contract
      * @param newContract The new address for the Eternal Token contract
      */
     function setEternalToken(address newContract) external override onlyFund() {

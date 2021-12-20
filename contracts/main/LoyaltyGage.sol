@@ -4,6 +4,11 @@ pragma solidity 0.8.0;
 import "./Gage.sol";
 import "../interfaces/ILoyaltyGage.sol";
 
+/**
+ * @title Loyalty Gage contract
+ * @author Nobody (me)
+ * @notice A loyalty gage creates a healthy, symbiotic relationship between a distributor and a receiver
+ */
 contract LoyaltyGage is Gage, ILoyaltyGage {
 
     // Address of the stakeholder which pays the discount in a loyalty gage
@@ -28,7 +33,7 @@ contract LoyaltyGage is Gage, ILoyaltyGage {
 /////–––««« Variable state-inspection functions »»»––––\\\\\
 
     /**
-     * @dev View the address of the creator
+     * @notice View the address of the creator
      * @return The address of the creator
      */
     function viewDistributor() external view override returns (address){
@@ -36,7 +41,7 @@ contract LoyaltyGage is Gage, ILoyaltyGage {
     }
 
     /**
-     * @dev View the address of the buyer
+     * @notice View the address of the buyer
      * @return The address of the buyer
      */
     function viewReceiver() external view override returns (address) {
@@ -44,7 +49,7 @@ contract LoyaltyGage is Gage, ILoyaltyGage {
     }
 
     /**
-     * @dev View the percent change condition for the total token supply of the deposit
+     * @notice View the percent change condition for the total token supply of the deposit
      * @return The percent change condition for the total token supply
      */
     function viewPercent() external view override returns (uint256) {
@@ -52,7 +57,7 @@ contract LoyaltyGage is Gage, ILoyaltyGage {
     }
 
     /**
-     * @dev View whether the deposited token suppply is inflationary or deflationary
+     * @notice View whether the deposited token suppply is inflationary or deflationary
      * @return True if the token is inflationary, False if it is deflationary
      */
     function viewInflationary() external view override returns (bool) {
@@ -61,7 +66,7 @@ contract LoyaltyGage is Gage, ILoyaltyGage {
     
 /////–––««« Gage-logic functions »»»––––\\\\\
     /**
-     * @dev Initializes a loyalty gage for the receiver and distributor
+     * @notice Initializes a loyalty gage for the receiver and distributor
      * @param rAsset The address of the asset used as deposit by the receiver
      * @param dAsset The address of the asset used as deposit by the distributor
      * @param rAmount The receiver's chosen deposit amount 

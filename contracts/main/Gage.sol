@@ -7,6 +7,11 @@ import "../interfaces/IEternalStorage.sol";
 import "../interfaces/IEternalTreasury.sol";
 import "../interfaces/IGage.sol";
 
+/**
+ * @title Gage contract 
+ * @author Nobody (me)
+ * @notice Implements the basic necessities for any gage
+ */
 abstract contract Gage is Context, IGage {
 
     // Holds all possible statuses for a gage
@@ -56,7 +61,7 @@ abstract contract Gage is Context, IGage {
     /////–––««« Variable state-inspection functions »»»––––\\\\\
 
     /**
-     * @dev View the number of stakeholders in the gage (if it isn't yet active)
+     * @notice View the number of stakeholders in the gage (if it isn't yet active)
      * @return The number of stakeholders in the selected gage
      *
      * Requirements:
@@ -68,7 +73,7 @@ abstract contract Gage is Context, IGage {
     }
 
     /**
-     * @dev View the total user capacity of the gage
+     * @notice View the total user capacity of the gage
      * @return The total user capacity
      */
     function viewCapacity() external view override returns(uint256) {
@@ -76,7 +81,7 @@ abstract contract Gage is Context, IGage {
     }
 
     /**
-     * @dev View the status of the gage
+     * @notice View the status of the gage
      * @return An integer indicating the status of the gage
      */
     function viewStatus() external view override returns (uint256) {
@@ -84,7 +89,7 @@ abstract contract Gage is Context, IGage {
     }
 
     /**
-     * @dev View whether the gage is a loyalty gage or not
+     * @notice View whether the gage is a loyalty gage or not
      * @return True if the gage is a loyalty gage, else false
      */
     function viewLoyalty() external view override returns (bool) {
@@ -92,7 +97,7 @@ abstract contract Gage is Context, IGage {
     }
 
     /**
-     * @dev View a given user's gage data 
+     * @notice View a given user's gage data 
      * @param user The address of the specified user
      * @return The asset, amount and risk for this user 
      */

@@ -13,7 +13,7 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoeFactory.sol";
 import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
 
 /**
- * @dev Contract for the Eternal Treasury
+ * @title Contract for the Eternal Treasury
  * @author Nobody (me)
  * @notice The Eternal Treasury contract holds all treasury logic
  */
@@ -119,7 +119,7 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
 /////–––««« Variable state-inspection functions »»»––––\\\\\
 
     /**
-     * @dev View the address of the ETRNL/AVAX pair on Trader Joe.
+     * @notice View the address of the ETRNL/AVAX pair on Trader Joe.
      */
     function viewPair() external view override returns(address) {
         return joePair;
@@ -128,7 +128,7 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
 /////–––««« Reserve Utility functions »»»––––\\\\\
 
     /**
-     * @dev Converts a given staked amount to the "reserve" number space
+     * @notice Converts a given staked amount to the "reserve" number space
      * @param amount The specified staked amount
      */
     function convertToReserve(uint256 amount) private view returns(uint256) {
@@ -137,7 +137,7 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
     }
 
     /**
-     * @dev Converts a given reserve amount to the regular number space (staked)
+     * @notice Converts a given reserve amount to the regular number space (staked)
      * @param reserveAmount The specified reserve amount
      */
     function convertToStaked(uint256 reserveAmount) private view returns(uint256) {
@@ -161,7 +161,7 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
 /////–––««« Gage-logic functions »»»––––\\\\\
 
     /**
-     * @dev Funds a given liquidity gage with ETRNL, provides liquidity using ETRNL and the receiver's asset and transfers a bonus to the receiver
+     * @notice Funds a given liquidity gage with ETRNL, provides liquidity using ETRNL and the receiver's asset and transfers a bonus to the receiver
      * @param gage The address of the specified liquidity gage
      * @param receiver The address of the receiver
      * @param asset The address of the asset provided by the receiver
@@ -231,7 +231,7 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
 /////–––««« Staking-logic functions »»»––––\\\\\
 
     /**
-     * @dev Stakes a given amount of ETRNL into the treasury
+     * @notice Stakes a given amount of ETRNL into the treasury
      * @param amount The specified amount of ETRNL being staked
      * 
      * Requirements:
@@ -257,7 +257,7 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
     }
 
     /**
-     * @dev Unstakes a user's given amount of ETRNL and transfers the user's accumulated rewards
+     * @notice Unstakes a user's given amount of ETRNL and transfers the user's accumulated rewards
      * @param amount The specified amount of ETRNL being unstaked
      * 
      * Requirements:
@@ -286,7 +286,7 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
 /////–––««« Automatic liquidity provision functions »»»––––\\\\\
 
     /**
-     * @dev Swaps a given amount of ETRNL for AVAX using Trader Joe. (Used for auto-liquidity swaps)
+     * @notice Swaps a given amount of ETRNL for AVAX using Trader Joe. (Used for auto-liquidity swaps)
      * @param amount The amount of ETRNL to be swapped for AVAX
      */
     function swapTokensForAVAX(uint256 amount, uint256 reserveETRNL, uint256 reserveAVAX) private {
@@ -304,7 +304,7 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
     }
 
     /**
-     * @dev Provides liquidity to the ETRNL/AVAX pair on Trader Joe for the EternalToken contract.
+     * @notice Provides liquidity to the ETRNL/AVAX pair on Trader Joe for the EternalToken contract.
      * @param contractBalance The contract's ETRNL balance
      *
      * Requirements:
@@ -322,7 +322,7 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
     } 
 
     /**
-     * @dev Converts half the contract's balance to AVAX and adds liquidity to the ETRNL/AVAX pair.
+     * @notice Converts half the contract's balance to AVAX and adds liquidity to the ETRNL/AVAX pair.
      * @param contractBalance The contract's ETRNL balance
      */
     function _provideLiquidity(uint256 contractBalance) private haltsLiquidityProvision() {
@@ -358,7 +358,7 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
 /////–––««« Fund-only functions »»»––––\\\\\
 
     /**
-     * @dev Transfers a given amount of AVAX from the contract to an address. (Fund only)
+     * @notice Transfers a given amount of AVAX from the contract to an address. (Fund only)
      * @param recipient The address to which the AVAX is to be sent
      * @param amount The specified amount of AVAX to transfer
      * 
@@ -375,7 +375,7 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
     }
 
     /**
-     * @dev Transfers a given amount of a token from the contract to an address. (Fund only)
+     * @notice Transfers a given amount of a token from the contract to an address. (Fund only)
      * @param asset The address of the asset being withdrawn
      * @param recipient The address to which the ETRNL is to be sent
      * @param amount The specified amount of ETRNL to transfer
@@ -386,7 +386,7 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
     }
 
     /**
-     * @dev Updates the address of the Eternal Factory contract
+     * @notice Updates the address of the Eternal Factory contract
      * @param newContract The new address for the Eternal Factory contract
      */
     function setEternalFactory(address newContract) external override onlyFund() {
@@ -394,7 +394,7 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
     }
 
     /**
-     * @dev Updates the address of the Eternal Token contract
+     * @notice Updates the address of the Eternal Token contract
      * @param newContract The new address for the Eternal Token contract
      */
     function setEternalToken(address newContract) external override onlyFund() {

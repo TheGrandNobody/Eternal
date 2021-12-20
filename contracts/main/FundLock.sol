@@ -32,7 +32,7 @@ contract FundLock {
     }
 
     /**
-     * @dev View the amount of tokens available based on the amount the supply has decreased by
+     * @notice View the amount of tokens available based on the amount the supply has decreased by
      */
     function viewAmountAvailable() public view returns(uint256) {
         uint256 deltaSupply = maxSupply - eternal.totalSupply();
@@ -40,7 +40,7 @@ contract FundLock {
     }
 
     /**
-     * @dev Withraws (part of) locked funds proportional to the deflation of the circulation supply of the token
+     * @notice Withraws (part of) locked funds proportional to the deflation of the circulation supply of the token
      */
     function withdrawFunds() external {
         uint256 amountWithdrawn = totalAmount - eternal.balanceOf(address(this));

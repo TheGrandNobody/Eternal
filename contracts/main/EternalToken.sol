@@ -91,7 +91,7 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
     } 
 
     /**
-     * @dev Initialize supplies and routers and create a pair. Mints total supply to the contract deployer. 
+     * @notice Initialize supplies and routers and create a pair. Mints total supply to the contract deployer. 
      * Exclude some addresses from fees and/or rewards. Sets initial rate values.
      */
     function initialize() external onlyAdmin() {
@@ -121,13 +121,13 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
         eternalStorage.setUint(entity, liquidityProvisionRate, 1500);
 
         //Initialize the transaction count time tracker
-        eternalStorage.setUint(entity, oneDayFromNow, block.timestamp + 86400);
+        eternalStorage.setUint(entity, oneDayFromNow, block.timestamp + 1 days);
     }
 
 /////–––««« Variable state-inspection functions »»»––––\\\\\
 
     /**
-     * @dev View the name of the token. 
+     * @notice View the name of the token. 
      * @return The token name
      */
     function name() external pure override returns (string memory) {
@@ -135,7 +135,7 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
     }
 
     /**
-     * @dev View the token ticker.
+     * @notice View the token ticker.
      * @return The token ticker
      */
     function symbol() external pure override returns (string memory) {
@@ -143,7 +143,7 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
     }
 
     /**
-     * @dev View the maximum number of decimals for the Eternal token.
+     * @notice View the maximum number of decimals for the Eternal token.
      * @return The number of decimals
      */
     function decimals() external pure override returns (uint8) {
@@ -151,7 +151,7 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
     }
     
     /**
-     * @dev View the total supply of the Eternal token.
+     * @notice View the total supply of the Eternal token.
      * @return Returns the total ETRNL supply.
      */
     function totalSupply() external view override returns (uint256){
@@ -159,7 +159,7 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
     }
 
     /**
-     * @dev View the balance of a given user's address.
+     * @notice View the balance of a given user's address.
      * @param account The address of the user
      * @return The balance of the account
      */
@@ -171,7 +171,7 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
     }
 
     /**
-     * @dev View the allowance of a given owner address for a given spender address.
+     * @notice View the allowance of a given owner address for a given spender address.
      * @param owner The address of whom we are checking the allowance of
      * @param spender The address of whom we are checking the allowance for
      * @return The allowance of the owner for the spender
@@ -181,7 +181,7 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
     }
 
     /**
-     * @dev Computes the current rate used to inter-convert from the mathematically reflected space to the "true" or total space.
+     * @notice Computes the current rate used to inter-convert from the mathematically reflected space to the "true" or total space.
      * @return The ratio of net reflected ETRNL to net total ETRNL
      */
     function getReflectionRate() public view override returns (uint256) {
@@ -192,7 +192,7 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
 /////–––««« IERC20/ERC20 functions »»»––––\\\\\
 
     /**
-     * @dev Tranfers a given amount of ETRNL to a given receiver address.
+     * @notice Tranfers a given amount of ETRNL to a given receiver address.
      * @param recipient The destination to which the ETRNL are to be transferred
      * @param amount The amount of ETRNL to be transferred
      * @return True if the transfer is successful.
@@ -204,7 +204,7 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
     }
 
     /**
-     * @dev Sets the allowance for a given address to a given amount.
+     * @notice Sets the allowance for a given address to a given amount.
      * @param spender The address of whom we are changing the allowance for
      * @param amount The amount we are changing the allowance to
      * @return True if the approval is successful.
@@ -216,7 +216,7 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
     }
 
     /**
-     * @dev Transfers a given amount of ETRNL for a given sender address to a given recipient address.
+     * @notice Transfers a given amount of ETRNL for a given sender address to a given recipient address.
      * @param sender The address whom we withdraw the ETRNL from
      * @param recipient The address which shall receive the ETRNL
      * @param amount The amount of ETRNL which is being transferred
@@ -237,7 +237,7 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
     }
 
     /**
-     * @dev Sets the allowance of a given owner address for a given spender address to a given amount.
+     * @notice Sets the allowance of a given owner address for a given spender address to a given amount.
      * @param owner The adress of whom we are changing the allowance of
      * @param spender The address of whom we are changing the allowance for
      * @param amount The amount which we change the allowance to
@@ -257,7 +257,7 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
     }
 
     /**
-     * @dev Transfers a given amount of ETRNL from a given sender's address to a given recipient's address.
+     * @notice Transfers a given amount of ETRNL from a given sender's address to a given recipient's address.
      * @param sender The address of whom the ETRNL will be transferred from
      * @param recipient The address of whom the ETRNL will be transferred to
      * @param amount The amount of ETRNL to be transferred
@@ -319,7 +319,7 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
             // Else update alpha, and reset the transaction count and 24h period tracker
             eternalStorage.setUint(entity, alpha, currentCount);
             eternalStorage.setUint(entity, transactionCount, amount);
-            eternalStorage.setUint(entity, oneDayFromNow, block.timestamp + 84600);
+            eternalStorage.setUint(entity, oneDayFromNow, block.timestamp + 1 days);
         }
 
         // Adjust the total reflected supply for the new fees
@@ -344,7 +344,7 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
     }
 
     /**
-     * @dev Burns a given amount of ETRNL.
+     * @notice Burns a given amount of ETRNL.
      * @param amount The amount of ETRNL being burned
      * @return True if the burn is successful
      *
@@ -379,7 +379,7 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
     }
     
     /**
-     * @dev Burns the specified amount of ETRNL for a given sender by sending them to the 0x0 address.
+     * @notice Burns the specified amount of ETRNL for a given sender by sending them to the 0x0 address.
      * @param sender The specified address burning ETRNL
      * @param amount The amount of ETRNL being burned
      * @param reflectedAmount The reflected equivalent of ETRNL being burned
@@ -406,7 +406,7 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
 /////–––««« Reward-redistribution functions »»»––––\\\\\
 
     /**
-     * @dev Translates a given reflected sum of ETRNL into the true amount of ETRNL it represents based on the current reserve rate.
+     * @notice Translates a given reflected sum of ETRNL into the true amount of ETRNL it represents based on the current reserve rate.
      * @param reflectedAmount The specified reflected sum of ETRNL
      * @return The true amount of ETRNL representing by its reflected amount
      */
@@ -417,7 +417,7 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
     }
 
     /**
-     * @dev Compute the reflected and net reflected transferred amounts and the net transferred amount from a given amount of ETRNL.
+     * @notice Compute the reflected and net reflected transferred amounts and the net transferred amount from a given amount of ETRNL.
      * @param trueAmount The specified amount of ETRNL
      * @return The reflected amount, the net reflected transfer amount, the actual net transfer amount, and the total reflected fees
      */
@@ -444,7 +444,7 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
     }
 
     /**
-     * @dev Computes the net reflected and total token supplies (adjusted for non-reward-accruing accounts).
+     * @notice Computes the net reflected and total token supplies (adjusted for non-reward-accruing accounts).
      * @return The adjusted reflected supply and adjusted total token supply
      */
     function getNetSupplies() private view returns(uint256, uint256) {
@@ -474,7 +474,7 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
     }
 
     /**
-     * @dev Updates the contract's balance regarding the liquidity provision fee for a given transaction's amount.
+     * @notice Updates the contract's balance regarding the liquidity provision fee for a given transaction's amount.
      * If the contract's balance threshold is reached, also initiates automatic liquidity provision.
      * @param sender The address of whom the ETRNL is being transferred from
      * @param amount The amount of ETRNL being transferred
@@ -501,7 +501,7 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
 /////–––««« Owner/Fund-only functions »»»––––\\\\\
 
     /**
-     * @dev Excludes a given wallet or contract's address from accruing rewards. (Admin and Fund only)
+     * @notice Excludes a given wallet or contract's address from accruing rewards. (Admin and Fund only)
      * @param account The wallet or contract's address
      *
      * Requirements:
@@ -522,7 +522,7 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
     }
 
     /**
-     * @dev Allows a given wallet or contract's address to accrue rewards. (Admin and Fund only)
+     * @notice Allows a given wallet or contract's address to accrue rewards. (Admin and Fund only)
      * @param account The wallet or contract's address
      *
      * Requirements:
@@ -543,7 +543,7 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
     }
 
     /**
-     * @dev Updates the address of the Eternal Treasury contract
+     * @notice Updates the address of the Eternal Treasury contract
      * @param newContract The new address for the Eternal Treasury contract
      */
     function setEternalTreasury(address newContract) external override onlyAdminAndFund() {
@@ -551,7 +551,7 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
     }
 
     /**
-     * @dev Attributes a given address to the Eternal Fund variable in this contract. (Admin and Fund only)
+     * @notice Attributes a given address to the Eternal Fund variable in this contract. (Admin and Fund only)
      * @param _fund The specified address of the designated fund
      */
     function designateFund(address _fund) external override onlyAdminAndFund() {
@@ -567,7 +567,7 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
         uint256 nCheckpoints = eternalStorage.getUint(entity, keccak256(abi.encodePacked("numCheckpoints", account)));
         return eternalStorage.getUint(entity, keccak256(abi.encodePacked("votes", account, nCheckpoints - 1)));
     }
-
+/////–––««« Governance-related functions »»»––––\\\\\
     /**
      * @notice Determine the number of votes of a given account prior to a given block
      * @param account The address of specified account
