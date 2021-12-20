@@ -129,6 +129,7 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
     /**
      * @notice Converts a given staked amount to the "reserve" number space
      * @param amount The specified staked amount
+     * @return The reserve number space of the staked amount
      */
     function convertToReserve(uint256 amount) private view returns(uint256) {
         uint256 currentRate = eternalStorage.getUint(entity, reserveStakedBalances) / eternalStorage.getUint(entity, totalStakedBalances);
@@ -138,12 +139,23 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
     /**
      * @notice Converts a given reserve amount to the regular number space (staked)
      * @param reserveAmount The specified reserve amount
+     * @return The regular number space value of the reserve amount
      */
     function convertToStaked(uint256 reserveAmount) private view returns(uint256) {
         uint256 currentRate = eternalStorage.getUint(entity, reserveStakedBalances) / eternalStorage.getUint(entity, totalStakedBalances);
         return reserveAmount / currentRate;
     }
 
+    /**
+     * @notice Computes the equivalent of an asset to an other asset and the minimum amount of the two needed to provide liquidity
+     * @param asset The first specified asset, which we want to convert 
+     * @param otherAsset The other specified asset
+     * @param amountAsset The amount of the first specified asset
+     * @param uncertainty The minimum loss to deduct from each minimum in case of price changes
+     * @return minOtherAsset The minimum amount of otherAsset needed to provide liquidity (not given if uncertainty = 0)
+     * @return minAsset The minimum amount of Asset needed to provide liquidity (not given if uncertainty = 0)
+     * @return amountOtherAsset The equivalent in otherAsset of the given amount of asset
+     */
     function computeMinAmounts(address asset, address otherAsset, uint256 amountAsset, uint256 uncertainty) private view returns(uint256 minOtherAsset, uint256 minAsset, uint256 amountOtherAsset) {
         // Get the reserve ratios for the Asset-otherAsset pair
         (uint256 reserveA, uint256 reserveB,) = IJoePair(joeFactory.getPair(asset, otherAsset)).getReserves();
@@ -196,6 +208,12 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
         eternal.transfer(receiver, providedETRNL * dRisk / (10 ** 4));
     }
 
+    /**
+     * @notice Settles a given ETRNL liquid gage
+     * @param receiver The address of the receiver
+     * @param id The id of the specified liquid gage
+     * @param winner Whether the gage closed in favor of the receiver or not
+     */
     function settleEternalLiquidGage(address receiver, uint256 id, bool winner) external override {
         bytes32 factory = keccak256(abi.encodePacked(address(eternalFactory)));
         address gageAddress = eternalStorage.getAddress(factory, keccak256(abi.encodePacked("gages", id)));
