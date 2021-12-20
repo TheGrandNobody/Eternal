@@ -144,17 +144,17 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
         return reserveAmount / currentRate;
     }
 
-    function computeMinAmounts(address asset, address otherAsset, uint256 amountAsset, uint256 uncertainty) private view returns(uint256, uint256, uint256) {
+    function computeMinAmounts(address asset, address otherAsset, uint256 amountAsset, uint256 uncertainty) private view returns(uint256 minOtherAsset, uint256 minAsset, uint256 amountOtherAsset) {
         // Get the reserve ratios for the Asset-otherAsset pair
         (uint256 reserveA, uint256 reserveB,) = IJoePair(joeFactory.getPair(asset, otherAsset)).getReserves();
         (uint256 reserveAsset, uint256 reserveOtherAsset) = asset < otherAsset ? (reserveA, reserveB) : (reserveB, reserveA);
         // Determine a reasonable minimum amount of asset and otherAsset based on current reserves (with a tolerance =  1 / uncertainty)
-        uint256 amountOtherAsset = joeRouter.quote(amountAsset, reserveAsset, reserveOtherAsset);
-        uint256 minAsset = joeRouter.quote(amountOtherAsset, reserveOtherAsset, reserveAsset);
-        uint256 minOtherAsset = amountOtherAsset - (amountOtherAsset / uncertainty);
-        minAsset -= minAsset / uncertainty;
-
-        return (minOtherAsset, minAsset, amountOtherAsset);
+        amountOtherAsset = joeRouter.quote(amountAsset, reserveAsset, reserveOtherAsset);
+        if (uncertainty != 0) {
+            minAsset = joeRouter.quote(amountOtherAsset, reserveOtherAsset, reserveAsset);
+            minAsset -= minAsset / uncertainty;
+            minOtherAsset = amountOtherAsset - (amountOtherAsset / uncertainty);
+        }
     }
 
 /////–––««« Gage-logic functions »»»––––\\\\\
@@ -258,9 +258,9 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
     }
 
     /**
-     * @notice Unstakes a user's given amount of ETRNL and transfers the user's accumulated rewards
+     * @notice Unstakes a user's given amount of ETRNL and transfers the user's accumulated rewards in terms of a given asset
      * @param amount The specified amount of ETRNL being unstaked
-     * @param asset The asset
+     * @param asset The specified asset which the rewards are transferred in
      * 
      * Requirements:
      *
@@ -270,6 +270,7 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
         bytes32 stakedBalances = keccak256(abi.encodePacked("stakedBalances", _msgSender()));
         uint256 stakedBalance = eternalStorage.getUint(entity, stakedBalances);
         require(amount <= stakedBalance , "Amount exceeds staked balance");
+        require(IERC20(asset).balanceOf(address(this)) > 0, "Asset not in reserves");
 
         emit Unstake(_msgSender(), amount);
         // Update user/total staked and reserve balances
