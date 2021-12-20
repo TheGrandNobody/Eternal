@@ -6,7 +6,7 @@ import "../interfaces/IEternalFactory.sol";
 import "../interfaces/IEternalStorage.sol";
 import "../interfaces/IEternalTreasury.sol";
 import "../interfaces/ILoyaltyGage.sol";
-import "./LoyaltyGage.sol";
+import "../gages/LoyaltyGage.sol";
 import "../inheritances/OwnableEnhanced.sol";
 
 /**

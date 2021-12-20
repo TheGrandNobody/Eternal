@@ -5,7 +5,7 @@ import "../interfaces/ITimelock.sol";
 
 /**
  * @title Timelock contract 
- * @author Taken from Compound (COMP) and tweaked/detailed by Nobody (me)
+ * @author Taken from Compound Finance (COMP) and tweaked/detailed by Nobody (me)
  * @notice A timelock contract queues and executes proposals made through the Eternal Fund contract
  */
  contract Timelock is ITimelock {
