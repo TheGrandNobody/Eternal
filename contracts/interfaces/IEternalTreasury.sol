@@ -13,8 +13,8 @@ interface IEternalTreasury {
     function settleEternalLiquidGage(address receiver, uint256 id, bool winner) external;
     // Stake a given amount of ETRNL
     function stake(uint256 amount) external;
-    // Unstake a given amount of ETRNL and withdraw any associated rewards
-    function unstake(uint256 amount) external;
+    // Unstake a given amount of ETRNL and withdraw any associated rewards in terms of the desired reserve asset
+    function unstake(uint256 amount, address asset) external;
     // View the ETRNL/AVAX pair address
     function viewPair() external view returns(address);
     // Provides liquidity for the ETRNL/AVAX pair for the ETRNL token contract

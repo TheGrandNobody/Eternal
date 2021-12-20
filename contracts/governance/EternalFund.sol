@@ -1,6 +1,8 @@
 //SPDX-License-Identifier: MIT
 pragma solidity 0.8.0;
 
+import "../interfaces/IEternalToken.sol";
+
 /**
  * @title The Eternal Fund contract
  * @author Taken from Compound Finance (COMP) and tweaked/detailed by Nobody (me)
@@ -13,10 +15,10 @@ contract EternalFund {
     string public constant name = "Eternal Fund";
 
     /// @notice The number of votes required in order for a voter to become a proposer
-    function proposalThreshold() public pure returns (uint256) { return 1_000_000e18; } // 
+    function proposalThreshold() public pure returns (uint256) { return (10 ** ) * (10 ** 18); } // 
 
     /// @notice The maximum number of actions that can be included in a proposal
-    function proposalMaxOperations() public pure returns (uint256) { return 10; } // 10 actions
+    function proposalMaxOperations() public pure returns (uint256) { return 15; }
 
     /// @notice The delay before voting on a proposal may take place, once proposed
     function votingDelay() public pure returns (uint256) { return 1 days; }
