@@ -47,8 +47,10 @@ contract EternalFactory is IEternalFactory, OwnableEnhanced {
     // The number of liquid gages that can possibly be active at a time
     bytes32 public immutable liquidGageLimit;
 
-///---*****  Variables: Constants *****---\\\ 
+///---*****  Variables: Constants and Factors *****---\\\ 
     // The holding time constant used in the percent change condition calculation (decided by the Eternal Fund) (x 10 ** 6)
+    bytes32 public immutable timeFactor;
+    // The average amount of time that users provide liquidity for
     bytes32 public immutable timeConstant;
     // The risk constant used in the calculation of the treasury's risk (x 10 ** 4)
     bytes32 public immutable riskConstant;
@@ -65,6 +67,7 @@ contract EternalFactory is IEternalFactory, OwnableEnhanced {
         // Initialize keccak256 hashes
         entity = keccak256(abi.encodePacked(address(this)));
         lastId = keccak256(abi.encodePacked("lastId"));
+        timeFactor = keccak256(abi.encodePacked("timeFactor"));
         timeConstant = keccak256(abi.encodePacked("timeConstant"));
         riskConstant = keccak256(abi.encodePacked("riskConstant"));
         baseline = keccak256(abi.encodePacked("baseline"));
@@ -75,8 +78,9 @@ contract EternalFactory is IEternalFactory, OwnableEnhanced {
     function initialize(address _treasury) external onlyAdmin() {
         // Set the initial treasury interface
         eternalTreasury = IEternalTreasury(_treasury);
-        // Set initial constants
-        eternalStorage.setUint(entity, timeConstant, 2 * (10 ** 6));
+        // Set initial constants and factors
+        eternalStorage.setUint(entity, timeFactor, 2 * (10 ** 6));
+        eternalStorage.setUint(entity, timeConstant, 15);
         eternalStorage.setUint(entity, riskConstant, 100);
         // Set initial baseline
         eternalStorage.setUint(entity, baseline, 10 ** 6);
@@ -104,7 +108,9 @@ contract EternalFactory is IEternalFactory, OwnableEnhanced {
             alpha = eternalStorage.getUint(entity, baseline);
         }
         uint256 burnRate = eternalStorage.getUint(eternalToken, keccak256(abi.encodePacked("burnRate")));
-        uint256 percent = burnRate * alpha * (10 ** 18) * eternalStorage.getUint(entity, timeConstant) * 15 / eternal.totalSupply();
+        uint256 _timeConstant = eternalStorage.getUint(entity, timeConstant);
+        uint256 _timeFactor = eternalStorage.getUint(entity, timeFactor);
+        uint256 percent = burnRate * alpha * (10 ** 18) * _timeConstant * _timeFactor / eternal.totalSupply();
 
         // Incremement the lastId tracker and the number of active liquid gages
         uint256 idLast = eternalStorage.getUint(entity, lastId) + 1;
