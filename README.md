@@ -10,6 +10,8 @@ Eternal is the world's first long-termist decentralized gaging platform, **aimin
 
 However Eternal is **not a company** and **not owned by anyone except for its token holders.** Even the company Eternal Finance B.V and the architect Nobody, hold no initial stake in Eternal.
 
+More than that, Eternal is an attempt at demonstrating the significant advantages of neo-long-termist strategies. We begin doing so by **giving you the opportunity to provide liquidity at a 50% discount and gain instant profits, simultaneously, whilst remaining economically sustainable**.&#x20;
+
 ## What is short-termism?
 
 Short-termism is **the habit of focusing on short-term results at the cost of long-term gain**. For instance, take an individual trying to earn money as fast as possible, paying no attention to risk, or another who only eats takeaway, ignoring their health.&#x20;
@@ -66,13 +68,13 @@ But that is not the end of it.
 
 ## Is a loyalty gage the same as a bond?
 
-No, a bond is a loan made by an investor to an entity, usually a firm. While bonds may initially sound similar to a loyalty gage in that they are both long-term financial instruments, they are entirely different.&#x20;
+No, a bond is a loan made by an investor to an entity, usually a firm or government. While bonds may initially sound similar to a loyalty gage in that they are both long-term financial instruments, they are entirely different.&#x20;
 
 1. **Bonds have a fixed period of maturation (vesting period).** **Loyalty gages are completely flexible** **and allow the liquidity providers to withdraw their liquidity whenever they  wish to do so**, penalizing them rather than forcing them into an involuntary choice.
 2. **Bonds yield interest over time to the investor. This entails relatively small rewards distributed over time,** as the full value of the interest is distributed by the end of the maturation period.  **Loyalty gages offer the investor a relatively large, instantaneous bonus percentage** **as well as an additional relatively large bonus** if the investor maintains his promise of long-termism.
 3. **Bonds do not fix the issue of short-termism in investors.** Forcing a vesting period onto investors does not change their short-termist psychology over time. From a behavioral psychology standpoint, forcing anything onto anyone is an unsustainable way to change them in the long-term. **A loyalty gage promotes long-term culture through the creation of a symbiotic relationship between any given investor and  asset-distributing entity.** No one is forced to do anything, but there are consequences which discourage anyone from acting poorly, and rewards which encourage anyone who acts virtuously.
 
-## What about a gage in general, is it similar financial instrument X (bonds, warrants, etc)?
+## What about a gage in general, is it similar to financial instrument X (bonds, warrants, etc)?
 
 No, gages are a different,  much larger class of long-term financial instruments of their own, which are particularly adept in establishing harmonious dynamics between entities.
 
