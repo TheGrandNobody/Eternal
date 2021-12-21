@@ -578,7 +578,7 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
      * 
      * - The given block must be finalized
      */
-    function getPriorVotes(address account, uint256 blockNumber) external view returns (uint256) {
+    function getPriorVotes(address account, uint256 blockNumber) external view override returns (uint256) {
         require(blockNumber < block.number, "Block is not yet finalized");
         uint256 nCheckpoints = eternalStorage.getUint(entity, keccak256(abi.encodePacked("numCheckpoints", account)));
 
@@ -613,7 +613,7 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
      * @notice Delegates the message sender's vote balance to a given user
      * @param delegatee The address of the user to whom the vote balance is being added to
      */
-    function delegate(address delegatee) external {
+    function delegate(address delegatee) external override {
         bytes32 _delegate = keccak256(abi.encodePacked("delegates", _msgSender()));
         address currentDelegate = eternalStorage.getAddress(entity, _delegate);
         uint256 delegatorBalance = balanceOf(_msgSender());
