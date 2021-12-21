@@ -1,5 +1,5 @@
 //SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity 0.8.0;
 
 import "../interfaces/IEternalToken.sol";
 
@@ -11,7 +11,7 @@ import "../interfaces/IEternalToken.sol";
 contract FundLock {
 
     // The Eternal Token interface
-    IEternalToken private immutable eternal;
+    IEternalToken public immutable eternal;
 
     // The address of the recipient
     address public immutable recipient;
@@ -26,13 +26,13 @@ contract FundLock {
     constructor (address _eternal, address _recipient, uint256 _totalAmount, uint256 _maxSupply, uint256 _gamma) {
         eternal = IEternalToken(_eternal);
         recipient = _recipient;
-        totalAmount = _totalAmount * (10 ** 9);
+        totalAmount = _totalAmount * (10 ** 18);
         maxSupply = _maxSupply;
         gamma = _gamma;
     }
 
     /**
-     * @dev View the amount of tokens available based on the amount the supply has decreased by
+     * @notice View the amount of tokens available based on the amount the supply has decreased by
      */
     function viewAmountAvailable() public view returns(uint256) {
         uint256 deltaSupply = maxSupply - eternal.totalSupply();
@@ -40,10 +40,10 @@ contract FundLock {
     }
 
     /**
-     * @dev Withraws (part of) locked funds proportional to the deflation of the circulation supply of the token
+     * @notice Withraws (part of) locked funds proportional to the deflation of the circulation supply of the token
      */
     function withdrawFunds() external {
         uint256 amountWithdrawn = totalAmount - eternal.balanceOf(address(this));
-        eternal.transfer(recipient, viewAmountAvailable() - amountWithdrawn);
+        require(eternal.transfer(recipient, viewAmountAvailable() - amountWithdrawn), "Failed to withdraw funds");
     }
 }

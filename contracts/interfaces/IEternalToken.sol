@@ -1,5 +1,5 @@
 //SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity 0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
@@ -19,27 +19,21 @@ interface IEternalToken is IERC20, IERC20Metadata {
         Burn
     }
     
-    // Sets the value of any given rate
-    function setRate(Rate rate, uint16 newRate) external;
-    // Sets the address of the Eternal Liquidity contract
-    function setEternalLiquidity(address newContract) external;
-    // Sets the liquidity threshold to a given value
-    function setLiquidityThreshold(uint256 value) external;
-    // Designates a new Eternal DAO address
+    // Sets the address of the Eternal Treasury contract
+    function setEternalTreasury(address newContract) external;
+    // Designates a new Eternal Fund address
     function designateFund(address fund) external;
     // View the rate used to convert between the reflection and true token space
     function getReflectionRate() external view returns (uint256);
-    // View whether an address is excluded from the transaction fees
-    function isExcludedFromFee(address account) external view returns (bool);
-    // View whether an address is excluded from rewards
-    function isExcludedFromReward(address account) external view returns (bool);
-    // View the total fee
-    function viewTotalRate() external view returns (uint256);
+    // Delegates the message sender's vote balance to a given user
+    function delegate(address delegatee) external;
+    // Determine the number of votes of a given account prior to a given block
+    function getPriorVotes(address account, uint256 blockNumber) external view returns (uint256);
 
     // Signals a change of value of a given rate in the Eternal Token contract
     event UpdateRate(uint256 oldRate, uint256 newRate, Rate rate);
-    // Signals a change of address for the Eternal Liquidity contract
-    event UpdateEternalLiquidity(address indexed oldContract, address indexed newContract);
     // Signals a change of value of the token liquidity threshold
     event UpdateLiquidityThreshold(uint256 oldThreshold, uint256 newThreshold);
+    event DelegateChanged(address indexed delegator, address indexed fromDelegate, address indexed toDelegate);
+    event DelegateVotesChanged(address indexed delegate, uint256 previousBalance, uint256 newBalance);
 }
