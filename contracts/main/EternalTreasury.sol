@@ -205,7 +205,7 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
         eternalStorage.setUint(entity, keccak256(abi.encodePacked("liquidity", receiver, asset)), liquidity);
         // Initialize the liquid gage and transfer the user's instant reward
         ILoyaltyGage(gage).initialize(asset, address(eternal), userAmount, providedETRNL, rRisk, dRisk);
-        eternal.transfer(receiver, providedETRNL * dRisk / (10 ** 4));
+        require(eternal.transfer(receiver, providedETRNL * dRisk / (10 ** 4)), "Failed to transfer bonus");
     }
 
     /**
@@ -231,7 +231,7 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
         uint256 eternalRewards = amountETRNL > dAmount ? amountETRNL - dAmount : 0;
         uint256 eternalFee = eternalStorage.getUint(entity, feeRate) * providedAsset / (10 ** 5);
         if (winner) {
-            eternal.transfer(receiver, amountETRNL * dRisk / (10 ** 4));
+            require(eternal.transfer(receiver, amountETRNL * dRisk / (10 ** 4)), "Failed to transfer ETRNL reward");
             // Compute the net liquidity rewards left to distribute to stakers
             //solhint-disable-next-line reentrancy
             eternalRewards -= eternalRewards * dRisk / (10 ** 4);
@@ -241,7 +241,7 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
             //solhint-disable-next-line reentrancy
             eternalRewards = amountETRNL * rRisk / (10 ** 4);
         }
-        IERC20(rAsset).transfer(receiver, amountAsset - eternalFee);
+        require(IERC20(rAsset).transfer(receiver, amountAsset - eternalFee), "Failed to transfer ERC20 reward");
         // Update staker's fees w.r.t the gage fee, gage rewards and liquidity rewards
         uint256 totalFee = eternalRewards + (dAmount * eternalStorage.getUint(entity, feeRate) / (10 ** 5));
         eternalStorage.setUint(entity, reserveStakedBalances, eternalStorage.getUint(entity, reserveStakedBalances) - convertToReserve(totalFee));
