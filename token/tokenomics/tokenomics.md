@@ -18,7 +18,7 @@ Following Eternal's pledge of being created by the people, for the people, a fai
 * 5% reserved for the private sale
 
 {% hint style="info" %}
-**Leftover tokens from the IGO and seed and private sales are sent to the Eternal Fund.**
+**Leftover tokens from the IGO are sent to the Eternal Fund.**
 {% endhint %}
 
 ### Seed/Private Investor Vesting Schedules
