@@ -83,7 +83,7 @@ contract EternalFactory is IEternalFactory, OwnableEnhanced {
         eternalStorage.setUint(entity, timeConstant, 15);
         eternalStorage.setUint(entity, riskConstant, 100);
         // Set initial baseline
-        eternalStorage.setUint(entity, baseline, 10 ** 6);
+        eternalStorage.setUint(entity, baseline, 10 ** 5);
     }
     
 /////–––««« Gage-logic functions »»»––––\\\\\
@@ -93,7 +93,7 @@ contract EternalFactory is IEternalFactory, OwnableEnhanced {
      * @param asset The address of the asset being deposited in the liquid gage by the receiver
      * @param amount The amount of the asset being deposited in the liquid gage by the receiver
      */
-    function initiateEternalLiquidGage(address asset, uint256 amount) external override returns(uint256) {
+    function initiateEternalLiquidGage(address asset, uint256 amount) external payable override returns(uint256) {
         uint256 liquidGages = eternalStorage.getUint(entity, totalLiquidGages);
         uint256 gageLimit = eternalStorage.getUint(entity, liquidGageLimit);
         require(asset != address(eternal), "Receiver can't deposit ETRNL");
@@ -123,13 +123,13 @@ contract EternalFactory is IEternalFactory, OwnableEnhanced {
         emit NewGage(idLast, address(newGage));
         eternalStorage.setAddress(entity, keccak256(abi.encodePacked("gages", idLast)), address(newGage));
 
-        //Transfer the deposit to the treasury
-        require(IERC20(asset).transferFrom(_msgSender(), address(eternalTreasury), amount), "Failed to deposit asset");
-        // Calculate risk and join the gage for the user and the treasury
+        //Transfer the deposit to the treasury, calculate risk and join the gage for the user and the treasury
         uint256 userRisk = eternalStorage.getUint(entity, keccak256(abi.encodePacked("risk", asset)));
         uint256 treasuryRisk = userRisk - eternalStorage.getUint(entity, riskConstant);
-        eternalTreasury.fundEternalLiquidGage(address(newGage), _msgSender(), asset, amount, userRisk, treasuryRisk);
-
+        if (msg.value == 0) {
+            require(IERC20(asset).transferFrom(_msgSender(), address(eternalTreasury), amount), "Failed to deposit asset");
+        }
+        eternalTreasury.fundEternalLiquidGage{value: msg.value}(address(newGage), _msgSender(), asset, amount, userRisk, treasuryRisk);
         return idLast;
     }
 

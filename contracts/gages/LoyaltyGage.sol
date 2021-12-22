@@ -115,7 +115,7 @@ contract LoyaltyGage is Gage, ILoyaltyGage {
         uint256 deltaSupply = inflationary ? (assetOfReference.totalSupply() - totalSupply) : (totalSupply - assetOfReference.totalSupply());
         uint256 percentChange = deltaSupply * (10 ** 11) / totalSupply;
         bool winner = percentChange >= percent;
-
-        treasury.settleEternalLiquidGage(receiver, id, winner);
+        emit GageClosed(id, winner);
+        treasury.settleGage(receiver, id, winner);
     }
 }

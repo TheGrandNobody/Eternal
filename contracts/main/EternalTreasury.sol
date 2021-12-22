@@ -21,14 +21,14 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
 
     // The Trader Joe router interface
     IJoeRouter02 public immutable joeRouter;
+    // The Trader Joe factory interface
+    IJoeFactory private immutable joeFactory;
     // The Eternal shared storage interface
     IEternalStorage public immutable eternalStorage;
     // The Eternal factory interface
     IEternalFactory private eternalFactory;
     // The Eternal token interface
     IEternalToken private eternal;
-    // The Trader Joe factory interface
-    IJoeFactory private joeFactory;
 
     // The address of the ETRNL/AVAX pair
     address private joePair;
@@ -80,6 +80,10 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
         // Initialize the Trader Joe router
         IJoeRouter02 _joeRouter = IJoeRouter02(0x60aE616a2155Ee3d9A68541Ba4544862310933d4);
         joeRouter = _joeRouter;
+        IJoeFactory _joeFactory = IJoeFactory(_joeRouter.factory());
+        joeFactory = _joeFactory;
+        // Create pair address
+        joePair = _joeFactory.createPair(address(eternal), _joeRouter.WAVAX());
 
         // Initialize keccak256 hashes
         entity = keccak256(abi.encodePacked(address(this)));
@@ -97,12 +101,9 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
         uint256 totalStake = eternal.balanceOf(address(this));
         eternalStorage.setUint(entity, totalStakedBalances, totalStake);
         eternalStorage.setUint(entity, reserveStakedBalances, (max - (max % totalStake)));
-        // Create pair address
-        joePair = IJoeFactory(joeRouter.factory()).createPair(address(eternal), joeRouter.WAVAX());
         eternalStorage.setBool(entity, autoLiquidityProvision, true);
         // Set initial feeRate
         eternalStorage.setUint(entity, feeRate, 500);
-        joeFactory = IJoeFactory(joeRouter.factory());
     }
 
 /////–––««« Modifiers »»»––––\\\\\
@@ -185,7 +186,7 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
      * - Only callable by the Eternal Platform
      * - Does not work with non-existent liquidity pairs
      */
-    function fundEternalLiquidGage(address gage, address receiver, address asset, uint256 userAmount, uint256 rRisk, uint256 dRisk) external override {
+    function fundEternalLiquidGage(address gage, address receiver, address asset, uint256 userAmount, uint256 rRisk, uint256 dRisk) external payable override {
         require(_msgSender() == address(eternalFactory), "msg.sender must be the platform");
         require(joeFactory.getPair(address(eternal), asset) != address(0), "Unable to find pair on Dex");
 
@@ -214,7 +215,7 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
      * @param id The id of the specified liquid gage
      * @param winner Whether the gage closed in favor of the receiver or not
      */
-    function settleEternalLiquidGage(address receiver, uint256 id, bool winner) external override {
+    function settleGage(address receiver, uint256 id, bool winner) external override {
         bytes32 factory = keccak256(abi.encodePacked(address(eternalFactory)));
         address gageAddress = eternalStorage.getAddress(factory, keccak256(abi.encodePacked("gages", id)));
         require(_msgSender() == gageAddress, "msg.sender must be the gage");
@@ -357,11 +358,11 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
         uint256 half = contractBalance / 2;
         uint256 amountETRNL = contractBalance - half;
 
-        // Capture the initial balance to later compute the difference
-        uint256 initialBalance = address(this).balance;
         // Get the reserve ratios for the ETRNL-AVAX pair
         (uint256 reserveA, uint256 reserveB,) = IJoePair(joePair).getReserves();
         (uint256 reserveETRNL, uint256 reserveAVAX) = address(eternal) < joeRouter.WAVAX() ? (reserveA, reserveB) : (reserveB, reserveA);
+        // Capture the initial balance to later compute the difference
+        uint256 initialBalance = address(this).balance;
         // Swap half the contract's ETRNL balance to AVAX
         swapTokensForAVAX(half, reserveETRNL, reserveAVAX);
         // Compute the amount of AVAX received from the swap

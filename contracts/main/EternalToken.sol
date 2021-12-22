@@ -94,16 +94,20 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
      * @notice Initialize supplies and routers and create a pair. Mints total supply to the contract deployer. 
      * Exclude some addresses from fees and/or rewards. Sets initial rate values.
      */
-    function initialize() external onlyAdmin() {
-
+    function initialize(address _eternalTreasury, address _offering) external onlyAdmin() {
+        eternalTreasury = IEternalTreasury(_eternalTreasury);
         // The largest possible number in a 256-bit integer
         uint256 max = ~uint256(0);
 
-        // Initialize total supplies, liquidity threshold and transfer total supply to the owner
+        // Initialize total supplies and liquidity threshold
         eternalStorage.setUint(entity, totalTokenSupply, (10 ** 10) * (10 ** 18));
-        eternalStorage.setUint(entity, totalReflectedSupply, (max - (max % ((10 ** 10) * (10 ** 18)))));
+        uint256 rSupply = (max - (max % ((10 ** 10) * (10 ** 18))));
+        eternalStorage.setUint(entity, totalReflectedSupply, rSupply);
         eternalStorage.setUint(entity, tokenLiquidityThreshold, (10 ** 10) * (10 ** 18) / 1000);
-        eternalStorage.setUint(entity, keccak256(abi.encodePacked("reflectedBalances", admin())), (max - (max % ((10**10) * (10 ** 18)))));
+        // Distribute supply (15% to admin to send to FundLock contracts, 42.5% to Treasury and 42.5% to the IGO contract)
+        eternalStorage.setUint(entity, keccak256(abi.encodePacked("reflectedBalances", admin())), rSupply * 15 / 100);
+        eternalStorage.setUint(entity, keccak256(abi.encodePacked("reflectedBalances", _offering)), rSupply * 425 / 1000);
+        eternalStorage.setUint(entity, keccak256(abi.encodePacked("reflectedBalances", _eternalTreasury)), rSupply * 425 / 1000);
 
         // Exclude the temporary admin address from rewards and fees
         excludeFromReward(admin());
@@ -113,6 +117,8 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
         eternalStorage.setBool(entity, keccak256(abi.encodePacked("isExcludedFromFees", address(this))), true);
         // Exclude the burn address from rewards
         excludeFromReward(address(0));
+        // Exclude the Eternal Treasury from fees
+        eternalStorage.setBool(entity, keccak256(abi.encodePacked("isExcludedFromFees", _eternalTreasury)), true);
 
         // Set initial rates for fees
         eternalStorage.setUint(entity, fundingRate, 500);
@@ -543,14 +549,6 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
     }
 
     /**
-     * @notice Updates the address of the Eternal Treasury contract
-     * @param newContract The new address for the Eternal Treasury contract
-     */
-    function setEternalTreasury(address newContract) external override onlyAdminAndFund() {
-        eternalTreasury = IEternalTreasury(newContract);
-    }
-
-    /**
      * @notice Attributes a given address to the Eternal Fund variable in this contract. (Admin and Fund only)
      * @param _fund The specified address of the designated fund
      */
@@ -558,6 +556,15 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
         attributeFundRights(_fund);
     }
 
+    /**
+     * @notice Updates the address of the Eternal Treasury contract
+     * @param newContract The new address for the Eternal Treasury contract
+     */
+    function setEternalTreasury(address newContract) external override onlyFund() {
+        eternalTreasury = IEternalTreasury(newContract);
+    }
+
+/////–––««« Governance-related functions »»»––––\\\\\
     /**
      * @notice Gets the current votes balance for a given account
      * @param account The address of the specified account
@@ -567,7 +574,7 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
         uint256 nCheckpoints = eternalStorage.getUint(entity, keccak256(abi.encodePacked("numCheckpoints", account)));
         return eternalStorage.getUint(entity, keccak256(abi.encodePacked("votes", account, nCheckpoints - 1)));
     }
-/////–––««« Governance-related functions »»»––––\\\\\
+
     /**
      * @notice Determine the number of votes of a given account prior to a given block
      * @param account The address of specified account

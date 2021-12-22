@@ -8,9 +8,9 @@ pragma solidity 0.8.0;
  */
 interface IEternalTreasury {
     // Provides liquidity for a given liquid gage and transfers instantaneous rewards to the receiver
-    function fundEternalLiquidGage(address _gage, address user, address asset, uint256 amount, uint256 risk, uint256 bonus) external;
+    function fundEternalLiquidGage(address _gage, address user, address asset, uint256 amount, uint256 risk, uint256 bonus) external payable;
     // Used by gages to compute and distribute ETRNL liquid gage rewards appropriately
-    function settleEternalLiquidGage(address receiver, uint256 id, bool winner) external;
+    function settleGage(address receiver, uint256 id, bool winner) external;
     // Stake a given amount of ETRNL
     function stake(uint256 amount) external;
     // Unstake a given amount of ETRNL and withdraw any associated rewards in terms of the desired reserve asset

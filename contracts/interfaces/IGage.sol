@@ -10,7 +10,7 @@ interface IGage {
     // Signals the transition from 'Open' to 'Active for a given gage
     event GageInitiated(uint256 id);
     // Signals the transition from 'Active' to 'Closed' for a given gage
-    event GageClosed(uint256 id); 
+    event GageClosed(uint256 id, bool winner); 
 
     // Removes a user from the gage
     function exit() external;
