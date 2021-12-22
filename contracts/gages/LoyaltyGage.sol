@@ -112,11 +112,14 @@ contract LoyaltyGage is Gage, ILoyaltyGage {
         // Remove user from the gage first (prevent re-entrancy)
         userData[receiver].inGage = false;
         userData[distributor].inGage = false;
+        // Calculate the change in total supply of the asset of reference
         uint256 deltaSupply = inflationary ? (assetOfReference.totalSupply() - totalSupply) : (totalSupply - assetOfReference.totalSupply());
         uint256 percentChange = deltaSupply * (10 ** 11) / totalSupply;
+        // Determine whether the user is the winner
         bool winner = percentChange >= percent;
         emit GageClosed(id, winner);
         status = Status.Closed;
+        // Communicate with an external treasury which offers gages
         treasury.settleGage(receiver, id, winner);
     }
 }
