@@ -9,7 +9,6 @@ import "./IGage.sol";
  * @notice Methods are used for all loyalty gage contracts
  */
 interface ILoyaltyGage is IGage {
-    
     // Initializes the loyalty gage
     function initialize(address rAsset, address dAsset, uint256 rAmount, uint256 dAmount, uint256 rRisk, uint256 dRisk) external;
     // View the distributor of the loyalty gage (usually token distributor)
