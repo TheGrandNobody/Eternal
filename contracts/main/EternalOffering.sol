@@ -8,13 +8,14 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoeRouter02.sol";
 import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoeFactory.sol";
 import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
 
-
 /**
  * @title Contract for the Eternal gaging platform
  * @author Nobody (me)
  * @notice The Eternal contract holds all user-data and gage logic.
  */
 contract EternalOffering {
+
+/////–––««« Variables: Events, Interfaces and Addresses »»»––––\\\\\
 
     // Signals the deployment of a new gage
     event NewGage(uint256 id, address indexed gageAddress);
@@ -25,12 +26,16 @@ contract EternalOffering {
     IJoeFactory public immutable joeFactory;
     // The Eternal token interface
     IEternalToken public immutable eternal;
+
     // The address of the Eternal Treasury
     address public immutable treasury;
+    // The address of the ETRNL-MIM pair
     address public immutable mimPair;
+    // The address of the ETRNL-AVAX pair
     address public immutable avaxPair;
 
-//---***** Variables: Mappings *****---\\
+/////–––««« Variables: Mappings »»»––––\\\\\
+
     // Keeps track of the respective gage tied to any given ID
     mapping (uint256 => address) private gages;
     // Keeps track of whether a user is in a loyalty gage or has provided liquidity for this offering
@@ -38,7 +43,8 @@ contract EternalOffering {
     // Keeps track of the amount of ETRNL the user has used in liquidity provision
     mapping (address => uint256) private liquidityOffered;
 
-//---*****  Variables: Constants and Factors *****---\\
+/////–––««« Variables: Constants and factors »»»––––\\\\\
+
     // The holding time constant used in the percent change condition calculation (decided by the Eternal Fund) (x 10 ** 6)
     uint256 public constant TIME_FACTOR = 2 * (10 ** 6);
     // The average amount of time that users provide liquidity for
@@ -51,7 +57,9 @@ contract EternalOffering {
     uint256 public constant LIMIT = 425 * (10 ** 7);
     // The MIM address
     address public constant MIM = 0x130966628846BFd36ff31a822705796e8cb8C18D;
-//---*****  Variables: Gage/Liquidity Bookkeeping *****---\\
+
+/////–––««« Variables: Gage/Liquidity bookkeeping »»»––––\\\\\
+
     // Keeps track of the latest Gage ID
     uint256 private lastId;
     // The total number of ETRNL dispensed in this offering thus far
@@ -63,7 +71,7 @@ contract EternalOffering {
     // The blockstamp at which this contract will cease to offer
     uint256 private offeringEnds;
 
-/////–––««« Constructors & Initializers »»»––––\\\\\
+/////–––««« Constructor »»»––––\\\\\
 
     constructor (address _eternal, address _treasury) {
         // Set the initial Eternal token and storage interfaces
@@ -78,6 +86,8 @@ contract EternalOffering {
         treasury = _treasury;
         offeringEnds = block.timestamp + 1 days;
     }
+
+/////–––««« Variable state-inspection functions »»»––––\\\\\
 
     /**
      * @notice Computes the equivalent of an asset to an other asset and the minimum amount of the two needed to provide liquidity
@@ -229,6 +239,8 @@ contract EternalOffering {
         require(eternal.transfer(receiver, dAmount), "Failed to transfer ETRNL");
     }
 
+/////–––««« Liquidity Provision functions »»»––––\\\\\
+
     /**
      * @notice Provides liquidity to either the MIM-ETRNL or AVAX-ETRNL pairs and sends ETRNL the msg.sender
      * @param amount The amount of the asset being provided
@@ -275,6 +287,8 @@ contract EternalOffering {
 
         require(eternal.transfer(msg.sender, providedETRNL), "ETRNL transfer failed");
     }
+
+/////–––««« Post-Offering functions »»»––––\\\\\
 
     /**
      * @notice Transfer all lp tokens, leftover ETRNL and any dust present in this contract, to the Eternal Treasury
