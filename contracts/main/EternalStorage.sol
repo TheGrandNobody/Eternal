@@ -57,7 +57,7 @@ constructor () {
      *
      * - Only callable by the latest version of any Eternal contract
      */
-    function setUint(bytes32 entity, bytes32 key, uint256 value) external override onlyLatestVersion() {
+    function setUint(bytes32 entity, bytes32 key, uint256 value) external override onlyLatestVersion {
         uints[entity][key] = value;
     }
 
@@ -71,7 +71,7 @@ constructor () {
      *
      * - Only callable by the latest version of any Eternal contract
      */
-    function setAddress(bytes32 entity, bytes32 key, address value) external override onlyLatestVersion() {
+    function setAddress(bytes32 entity, bytes32 key, address value) external override onlyLatestVersion {
         addresses[entity][key] = value;
     }
 
@@ -85,7 +85,7 @@ constructor () {
      *
      * - Only callable by the latest version of any Eternal contract
      */
-    function setBool(bytes32 entity, bytes32 key, bool value) external override onlyLatestVersion() {
+    function setBool(bytes32 entity, bytes32 key, bool value) external override onlyLatestVersion {
         bools[entity][key] = value;
     }    
 
@@ -99,7 +99,7 @@ constructor () {
      *
      * - Only callable by the latest version of any Eternal contract
      */
-    function setBytes(bytes32 entity, bytes32 key, bytes32 value) external override onlyLatestVersion() {
+    function setBytes(bytes32 entity, bytes32 key, bytes32 value) external override onlyLatestVersion {
         bytes32s[entity][key] = value;
     }    
 
@@ -113,7 +113,7 @@ constructor () {
      *
      * - Only callable by the latest version of any Eternal contract
      */
-    function setUintArrayValue(bytes32 key, uint256 index, uint256 value) external override onlyLatestVersion() {
+    function setUintArrayValue(bytes32 key, uint256 index, uint256 value) external override onlyLatestVersion {
         if (index == 0) {
             manyUints[key].push(value);
         } else {
@@ -131,7 +131,7 @@ constructor () {
      *
      * - Only callable by the latest version of any Eternal contract
      */
-    function setAddressArrayValue(bytes32 key, uint256 index, address value) external override onlyLatestVersion() {
+    function setAddressArrayValue(bytes32 key, uint256 index, address value) external override onlyLatestVersion {
         if (index == 0) {
             manyAddresses[key].push(value);
         } else {
@@ -149,7 +149,7 @@ constructor () {
      *
      * - Only callable by the latest version of any Eternal contract
      */
-    function setBoolArrayValue(bytes32 key, uint256 index, bool value) external override onlyLatestVersion() {
+    function setBoolArrayValue(bytes32 key, uint256 index, bool value) external override onlyLatestVersion {
         if (index == 0) {
             manyBools[key].push(value);
         } else {
@@ -167,7 +167,7 @@ constructor () {
      *
      * - Only callable by the latest version of any Eternal contract
      */
-    function setBytesArrayValue(bytes32 key, uint256 index, bytes32 value) external override onlyLatestVersion() {
+    function setBytesArrayValue(bytes32 key, uint256 index, bytes32 value) external override onlyLatestVersion {
         if (index == 0) {
             manyBytes[key].push(value);
         } else {
@@ -267,7 +267,7 @@ constructor () {
      *
      * - Only callable by the latest version of any Eternal contract
      */
-    function deleteUint(bytes32 key, uint256 index) external override onlyLatestVersion() {
+    function deleteUint(bytes32 key, uint256 index) external override onlyLatestVersion {
         uint256 length = manyUints[key].length;
         manyUints[key][index] = manyUints[key][length - 1];
         manyUints[key].pop();
@@ -282,7 +282,7 @@ constructor () {
      *
      * - Only callable by the latest version of any Eternal contract
      */
-    function deleteAddress(bytes32 key, uint256 index) external override onlyLatestVersion() {
+    function deleteAddress(bytes32 key, uint256 index) external override onlyLatestVersion {
         uint256 length = manyAddresses[key].length;
         manyAddresses[key][index] = manyAddresses[key][length - 1];
         manyAddresses[key].pop();
@@ -297,7 +297,7 @@ constructor () {
      *
      * - Only callable by the latest version of any Eternal contract
      */
-    function deleteBool(bytes32 key, uint256 index) external override onlyLatestVersion() {
+    function deleteBool(bytes32 key, uint256 index) external override onlyLatestVersion {
         uint256 length = manyBools[key].length;
         manyBools[key][index] = manyBools[key][length - 1];
         manyBools[key].pop();
@@ -312,7 +312,7 @@ constructor () {
      *
      * - Only callable by the latest version of any Eternal contract
      */
-    function deleteBytes(bytes32 key, uint256 index) external override onlyLatestVersion() {
+    function deleteBytes(bytes32 key, uint256 index) external override onlyLatestVersion {
         uint256 length = manyBytes[key].length;
         manyBytes[key][index] = manyBytes[key][length - 1];
         manyBytes[key].pop();

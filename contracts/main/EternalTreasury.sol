@@ -245,7 +245,7 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
      *
      * - Only callable by an Eternal-deployed gage
      */
-    function settleGage(address receiver, uint256 id, bool winner) external override activityHalted() {
+    function settleGage(address receiver, uint256 id, bool winner) external override activityHalted {
         // Checks
         bytes32 factory = keccak256(abi.encodePacked(address(eternalFactory)));
         address gageAddress = eternalStorage.getAddress(factory, keccak256(abi.encodePacked("gages", id)));
@@ -321,7 +321,7 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
      * - A liquidity swap should not be in progress
      * - User staked balance must have enough tokens to support the withdrawal 
      */
-    function unstake(uint256 amount, address asset) external override activityHalted() {
+    function unstake(uint256 amount, address asset) external override activityHalted {
         bytes32 stakedBalances = keccak256(abi.encodePacked("stakedBalances", _msgSender()));
         uint256 stakedBalance = eternalStorage.getUint(entity, stakedBalances);
         require(amount <= stakedBalance , "Amount exceeds staked balance");
@@ -377,7 +377,7 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
      * - Automatic liquidity provision must be enabled
      * - Caller can only be the Eternal Token contract
      */
-    function provideLiquidity(uint256 contractBalance) external override activityHalted() {
+    function provideLiquidity(uint256 contractBalance) external override activityHalted {
         require(_msgSender() == address(eternal), "Only callable by ETRNL contract");
         require(eternalStorage.getBool(entity, autoLiquidityProvision), "Auto-liquidity is disabled");
 
@@ -388,7 +388,7 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
      * @notice Converts half the contract's balance to AVAX and adds liquidity to the ETRNL/AVAX pair.
      * @param contractBalance The contract's ETRNL balance
      */
-    function _provideLiquidity(uint256 contractBalance) private haltsActivity() {
+    function _provideLiquidity(uint256 contractBalance) private haltsActivity {
         // Split the contract's balance into two halves
         uint256 half = contractBalance / 2;
         uint256 amountETRNL = contractBalance - half;
@@ -431,7 +431,7 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
      * - A liquidity swap should not be in progress
      * - The contract's balance must have enough funds to accomodate the withdrawal
      */
-    function withdrawAVAX(address payable recipient, uint256 amount) external override onlyFund() activityHalted() {
+    function withdrawAVAX(address payable recipient, uint256 amount) external override onlyFund activityHalted {
         require(amount < address(this).balance, "Insufficient balance");
 
         emit AVAXTransferred(amount, recipient);
@@ -449,7 +449,7 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
      *
      * - Only callable by the Eternal Fund
      */
-    function withdrawAsset(address asset, address recipient, uint256 amount) external override onlyFund() {
+    function withdrawAsset(address asset, address recipient, uint256 amount) external override onlyFund {
         emit AssetTransferred(asset, amount, recipient);
         require(IERC20(asset).transfer(recipient, amount), "Asset withdrawal failed");
     }
@@ -462,7 +462,7 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
      *
      * - Only callable by the Eternal Fund
      */
-    function setEternalFactory(address newContract) external override onlyFund() {
+    function setEternalFactory(address newContract) external override onlyFund {
         eternalFactory = IEternalFactory(newContract);
     }
 
@@ -474,7 +474,7 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
      *
      * - Only callable by the Eternal Fund
      */
-    function setEternalToken(address newContract) external override onlyFund() {
+    function setEternalToken(address newContract) external override onlyFund {
         eternal = IEternalToken(newContract);
     }
  }

@@ -98,7 +98,7 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
      * @notice Initialize supplies and routers and create a pair. Mints total supply to the contract deployer. 
      * Exclude some addresses from fees and/or rewards. Sets initial rate values.
      */
-    function initialize(address _eternalTreasury, address _offering, address _seedLock, address _privLock) external onlyAdmin() {
+    function initialize(address _eternalTreasury, address _offering, address _seedLock, address _privLock) external onlyAdmin {
         eternalTreasury = IEternalTreasury(_eternalTreasury);
         // The largest possible number in a 256-bit integer
         uint256 max = ~uint256(0);
@@ -523,7 +523,7 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
      * Requirements:
      * – Account must not already be excluded from rewards.
      */
-    function excludeFromReward(address account) public onlyFund() {
+    function excludeFromReward(address account) public onlyFund {
         bytes32 excludedFromRewards = keccak256(abi.encodePacked("isExcludedFromRewards", account));
         require(!eternalStorage.getBool(entity, excludedFromRewards), "Account is already excluded");
 
@@ -544,7 +544,7 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
      * Requirements:
      * – Account must not already be accruing rewards.
      */
-    function includeInReward(address account) external onlyFund() {
+    function includeInReward(address account) external onlyFund {
         bytes32 excludedFromRewards = keccak256(abi.encodePacked("isExcludedFromRewards", account));
         require(eternalStorage.getBool(entity, excludedFromRewards), "Account is already included");
         for (uint i = 0; i < eternalStorage.lengthAddress(excludedAddresses); i++) {
@@ -562,7 +562,7 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
      * @notice Updates the address of the Eternal Treasury contract
      * @param newContract The new address for the Eternal Treasury contract
      */
-    function setEternalTreasury(address newContract) external override onlyFund() {
+    function setEternalTreasury(address newContract) external override onlyFund {
         eternalTreasury = IEternalTreasury(newContract);
     }
 

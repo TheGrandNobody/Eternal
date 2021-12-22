@@ -78,7 +78,7 @@ contract EternalFactory is IEternalFactory, OwnableEnhanced {
         liquidGageLimit = keccak256(abi.encodePacked("liquidGageLimit"));
     }
 
-    function initialize(address _treasury) external onlyAdmin() {
+    function initialize(address _treasury) external onlyAdmin {
         // Set the initial treasury interface
         eternalTreasury = IEternalTreasury(_treasury);
 
@@ -155,7 +155,7 @@ contract EternalFactory is IEternalFactory, OwnableEnhanced {
      * @notice Updates the address of the Eternal Treasury contract
      * @param newContract The new address for the Eternal Treasury contract
      */
-    function setEternalTreasury(address newContract) external override onlyFund() {
+    function setEternalTreasury(address newContract) external override onlyFund {
         eternalTreasury = IEternalTreasury(newContract);
     }
 
@@ -163,7 +163,7 @@ contract EternalFactory is IEternalFactory, OwnableEnhanced {
      * @notice Updates the address of the Eternal Token contract
      * @param newContract The new address for the Eternal Token contract
      */
-    function setEternalToken(address newContract) external override onlyFund() {
+    function setEternalToken(address newContract) external override onlyFund {
         eternal = IEternalToken(newContract);
     }
 }
