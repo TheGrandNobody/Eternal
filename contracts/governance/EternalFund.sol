@@ -126,6 +126,8 @@ contract EternalFund {
         return 3 days; 
     }
 
+/////–––««« Governance logic functions »»»––––\\\\\
+
     /**
      * @notice Initiates a proposal
      * @param targets An ordered list of contract addresses used to make the calls

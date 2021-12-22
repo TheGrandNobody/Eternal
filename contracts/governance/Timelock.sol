@@ -26,6 +26,11 @@ import "../interfaces/ITimelock.sol";
     // Determines whether a given transaction hash is queued or not
     mapping (bytes32 => bool) private queuedTransactions;
 
+    // Fallback function
+    // solhint-disable-next-line no-empty-blocks
+    receive() external payable {}
+
+/////–––««« Constructors & Initializers »»»––––\\\\\
 
     constructor(address _fund, uint256 _delay) {
         require(_delay >= MINIMUM_DELAY, "Delay must exceed minimum delay");
@@ -35,9 +40,7 @@ import "../interfaces/ITimelock.sol";
         delay = _delay;
     }
 
-    // Fallback function
-    // solhint-disable-next-line no-empty-blocks
-    receive() external payable {}
+/////–––««« Variable state-inspection functions »»»––––\\\\\
 
     /**
      * @notice View the period of time any proposal action is given to be executed once the queuing period is over
@@ -78,6 +81,8 @@ import "../interfaces/ITimelock.sol";
     function queuedTransaction(bytes32 hash) external view override returns (bool) {
         return queuedTransactions[hash];
     }
+
+/////–––««« Timelock logic functions »»»––––\\\\\
 
     /**
      * @notice Updates the amount of time the contract must wait before queuing a proposal
