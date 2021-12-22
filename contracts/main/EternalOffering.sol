@@ -49,8 +49,6 @@ contract EternalOffering {
     uint256 public constant TIME_FACTOR = 2 * (10 ** 6);
     // The average amount of time that users provide liquidity for
     uint256 public constant TIME_CONSTANT = 15;
-    // The risk constant used in the calculation of the treasury's risk (x 10 ** 4)
-    uint256 public constant RISK_CONSTANT = 100;
     // The minimum token value estimate of transactions in 24h, used in case the alpha value is not determined yet
     uint256 public constant BASELINE = 10 ** 6;
     // The number of ETRNL allocated
@@ -80,6 +78,7 @@ contract EternalOffering {
         IJoeFactory _joeFactory = IJoeFactory(_joeRouter.factory());
         joeRouter = _joeRouter;
         joeFactory = _joeFactory;
+
         // Create the pairs
         avaxPair = _joeFactory.getPair(_eternal, _joeRouter.WAVAX());
         mimPair = _joeFactory.createPair(_eternal, MIM);
@@ -103,6 +102,7 @@ contract EternalOffering {
         // Get the reserve ratios for the Asset-otherAsset pair
         (uint256 reserveA, uint256 reserveB,) = IJoePair(joeFactory.getPair(asset, otherAsset)).getReserves();
         (uint256 reserveAsset, uint256 reserveOtherAsset) = asset < otherAsset ? (reserveA, reserveB) : (reserveB, reserveA);
+
         // Determine a reasonable minimum amount of asset and otherAsset based on current reserves (with a tolerance =  1 / uncertainty)
         amountOtherAsset = joeRouter.quote(amountAsset, reserveAsset, reserveOtherAsset);
         if (uncertainty != 0) {
@@ -155,6 +155,7 @@ contract EternalOffering {
      * - The sum of the new amount provided and the previous amounts provided by a user can not exceed the equivalent of 10 000 000 ETRNL
      */
     function initiateEternalLoyaltyGage(address asset, uint256 amount) external payable returns(uint256) {
+        // Checks
         require(block.timestamp < offeringEnds, "Offering is over");
         require(asset == MIM || msg.value > 0, "Only MIM or AVAX");
         require(totalETRNLOffered < LIMIT, "ETRNL offering limit is reached");
@@ -186,9 +187,9 @@ contract EternalOffering {
         } else {
             asset = joeRouter.WAVAX();
         }
+
         // Calculate risk and join the gage for the user and the Eternal Offering contract
         uint256 rRisk = totalETRNLOffered < LIMIT / 4 ? 3100 : (totalETRNLOffered < LIMIT / 2 ? 2600 : (totalETRNLOffered < LIMIT * 3 / 4 ? 2100 : 1600));
-        uint256 dRisk = rRisk - RISK_CONSTANT;
 
         // Add liquidity to the ETRNL/Asset pair
         require(eternal.approve(address(joeRouter), amountETRNL), "Approve failed");
@@ -201,13 +202,14 @@ contract EternalOffering {
         }
         // Calculate the difference in asset given vs asset provided
         providedETRNL += (amount - providedAsset) * providedETRNL / amount;
-        // Update the offering variables
-        liquidityOffered[msg.sender] += providedETRNL + (providedETRNL * dRisk / (10 ** 4));
-        totalETRNLOffered += providedETRNL + (providedETRNL * dRisk / (10 ** 4));
-        // Initialize the loyalty gage and transfer the user's instant reward
-        newGage.initialize(asset, address(eternal), amount, providedETRNL, rRisk, dRisk);
 
-        require(eternal.transfer(msg.sender, providedETRNL * dRisk / (10 ** 4)), "Failed to transfer bonus");
+        // Update the offering variables
+        liquidityOffered[msg.sender] += providedETRNL + (providedETRNL * (rRisk - 100) / (10 ** 4));
+        totalETRNLOffered += providedETRNL + (providedETRNL * (rRisk - 100) / (10 ** 4));
+
+        // Initialize the loyalty gage and transfer the user's instant reward
+        newGage.initialize(asset, address(eternal), amount, providedETRNL, rRisk, 1000);
+        require(eternal.transfer(msg.sender, providedETRNL * (rRisk - 100) / (10 ** 4)), "Failed to transfer bonus");
 
         return lastId;
     }
@@ -223,6 +225,7 @@ contract EternalOffering {
      * - Only callable by a loyalty gage
      */
     function settleGage(address receiver, uint256 id, bool winner) external {
+        // Checks
         address _gage = gages[id];
         require(msg.sender == _gage, "msg.sender must be the gage");
 
@@ -230,6 +233,7 @@ contract EternalOffering {
         ILoyaltyGage gage = ILoyaltyGage(_gage);
         (,, uint256 rRisk) = gage.viewUserData(receiver);
         (,uint256 dAmount, uint256 dRisk) = gage.viewUserData(address(this));
+
         // Compute and transfer the net gage deposit due to the receiver
         if (winner) {
             dAmount += dAmount * dRisk / (10 ** 4);
@@ -255,21 +259,27 @@ contract EternalOffering {
      * - The sum of the new amount provided and the previous amounts provided by a user can not exceed the equivalent of 10 000 000 ETRNL
      */
     function provideLiquidity(uint256 amount, address asset) external payable {
+        // Checks
         require(block.timestamp < offeringEnds, "Offering is over");
         require(asset == MIM || msg.value > 0, "Only MIM or AVAX");
         require(liquidityOffered[msg.sender] < (10 ** 7) * (10 ** 18), "Limit for this user reached");
         require(totalETRNLOffered < LIMIT, "ETRNL offering limit is reached");
+
+
         uint256 providedETRNL;
         uint256 providedAsset;
         uint256 liquidity;
+        // Compute the minimum amounts needed to provide liquidity and the equivalent of the asset in ETRNL
         (uint256 minETRNL, uint256 minAsset, uint256 amountETRNL) = computeMinAmounts(asset, address(eternal), amount, 200);
         require(amountETRNL + liquidityOffered[msg.sender] <= (10 ** 7) * (10 ** 18), "Amount exceeds the user limit");
 
+        // Transfer user's funds to this contract if it's not already done
         if (msg.value == 0) {
             require(IERC20(asset).transferFrom(msg.sender, address(this), amount), "Failed to deposit funds");
         } else {
             asset = joeRouter.WAVAX();
         }
+
         // Add liquidity to the ETRNL/Asset pair
         require(eternal.approve(address(joeRouter), amountETRNL), "Approve failed");
         if (asset == joeRouter.WAVAX()) {
@@ -279,12 +289,15 @@ contract EternalOffering {
             (providedETRNL, providedAsset, liquidity) = joeRouter.addLiquidity(address(eternal), asset, amountETRNL, amount, minETRNL, minAsset, address(this), block.timestamp);
             totalLpMIM += liquidity;
         }
+
         // Calculate and add the difference in asset given vs asset provided
         providedETRNL += (amount - providedAsset) * providedETRNL / amount;
+
         // Update the offering variables
         liquidityOffered[msg.sender] += providedETRNL;
         totalETRNLOffered += providedETRNL;
 
+        // Transfer ETRNL to the user
         require(eternal.transfer(msg.sender, providedETRNL), "ETRNL transfer failed");
     }
 
@@ -298,20 +311,27 @@ contract EternalOffering {
      * - Either the time or ETRNL limit must be met
      */
     function sendLPToTreasury() external {
+        // Checks
         require(totalETRNLOffered == LIMIT || offeringEnds < block.timestamp, "Offering not over yet");
+
         uint256 mimBal = IERC20(MIM).balanceOf(address(this));
         uint256 etrnlBal = eternal.balanceOf(address(this));
         uint256 avaxBal = address(this).balance;
+        // Send the MIM and AVAX balance of this contract to the Eternal Treasury if there is any dust leftover
         if (mimBal > 0) {
             require(IERC20(MIM).transfer(treasury, mimBal), "MIM Transfer failed");
-        }
-        if (etrnlBal > 0) {
-            require(eternal.transfer(treasury, etrnlBal), "ETRNL transfer failed");
         }
         if (avaxBal > 0) {
             (bool success,) = treasury.call{value: avaxBal}("");
             require(success, "AVAX transfer failed");
         }
+
+        // Send any leftover ETRNL from this offering to the Eternal Treasury
+        if (etrnlBal > 0) {
+            require(eternal.transfer(treasury, etrnlBal), "ETRNL transfer failed");
+        }
+
+        // Send the lp tokens earned from this offering to the Eternal Treasury
         require(IERC20(avaxPair).transfer(treasury, totalLpAVAX), "Failed to transfer AVAX lp");
         require(IERC20(mimPair).transfer(treasury, totalLpMIM), "Failed to transfer MIM lp");
     }
