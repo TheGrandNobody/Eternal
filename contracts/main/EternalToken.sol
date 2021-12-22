@@ -69,7 +69,6 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
     // Keeps track of the UNIX time to recalculate the average transaction estimate
     bytes32 public immutable oneDayFromNow;
 
-///---*****  Variables: Transaction Counting *****---\\\
 /////–––««« Constructors & Initializers »»»––––\\\\\
 
     constructor (address _eternalStorage) {
