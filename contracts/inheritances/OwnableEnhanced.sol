@@ -18,14 +18,19 @@ import "@openzeppelin/contracts/utils/Context.sol";
  * such as different modifiers (onlyFund and onlyAdminAndFund) and locking/unlocking
  */
 abstract contract OwnableEnhanced is Context {
+
+/////–––««« Variables: Addresses, Events and Locking »»»––––\\\\\
+
     address private _admin;
     address private _previousAdmin;
     address private _fund;
-    
-    uint256 private _lockPeriod;
 
     event AdminRightsTransferred(address indexed previousAdmin, address indexed newAdmin);
     event FundRightsAttributed(address indexed newFund);
+
+    uint256 private _lockPeriod;
+
+/////–––««« Constructor »»»––––\\\\\
 
     /**
      * @dev Initializes the contract setting the deployer as the initial admin.
