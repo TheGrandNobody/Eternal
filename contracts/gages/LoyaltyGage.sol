@@ -116,6 +116,7 @@ contract LoyaltyGage is Gage, ILoyaltyGage {
         uint256 percentChange = deltaSupply * (10 ** 11) / totalSupply;
         bool winner = percentChange >= percent;
         emit GageClosed(id, winner);
+        status = Status.Closed;
         treasury.settleGage(receiver, id, winner);
     }
 }
