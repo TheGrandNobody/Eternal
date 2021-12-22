@@ -29,6 +29,6 @@ $$
 available\space tokens =vested\space{tokens}\times \frac{initial\space supply - current\space  supply}{initial\space supply}\gamma
 $$
 
-**Where** $$\gamma$$ **is equal to 4 for seed investors and 10 for private investors**, ensuring that these individuals  will only have full access to their funds once the total supply has decreased by 25% and 10%, respectively.
+**Where** $$\gamma$$ **is equal to 333 for seed investors and 666 for private investors**, ensuring that these individuals  will only have full access to their funds once the total supply has decreased by 0.2% and 0.1%, respectively.
 
-Taking the initial rate of deflation to be 0.5% per transaction, and assuming a minimum constant monthly transaction volume of 50 million ETRNL, this entails a **minimum vesting period of over 48 and 20 months**, respectively. In reality, the monthly transaction volume will likely be a lot lower than this optimistic guess. Hence, this also aligns with the idea that our investors believe in ETRNL in the long-term.
+Taking the initial rate of deflation to be 0.5% per transaction, and assuming a minimum constant monthly transaction volume of 100 million ETRNL, this entails a **minimum vesting period of 40 and 20 months**, respectively. In reality, the monthly transaction volume will likely be a lot lower than this optimistic guess. Hence, this aligns with the idea that both seed and private investors believe in ETRNL in the long-term.
