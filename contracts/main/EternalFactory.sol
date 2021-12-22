@@ -97,12 +97,21 @@ contract EternalFactory is IEternalFactory, OwnableEnhanced {
      * @notice Creates an ETRNL liquid gage contract for a given user, asset and amount
      * @param asset The address of the asset being deposited in the liquid gage by the receiver
      * @param amount The amount of the asset being deposited in the liquid gage by the receiver
+     *
+     * Requirements:
+     *
+     * - The asset must be supported by Eternal
+     * - Receivers (users) cannot deposit ETRNL into liquid gages
+     * - There must be less active gages than the liquid gage limit dictates
+     * - Users are only able to join 1 liquid gage per Asset-ETRNL pair offered (the maximum being the number of existing liquid gage pairs)
      */
     function initiateEternalLiquidGage(address asset, uint256 amount) external payable override returns(uint256) {
         // Checks
-        uint256 liquidGages = eternalStorage.getUint(entity, totalLiquidGages);
+        uint256 userRisk = eternalStorage.getUint(entity, keccak256(abi.encodePacked("risk", asset)));
+        require(userRisk > 0, "This asset is not supported");
         uint256 gageLimit = eternalStorage.getUint(entity, liquidGageLimit);
         require(asset != address(eternal), "Receiver can't deposit ETRNL");
+        uint256 liquidGages = eternalStorage.getUint(entity, totalLiquidGages);
         require(liquidGages < gageLimit, "Liquid gage limit is reached");
         bool inLiquidGage = eternalStorage.getBool(entity, keccak256(abi.encodePacked("inLiquidGage", _msgSender(), asset)));
         require(!inLiquidGage, "Per-asset gaging limit reached");
@@ -130,7 +139,6 @@ contract EternalFactory is IEternalFactory, OwnableEnhanced {
         eternalStorage.setAddress(entity, keccak256(abi.encodePacked("gages", idLast)), address(newGage));
 
         //Transfer the deposit to the treasury, calculate risk and join the gage for the user and the treasury
-        uint256 userRisk = eternalStorage.getUint(entity, keccak256(abi.encodePacked("risk", asset)));
         uint256 treasuryRisk = userRisk - eternalStorage.getUint(entity, riskConstant);
         if (msg.value == 0) {
             require(IERC20(asset).transferFrom(_msgSender(), address(eternalTreasury), amount), "Failed to deposit asset");

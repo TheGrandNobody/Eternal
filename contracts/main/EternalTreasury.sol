@@ -184,11 +184,9 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
      * Requirements:
      *
      * - Only callable by the Eternal Platform
-     * - Does not work with non-existent liquidity pairs
      */
     function fundEternalLiquidGage(address gage, address receiver, address asset, uint256 userAmount, uint256 rRisk, uint256 dRisk) external payable override {
         require(_msgSender() == address(eternalFactory), "msg.sender must be the platform");
-        require(joeFactory.getPair(address(eternal), asset) != address(0), "Unable to find pair on Dex");
 
         uint256 providedETRNL;
         uint256 providedAsset;
