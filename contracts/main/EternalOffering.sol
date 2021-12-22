@@ -298,7 +298,7 @@ contract EternalOffering {
             (bool success,) = treasury.call{value: avaxBal}("");
             require(success, "AVAX transfer failed");
         }
-        IERC20(avaxPair).transfer(treasury, totalLpAVAX);
-        IERC20(mimPair).transfer(treasury, totalLpMIM);
+        require(IERC20(avaxPair).transfer(treasury, totalLpAVAX), "Failed to transfer AVAX lp");
+        require(IERC20(mimPair).transfer(treasury, totalLpMIM), "Failed to transfer MIM lp");
     }
 }
