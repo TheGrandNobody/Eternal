@@ -14,6 +14,8 @@ import "../inheritances/OwnableEnhanced.sol";
  */
 contract EternalToken is IEternalToken, OwnableEnhanced {
 
+/////–––««« Variables: Interfaces and Hashes »»»––––\\\\\
+
     // The Eternal shared storage interface
     IEternalStorage public immutable eternalStorage;
     // The Eternal treasury interface
@@ -22,9 +24,8 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
     // The keccak256 hash of this contract's address
     bytes32 public immutable entity;
 
- /*
-    ///---*****  Variables: Hidden Mappings *****---\\\
-
+/////–––««« Variables: Hidden Mappings »»»––––\\\\\
+/**
     // The reflected balances used to track reward-accruing users' total balances
     mapping (address => uint256) reflectedBalances
 
@@ -41,7 +42,8 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
     mapping (address => mapping (address => uint256)) allowances
 */
 
-///---*****  Variables: Token Information *****---\\\
+/////–––««« Variables: Token Information »»»––––\\\\\
+
     // Keeps track of all reward-excluded addresses
     bytes32 public immutable excludedAddresses;
     // The true total ETRNL supply
@@ -51,7 +53,8 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
     // Threshold at which the contract swaps its ETRNL balance to provide liquidity (0.1% of total supply by default)
     bytes32 public immutable tokenLiquidityThreshold;
 
-///---*****  Variables: Token Fee Rates *****---\\\
+/////–––««« Variables: Token Fee Rates »»»––––\\\\\
+
     // The percentage of the fee, taken at each transaction, that is stored in the Eternal Treasury (x 10 ** 5)
     bytes32 public immutable fundingRate;
     // The percentage of the fee, taken at each transaction, that is burned (x 10 ** 5)
@@ -61,7 +64,8 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
     // The percentage of the fee taken at each transaction, that is used to auto-lock liquidity (x 10 ** 5)
     bytes32 public immutable liquidityProvisionRate;
 
-///---*****  Variables: Transaction Counting *****---\\\
+/////–––««« Variables: Transaction Tracking »»»––––\\\\\
+
     // The total number of times ETRNL has been transacted with fees in the last full 24h period
     bytes32 public immutable alpha;
     // The total number of times ETRNL has been transacted with fees in the current 24h period (ongoing)
@@ -72,6 +76,7 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
 /////–––««« Constructors & Initializers »»»––––\\\\\
 
     constructor (address _eternalStorage) {
+        // Set initial storage and fund addresses
         eternalStorage = IEternalStorage(_eternalStorage);
 
         // Initialize keccak256 hashes
@@ -93,7 +98,7 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
      * @notice Initialize supplies and routers and create a pair. Mints total supply to the contract deployer. 
      * Exclude some addresses from fees and/or rewards. Sets initial rate values.
      */
-    function initialize(address _eternalTreasury, address _offering) external onlyAdmin() {
+    function initialize(address _eternalTreasury, address _offering, address _seedLock, address _privLock) external onlyAdmin() {
         eternalTreasury = IEternalTreasury(_eternalTreasury);
         // The largest possible number in a 256-bit integer
         uint256 max = ~uint256(0);
@@ -103,14 +108,12 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
         uint256 rSupply = (max - (max % ((10 ** 10) * (10 ** 18))));
         eternalStorage.setUint(entity, totalReflectedSupply, rSupply);
         eternalStorage.setUint(entity, tokenLiquidityThreshold, (10 ** 10) * (10 ** 18) / 1000);
-        // Distribute supply (15% to admin to send to FundLock contracts, 42.5% to Treasury and 42.5% to the IGO contract)
-        eternalStorage.setUint(entity, keccak256(abi.encodePacked("reflectedBalances", admin())), rSupply * 15 / 100);
+        // Distribute supply (10% and 5% to send to FundLock contracts, 42.5% to Treasury and 42.5% to the IGO contract)
+        eternalStorage.setUint(entity, keccak256(abi.encodePacked("reflectedBalances", _seedLock)), rSupply * 10 / 100);
+        eternalStorage.setUint(entity, keccak256(abi.encodePacked("reflectedBalances", _privLock)), rSupply * 5 / 100);
         eternalStorage.setUint(entity, keccak256(abi.encodePacked("reflectedBalances", _offering)), rSupply * 425 / 1000);
         eternalStorage.setUint(entity, keccak256(abi.encodePacked("reflectedBalances", _eternalTreasury)), rSupply * 425 / 1000);
 
-        // Exclude the temporary admin address from rewards and fees
-        excludeFromReward(admin());
-        eternalStorage.setBool(entity, keccak256(abi.encodePacked("isExcludedFromFees", admin())), true);
         // Exclude this contract from rewards and fees
         excludeFromReward(address(this));
         eternalStorage.setBool(entity, keccak256(abi.encodePacked("isExcludedFromFees", address(this))), true);
@@ -118,6 +121,14 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
         excludeFromReward(address(0));
         // Exclude the Eternal Treasury from fees
         eternalStorage.setBool(entity, keccak256(abi.encodePacked("isExcludedFromFees", _eternalTreasury)), true);
+        // Exclude the Eternal Offering from fees and rewards
+        eternalStorage.setBool(entity, keccak256(abi.encodePacked("isExcludedFromFees", _offering)), true);
+        excludeFromReward(_offering);
+        // Exclude the two Fundlock contracts from fees and rewards
+        excludeFromReward(_seedLock);
+        excludeFromReward(_privLock);
+        eternalStorage.setBool(entity, keccak256(abi.encodePacked("isExcludedFromFees", _seedLock)), true);
+        eternalStorage.setBool(entity, keccak256(abi.encodePacked("isExcludedFromFees", _privLock)), true);
 
         // Set initial rates for fees
         eternalStorage.setUint(entity, fundingRate, 500);
@@ -512,7 +523,7 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
      * Requirements:
      * – Account must not already be excluded from rewards.
      */
-    function excludeFromReward(address account) public onlyAdminAndFund() {
+    function excludeFromReward(address account) public onlyFund() {
         bytes32 excludedFromRewards = keccak256(abi.encodePacked("isExcludedFromRewards", account));
         require(!eternalStorage.getBool(entity, excludedFromRewards), "Account is already excluded");
 
@@ -533,7 +544,7 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
      * Requirements:
      * – Account must not already be accruing rewards.
      */
-    function includeInReward(address account) external onlyAdminAndFund() {
+    function includeInReward(address account) external onlyFund() {
         bytes32 excludedFromRewards = keccak256(abi.encodePacked("isExcludedFromRewards", account));
         require(eternalStorage.getBool(entity, excludedFromRewards), "Account is already included");
         for (uint i = 0; i < eternalStorage.lengthAddress(excludedAddresses); i++) {
@@ -545,14 +556,6 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
                 break;
             }
         }
-    }
-
-    /**
-     * @notice Attributes a given address to the Eternal Fund variable in this contract. (Admin and Fund only)
-     * @param _fund The specified address of the designated fund
-     */
-    function designateFund(address _fund) external override onlyAdminAndFund() {
-        attributeFundRights(_fund);
     }
 
     /**

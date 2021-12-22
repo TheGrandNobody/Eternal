@@ -20,8 +20,6 @@ interface IEternalToken is IERC20, IERC20Metadata {
     
     // Sets the address of the Eternal Treasury contract
     function setEternalTreasury(address newContract) external;
-    // Designates a new Eternal Fund address
-    function designateFund(address fund) external;
     // View the rate used to convert between the reflection and true token space
     function getReflectionRate() external view returns (uint256);
     // Delegates the message sender's vote balance to a given user
