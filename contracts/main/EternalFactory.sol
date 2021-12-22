@@ -115,6 +115,7 @@ contract EternalFactory is IEternalFactory, OwnableEnhanced {
         require(liquidGages < gageLimit, "Liquid gage limit is reached");
         bool inLiquidGage = eternalStorage.getBool(entity, keccak256(abi.encodePacked("inLiquidGage", _msgSender(), asset)));
         require(!inLiquidGage, "Per-asset gaging limit reached");
+        require(!eternalTreasury.viewUndergoingSwap(), "A liquidity swap is in progress");
 
         // Compute the percent change condition
         bytes32 eternalToken = keccak256(abi.encodePacked(address(eternal)));

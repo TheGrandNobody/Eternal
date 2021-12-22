@@ -110,7 +110,7 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
     /**
      * Ensures the contract doesn't swap when it's already swapping (prevents it from getting caught in a circular liquidity event).
      */
-    modifier haltsLiquidityProvision() {
+    modifier haltsActivity() {
         undergoingSwap = true;
         _;
         undergoingSwap = false;
@@ -123,6 +123,13 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
      */
     function viewPair() external view override returns(address) {
         return joePair;
+    }
+
+    /**
+     * @notice View whether a liquidity swap is currently in progress
+     */
+    function viewUndergoingSwap() external view override returns(bool) {
+        return undergoingSwap;
     }
 
 /////–––««« Reserve Utility functions »»»––––\\\\\
@@ -351,7 +358,7 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
      * @notice Converts half the contract's balance to AVAX and adds liquidity to the ETRNL/AVAX pair.
      * @param contractBalance The contract's ETRNL balance
      */
-    function _provideLiquidity(uint256 contractBalance) private haltsLiquidityProvision() {
+    function _provideLiquidity(uint256 contractBalance) private haltsActivity() {
         // Split the contract's balance into two halves
         uint256 half = contractBalance / 2;
         uint256 amountETRNL = contractBalance - half;

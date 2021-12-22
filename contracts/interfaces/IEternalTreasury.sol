@@ -17,6 +17,8 @@ interface IEternalTreasury {
     function unstake(uint256 amount, address asset) external;
     // View the ETRNL/AVAX pair address
     function viewPair() external view returns(address);
+    // View whether a liquidity swap is in progress
+    function viewUndergoingSwap() external view returns(bool);
     // Provides liquidity for the ETRNL/AVAX pair for the ETRNL token contract
     function provideLiquidity(uint256 contractBalance) external;
     // Allows the withdrawal of AVAX in the contract
