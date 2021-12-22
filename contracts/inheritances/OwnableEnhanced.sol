@@ -43,7 +43,7 @@ abstract contract OwnableEnhanced is Context {
         address msgSender = _msgSender();
         _admin = msgSender;
         emit AdminRightsTransferred(address(0), msgSender);
-        timeOfCreation = block.timestamp + 3 days;
+        ownershipDeadline = block.timestamp + 3 days;
     }
 
 /////–––««« Modifiers »»»––––\\\\\
@@ -97,7 +97,7 @@ abstract contract OwnableEnhanced is Context {
      *
      * - New admin cannot be the zero address
      */
-    function attributeFundRights(address newFund) public virtual onlyAdminAndFund {
+    function attributeFundRights(address newFund) public virtual onlyAdmin onlyFund {
         require(newFund != address(0), "New fund is the zero address");
         _fund = newFund;
         emit FundRightsAttributed(newFund);
