@@ -133,7 +133,7 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
         // Set initial rates for fees
         eternalStorage.setUint(entity, fundingRate, 500);
         eternalStorage.setUint(entity, burnRate, 500);
-        eternalStorage.setUint(entity, redistributionRate, 5000);
+        eternalStorage.setUint(entity, redistributionRate, 2500);
         eternalStorage.setUint(entity, liquidityProvisionRate, 1500);
 
         //Initialize the transaction count time tracker
