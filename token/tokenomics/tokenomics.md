@@ -15,7 +15,7 @@ Following Eternal's pledge of being created by the people, for the people, a fai
 * Minimum of 42.5% reserved for a fair launched Initial Gage Offering (IGO)
 * Minimum of 42.5% locked into the Eternal Fund
 * Maximum of 10% reserved for the seed sale
-* Maximum of 5% reserved for private sales
+* 5% reserved for team
 
 {% hint style="info" %}
 **Leftover tokens from the IGO and seed and private sales are sent to the Eternal Fund.**
