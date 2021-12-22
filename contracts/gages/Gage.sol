@@ -14,21 +14,6 @@ import "../interfaces/IGage.sol";
  */
 abstract contract Gage is Context, IGage {
 
-    // Holds all possible statuses for a gage
-    enum Status {
-        Open,
-        Active,
-        Closed
-    }
-
-    // Holds user-specific information with regards to the gage
-    struct UserData {
-        address asset;                       // The address of the asset used as deposit     
-        uint256 amount;                      // The entry deposit (in tokens) needed to participate in this gage        
-        uint256 risk;                        // The percentage (in decimal form) that is being risked in this gage (x 10 ** 4) 
-        bool inGage;                         // Keeps track of whether the user is in the gage or not
-    }         
-
     // Holds all users' information in the gage
     mapping (address => UserData) internal userData;
 
