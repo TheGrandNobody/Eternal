@@ -16,6 +16,8 @@ import "../inheritances/OwnableEnhanced.sol";
  */
 contract EternalFactory is IEternalFactory, OwnableEnhanced {
 
+/////–––««« Interfaces, Addresses and Hashes »»»––––\\\\\
+
     // The Eternal shared storage interface
     IEternalStorage public immutable eternalStorage;
     // The Eternal token interface
@@ -27,7 +29,8 @@ contract EternalFactory is IEternalFactory, OwnableEnhanced {
     bytes32 public immutable entity;
 
 /**
-///---*****  Variables: Hidden Mappings *****---\\\ 
+
+/////–––««« Variables: Hidden Mappings »»»––––\\\\\
     
     // Keeps track of the respective gage tied to any given ID
     mapping (uint256 => address) gages
@@ -39,7 +42,8 @@ contract EternalFactory is IEternalFactory, OwnableEnhanced {
     mapping (address => mapping (address => bool)) inLiquidGage
 */
 
-///---*****  Variables: Gage Bookkeeping *****---\\\ 
+/////–––««« Variables: Gage Bookkeeping »»»––––\\\\\
+
     // Keeps track of the latest Gage ID
     bytes32 public immutable lastId;
     // The total number of active liquid gages
@@ -47,7 +51,8 @@ contract EternalFactory is IEternalFactory, OwnableEnhanced {
     // The number of liquid gages that can possibly be active at a time
     bytes32 public immutable liquidGageLimit;
 
-///---*****  Variables: Constants and Factors *****---\\\ 
+/////–––««« Variables: Constants, Factors and Estimates »»»––––\\\\\
+
     // The holding time constant used in the percent change condition calculation (decided by the Eternal Fund) (x 10 ** 6)
     bytes32 public immutable timeFactor;
     // The average amount of time that users provide liquidity for
@@ -94,6 +99,7 @@ contract EternalFactory is IEternalFactory, OwnableEnhanced {
      * @param amount The amount of the asset being deposited in the liquid gage by the receiver
      */
     function initiateEternalLiquidGage(address asset, uint256 amount) external payable override returns(uint256) {
+        // Checks
         uint256 liquidGages = eternalStorage.getUint(entity, totalLiquidGages);
         uint256 gageLimit = eternalStorage.getUint(entity, liquidGageLimit);
         require(asset != address(eternal), "Receiver can't deposit ETRNL");
@@ -134,6 +140,7 @@ contract EternalFactory is IEternalFactory, OwnableEnhanced {
     }
 
 /////–––««« Fund-only functions »»»––––\\\\\
+
     /**
      * @notice Updates the address of the Eternal Treasury contract
      * @param newContract The new address for the Eternal Treasury contract
@@ -149,6 +156,4 @@ contract EternalFactory is IEternalFactory, OwnableEnhanced {
     function setEternalToken(address newContract) external override onlyFund() {
         eternal = IEternalToken(newContract);
     }
-
-
 }
