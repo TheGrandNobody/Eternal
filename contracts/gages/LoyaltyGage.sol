@@ -17,12 +17,15 @@ contract LoyaltyGage is Gage, ILoyaltyGage {
     address private immutable receiver;
     // The asset used in the condition
     IERC20 private assetOfReference;
+    
     // The percentage change condition for the total token supply (x 10 ** 11)
     uint256 private immutable percent;
     // The total supply at the time of the deposit
     uint256 private totalSupply;
     // Whether the token's supply is inflationary or deflationary
     bool private immutable inflationary;
+
+/////–––««« Constructors & Initializers »»»––––\\\\\
 
     constructor(uint256 _id, uint256 _percent, uint256 _users, bool _inflationary, address _distributor, address _receiver, address _storage) Gage(_id, _users, _storage, true) {
         distributor = _distributor;
@@ -107,6 +110,13 @@ contract LoyaltyGage is Gage, ILoyaltyGage {
         emit GageInitiated(id);
     }
 
+    /**
+     * @notice Closes this gage and determines the winner
+     *
+     * Requirements:
+     *
+     * - Only callable by the receiver
+     */
     function exit() external override {
         require(_msgSender() == receiver, "Only the receiver may exit");
         // Remove user from the gage first (prevent re-entrancy)
