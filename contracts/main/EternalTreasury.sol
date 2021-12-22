@@ -77,11 +77,13 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
         eternalStorage = IEternalStorage(_eternalStorage);
         eternalFactory = IEternalFactory(_eternalFactory);
         eternal = IEternalToken(_eternal);
+
         // Initialize the Trader Joe router
         IJoeRouter02 _joeRouter = IJoeRouter02(0x60aE616a2155Ee3d9A68541Ba4544862310933d4);
         joeRouter = _joeRouter;
         IJoeFactory _joeFactory = IJoeFactory(_joeRouter.factory());
         joeFactory = _joeFactory;
+
         // Create pair address
         joePair = _joeFactory.createPair(address(eternal), _joeRouter.WAVAX());
 
@@ -97,11 +99,13 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
     function initialize() external onlyAdmin {
         // The largest possible number in a 256-bit integer 
         uint256 max = ~uint256(0);
+
         // Set initial staking balances
         uint256 totalStake = eternal.balanceOf(address(this));
         eternalStorage.setUint(entity, totalStakedBalances, totalStake);
         eternalStorage.setUint(entity, reserveStakedBalances, (max - (max % totalStake)));
         eternalStorage.setBool(entity, autoLiquidityProvision, true);
+        
         // Set initial feeRate
         eternalStorage.setUint(entity, feeRate, 500);
     }
@@ -117,7 +121,7 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
     }
 
     /**
-     * Ensures that functions stop functioning when activity is halted
+     * Reverts if activity is halted (a liquidity swap is in progress)
      */
     modifier activityHalted() {
         require(!undergoingSwap, "A liquidity swap is in progress");
@@ -201,12 +205,15 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
      * - Only callable by the Eternal Platform
      */
     function fundEternalLiquidGage(address gage, address receiver, address asset, uint256 userAmount, uint256 rRisk, uint256 dRisk) external payable override {
+        // Checks
         require(_msgSender() == address(eternalFactory), "msg.sender must be the platform");
 
+        // Compute minimum amounts and the amount of ETRNL needed to provide liquidity
         uint256 providedETRNL;
         uint256 providedAsset;
         uint256 liquidity;
         (uint256 minETRNL, uint256 minAsset, uint256 amountETRNL) = computeMinAmounts(asset, address(eternal), userAmount, 200);
+        
         // Add liquidity to the ETRNL/Asset pair
         require(eternal.approve(address(joeRouter), amountETRNL), "Approve failed");
         if (asset == joeRouter.WAVAX()) {
@@ -214,9 +221,11 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
         } else {
             (providedETRNL, providedAsset, liquidity) = joeRouter.addLiquidity(address(eternal), asset, amountETRNL, userAmount, minETRNL, minAsset, address(this), block.timestamp);
         }
+        
         // Save the true amount provided as liquidity by the receiver and the actual liquidity amount
         eternalStorage.setUint(entity, keccak256(abi.encodePacked("amountProvided", receiver, asset)), providedAsset);
         eternalStorage.setUint(entity, keccak256(abi.encodePacked("liquidity", receiver, asset)), liquidity);
+        
         // Initialize the liquid gage and transfer the user's instant reward
         ILoyaltyGage(gage).initialize(asset, address(eternal), userAmount, providedETRNL, rRisk, dRisk);
         require(eternal.transfer(receiver, providedETRNL * dRisk / (10 ** 4)), "Failed to transfer bonus");
@@ -227,11 +236,18 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
      * @param receiver The address of the receiver
      * @param id The id of the specified liquid gage
      * @param winner Whether the gage closed in favor of the receiver or not
+     *
+     * Requirements:
+     *
+     * - Only callable by an Eternal-deployed gage
      */
     function settleGage(address receiver, uint256 id, bool winner) external override activityHalted() {
+        // Checks
         bytes32 factory = keccak256(abi.encodePacked(address(eternalFactory)));
         address gageAddress = eternalStorage.getAddress(factory, keccak256(abi.encodePacked("gages", id)));
         require(_msgSender() == gageAddress, "msg.sender must be the gage");
+
+        // Fetch the liquid gage data
         ILoyaltyGage gage = ILoyaltyGage(gageAddress);
         (address rAsset,, uint256 rRisk) = gage.viewUserData(receiver);
         (,uint256 dAmount, uint256 dRisk) = gage.viewUserData(address(this));
@@ -241,6 +257,7 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
         // Remove the liquidity for this gage
         (uint256 minETRNL, uint256 minAsset,) = computeMinAmounts(rAsset, address(eternal), providedAsset, 200);
         (uint256 amountETRNL, uint256 amountAsset) = joeRouter.removeLiquidity(address(eternal), rAsset, liquidity, minETRNL, minAsset, address(this), block.timestamp);
+        
         // Compute and transfer the net gage deposit + any rewards due to the receiver
         uint256 eternalRewards = amountETRNL > dAmount ? amountETRNL - dAmount : 0;
         uint256 eternalFee = eternalStorage.getUint(entity, feeRate) * providedAsset / (10 ** 5);
@@ -256,6 +273,7 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
             eternalRewards = amountETRNL * rRisk / (10 ** 4);
         }
         require(IERC20(rAsset).transfer(receiver, amountAsset - eternalFee), "Failed to transfer ERC20 reward");
+
         // Update staker's fees w.r.t the gage fee, gage rewards and liquidity rewards
         uint256 totalFee = eternalRewards + (dAmount * eternalStorage.getUint(entity, feeRate) / (10 ** 5));
         eternalStorage.setUint(entity, reserveStakedBalances, eternalStorage.getUint(entity, reserveStakedBalances) - convertToReserve(totalFee));
@@ -296,6 +314,7 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
      * 
      * Requirements:
      *
+     * - A liquidity swap should not be in progress
      * - User staked balance must have enough tokens to support the withdrawal 
      */
     function unstake(uint256 amount, address asset) external override activityHalted() {
@@ -350,9 +369,9 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
      *
      * Requirements:
      * 
-     * - Automatic liquidity provision must be enabled
      * - There cannot already be a liquidity swap in progress
-     * - Caller can only be the ETRNL contract
+     * - Automatic liquidity provision must be enabled
+     * - Caller can only be the Eternal Token contract
      */
     function provideLiquidity(uint256 contractBalance) external override activityHalted() {
         require(_msgSender() == address(eternal), "Only callable by ETRNL contract");
@@ -404,6 +423,8 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
      * 
      * Requirements:
      * 
+     * - Only callable by the Eternal Fund
+     * - A liquidity swap should not be in progress
      * - The contract's balance must have enough funds to accomodate the withdrawal
      */
     function withdrawAVAX(address payable recipient, uint256 amount) external override onlyFund() activityHalted() {
@@ -419,6 +440,10 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
      * @param asset The address of the asset being withdrawn
      * @param recipient The address to which the ETRNL is to be sent
      * @param amount The specified amount of ETRNL to transfer
+     *
+     * Requirements:
+     *
+     * - Only callable by the Eternal Fund
      */
     function withdrawAsset(address asset, address recipient, uint256 amount) external override onlyFund() {
         emit AssetTransferred(asset, amount, recipient);
@@ -428,6 +453,10 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
     /**
      * @notice Updates the address of the Eternal Factory contract
      * @param newContract The new address for the Eternal Factory contract
+     *
+     * Requirements:
+     *
+     * - Only callable by the Eternal Fund
      */
     function setEternalFactory(address newContract) external override onlyFund() {
         eternalFactory = IEternalFactory(newContract);
@@ -436,6 +465,10 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
     /**
      * @notice Updates the address of the Eternal Token contract
      * @param newContract The new address for the Eternal Token contract
+     *
+     * Requirements:
+     *
+     * - Only callable by the Eternal Fund
      */
     function setEternalToken(address newContract) external override onlyFund() {
         eternal = IEternalToken(newContract);
