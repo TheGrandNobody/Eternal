@@ -16,7 +16,7 @@ import "../inheritances/OwnableEnhanced.sol";
  */
 contract EternalFactory is IEternalFactory, OwnableEnhanced {
 
-/////–––««« Interfaces, Addresses and Hashes »»»––––\\\\\
+/////–––««« Variables: Interfaces, Addresses and Hashes »»»––––\\\\\
 
     // The Eternal shared storage interface
     IEternalStorage public immutable eternalStorage;
@@ -28,10 +28,8 @@ contract EternalFactory is IEternalFactory, OwnableEnhanced {
     // The keccak256 hash of this address
     bytes32 public immutable entity;
 
-/**
-
 /////–––««« Variables: Hidden Mappings »»»––––\\\\\
-    
+/**
     // Keeps track of the respective gage tied to any given ID
     mapping (uint256 => address) gages
 
@@ -83,10 +81,12 @@ contract EternalFactory is IEternalFactory, OwnableEnhanced {
     function initialize(address _treasury) external onlyAdmin() {
         // Set the initial treasury interface
         eternalTreasury = IEternalTreasury(_treasury);
+
         // Set initial constants and factors
         eternalStorage.setUint(entity, timeFactor, 2 * (10 ** 6));
         eternalStorage.setUint(entity, timeConstant, 15);
         eternalStorage.setUint(entity, riskConstant, 100);
+
         // Set initial baseline
         eternalStorage.setUint(entity, baseline, 10 ** 5);
     }
@@ -104,6 +104,7 @@ contract EternalFactory is IEternalFactory, OwnableEnhanced {
      * - Receivers (users) cannot deposit ETRNL into liquid gages
      * - There must be less active gages than the liquid gage limit dictates
      * - Users are only able to join 1 liquid gage per Asset-ETRNL pair offered (the maximum being the number of existing liquid gage pairs)
+     * - The Eternal Treasury cannot have a liquidity swap in progress
      */
     function initiateEternalLiquidGage(address asset, uint256 amount) external payable override returns(uint256) {
         // Checks

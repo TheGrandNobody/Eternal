@@ -19,6 +19,8 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
  */
  contract EternalTreasury is IEternalTreasury, OwnableEnhanced {
 
+/////–––««« Variables: Interfaces, Addresses and Hashes »»»––––\\\\\
+
     // The Trader Joe router interface
     IJoeRouter02 public immutable joeRouter;
     // The Trader Joe factory interface
@@ -29,16 +31,13 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
     IEternalFactory private eternalFactory;
     // The Eternal token interface
     IEternalToken private eternal;
-
     // The address of the ETRNL/AVAX pair
     address private joePair;
-    // Determines whether an auto-liquidity provision process is undergoing
-    bool private undergoingSwap;
     // The keccak256 hash of this contract's address
     bytes32 public immutable entity;
 
+/////–––««« Variable: Hidden Mappings »»»––––\\\\\
 /**
-///---*****  Variables: Hidden Mappings *****---\\\ 
     // The amount of ETRNL staked by any given individual user, converted to the "reserve" number space for fee distribution
     mapping (address => uint256) reserveBalances
 
@@ -52,13 +51,17 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
     mapping (address => mapping (address => uint256)) liquidityProvided
 */
 
-///---*****  Variables: Automatic Liquidity Provision *****---\\\ 
-    // The total amount of liquidity provided by ETRNL
+/////–––««« Variables: Automatic Liquidity Provision »»»––––\\\\\
+
+    // The total amount of liquidity provided by the treasury to the ETRNL-AVAX pair
     bytes32 public immutable totalLiquidity;
     // Determines whether the contract is tasked with providing liquidity using part of the transaction fees
     bytes32 public immutable autoLiquidityProvision;
+    // Determines whether an auto-liquidity provision process is undergoing
+    bool private undergoingSwap;
 
-///---*****  Variables: Gaging/Staking *****---\\\ 
+/////–––««« Variables: Gaging & Staking »»»––––\\\\\
+
     // The total number of ETRNL staked by users 
     bytes32 public immutable totalStakedBalances;
     // Used to increase or decrease everyone's accumulated fees
@@ -111,6 +114,7 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
     }
 
 /////–––««« Modifiers »»»––––\\\\\
+
     /**
      * Ensures the contract doesn't affect its AVAX balance when swapping (prevents it from getting caught in a circular liquidity event).
      */
