@@ -9,6 +9,8 @@ import "../interfaces/ITimelock.sol";
  * @notice A timelock contract queues and executes proposals made through the Eternal Fund contract
  */
  contract Timelock is ITimelock {
+
+/////–––««« Variables: Constants »»»––––\\\\\
     
     // The period of time any proposal action is given to be executed once the queuing period is over
     uint256 public constant GRACE_PERIOD = 14 days;
@@ -16,11 +18,16 @@ import "../interfaces/ITimelock.sol";
     uint256 public constant MINIMUM_DELAY = 2 days;
     // The upper bound for the minimum amount of time the contract must wait before queuing a proposal
     uint256 public constant MAXIMUM_DELAY = 30 days;
+
+/////–––««« Variables: Addresses »»»––––\\\\\
     
     // The address of this contract's fund
     address private fund;
     // The address of the next fund (stored here until it accepts the role)
     address private pendingFund;
+
+/////–––««« Variables: Queuing »»»––––\\\\\
+
     // The minimum amount of time the contract must wait before queuing a proposal
     uint256 private delay;
     // Determines whether a given transaction hash is queued or not
@@ -30,7 +37,7 @@ import "../interfaces/ITimelock.sol";
     // solhint-disable-next-line no-empty-blocks
     receive() external payable {}
 
-/////–––««« Constructors & Initializers »»»––––\\\\\
+/////–––««« Constructor »»»––––\\\\\
 
     constructor(address _fund, uint256 _delay) {
         require(_delay >= MINIMUM_DELAY, "Delay must exceed minimum delay");

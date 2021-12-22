@@ -11,9 +11,7 @@ import "../interfaces/ITimelock.sol";
  */
 contract EternalFund {
 
-    // The name of this contract
-    // solhint-disable-next-line const-name-snakecase
-    string public constant name = "Eternal Fund";
+/////–––««« Variables: Interfaces and Addresses »»»––––\\\\\
 
     // The timelock interface
     ITimelock public timelock;
@@ -21,6 +19,8 @@ contract EternalFund {
     IEternalToken public eternal;
     // The address of the Governor Guardian
     address public guardian;
+
+/////–––««« Variable: Voting »»»––––\\\\\
 
     // The total number of proposals
     uint256 public proposalCount;
@@ -68,10 +68,14 @@ contract EternalFund {
     // The latest proposal for each proposer
     mapping (address => uint256) public latestProposalIds;
 
+/////–––««« Variables: Voting by signature »»»––––\\\\\
+
     // The EIP-712 typehash for the contract's domain
     bytes32 public constant DOMAIN_TYPEHASH = keccak256("EIP712Domain(string name,uint256 chainId,address verifyingContract)");
     // The EIP-712 typehash for the ballot struct used by the contract
     bytes32 public constant BALLOT_TYPEHASH = keccak256("Ballot(uint256 proposalId,bool support)");
+
+/////–––««« Events »»»––––\\\\\
 
     // Emitted when a new proposal is created
     event ProposalCreated(uint256 id, address proposer, address[] targets, uint256[] values, string[] signatures, bytes[] calldatas, uint256 startTime, uint256 endTime, string description);
@@ -86,6 +90,8 @@ contract EternalFund {
     event ProposalQueued(uint256 id, uint256 eta);
     // Emitted when a proposal has been executed in the Timelock
     event ProposalExecuted(uint256 id);
+
+/////–––««« Constructor »»»––––\\\\\
 
     constructor (address _timelock, address _eternal, address _guardian) {
         timelock = ITimelock(_timelock);
