@@ -62,10 +62,6 @@ abstract contract Gage is Context, IGage {
     /**
      * @notice View the number of stakeholders in the gage (if it isn't yet active)
      * @return The number of stakeholders in the selected gage
-     *
-     * Requirements:
-     *
-     * - Gage status cannot be 'Active'
      */
     function viewGageUserCount() external view override returns (uint256) {
         return users;
