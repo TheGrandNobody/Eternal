@@ -108,12 +108,20 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
 
 /////–––««« Modifiers »»»––––\\\\\
     /**
-     * Ensures the contract doesn't swap when it's already swapping (prevents it from getting caught in a circular liquidity event).
+     * Ensures the contract doesn't affect its AVAX balance when swapping (prevents it from getting caught in a circular liquidity event).
      */
     modifier haltsActivity() {
         undergoingSwap = true;
         _;
         undergoingSwap = false;
+    }
+
+    /**
+     * Ensures that functions stop functioning when activity is halted
+     */
+    modifier activityHalted() {
+        require(!undergoingSwap, "A liquidity swap is in progress");
+        _;
     }
 
 /////–––««« Variable state-inspection functions »»»––––\\\\\
@@ -220,7 +228,7 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
      * @param id The id of the specified liquid gage
      * @param winner Whether the gage closed in favor of the receiver or not
      */
-    function settleGage(address receiver, uint256 id, bool winner) external override {
+    function settleGage(address receiver, uint256 id, bool winner) external override activityHalted() {
         bytes32 factory = keccak256(abi.encodePacked(address(eternalFactory)));
         address gageAddress = eternalStorage.getAddress(factory, keccak256(abi.encodePacked("gages", id)));
         require(_msgSender() == gageAddress, "msg.sender must be the gage");
@@ -290,7 +298,7 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
      *
      * - User staked balance must have enough tokens to support the withdrawal 
      */
-    function unstake(uint256 amount, address asset) external override {
+    function unstake(uint256 amount, address asset) external override activityHalted() {
         bytes32 stakedBalances = keccak256(abi.encodePacked("stakedBalances", _msgSender()));
         uint256 stakedBalance = eternalStorage.getUint(entity, stakedBalances);
         require(amount <= stakedBalance , "Amount exceeds staked balance");
@@ -346,10 +354,9 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
      * - There cannot already be a liquidity swap in progress
      * - Caller can only be the ETRNL contract
      */
-    function provideLiquidity(uint256 contractBalance) external override {
+    function provideLiquidity(uint256 contractBalance) external override activityHalted() {
         require(_msgSender() == address(eternal), "Only callable by ETRNL contract");
         require(eternalStorage.getBool(entity, autoLiquidityProvision), "Auto-liquidity is disabled");
-        require(!undergoingSwap, "A liquidity swap is in progress");
 
         _provideLiquidity(contractBalance);
     } 
@@ -399,7 +406,7 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
      * 
      * - The contract's balance must have enough funds to accomodate the withdrawal
      */
-    function withdrawAVAX(address payable recipient, uint256 amount) external override onlyFund() {
+    function withdrawAVAX(address payable recipient, uint256 amount) external override onlyFund() activityHalted() {
         require(amount < address(this).balance, "Insufficient balance");
 
         emit AVAXTransferred(amount, recipient);
