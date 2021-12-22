@@ -48,14 +48,13 @@ abstract contract Gage is Context, IGage {
     // Determines whether the gage is a loyalty gage or not       
     bool private immutable loyalty;
     
-
     constructor (uint256 _id, uint256 _users, address _eternalStorage, bool _loyalty) {
         require(users > 1, "Gage needs at least two users");
         id = _id;
         capacity = _users;
         loyalty = _loyalty;
         eternalStorage = IEternalStorage(_eternalStorage);
-    }      
+    }   
 
     /////–––««« Variable state-inspection functions »»»––––\\\\\
 
