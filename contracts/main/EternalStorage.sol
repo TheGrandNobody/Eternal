@@ -11,6 +11,8 @@ import "../interfaces/IEternalStorage.sol";
  */
 contract EternalStorage is IEternalStorage, Context {
 
+/////–––««« Variables: Storage »»»––––\\\\\
+
     // Scalars
     mapping (bytes32 => mapping (bytes32 => uint256)) private uints;
     mapping (bytes32 => mapping (bytes32 => address)) private addresses;
@@ -22,6 +24,8 @@ contract EternalStorage is IEternalStorage, Context {
     mapping(bytes32 => address[]) private manyAddresses;
     mapping(bytes32 => bool[]) private manyBools;
     mapping(bytes32 => bytes32[]) private manyBytes;
+
+/////–––««« Constructor »»»––––\\\\\
 
 constructor () {
     bytes32 eternalStorage = keccak256(abi.encodePacked(address(this)));    
@@ -48,6 +52,10 @@ constructor () {
      * @param entity The keccak256 hash of the contract's address
      * @param key The specified mapping key
      * @param value The specified uint256 value
+     * 
+     * Requirements:
+     *
+     * - Only callable by the latest version of any Eternal contract
      */
     function setUint(bytes32 entity, bytes32 key, uint256 value) external override onlyLatestVersion() {
         uints[entity][key] = value;
@@ -58,6 +66,10 @@ constructor () {
      * @param entity The keccak256 hash of the contract's address
      * @param key The specified mapping key
      * @param value The specified address value
+     * 
+     * Requirements:
+     *
+     * - Only callable by the latest version of any Eternal contract
      */
     function setAddress(bytes32 entity, bytes32 key, address value) external override onlyLatestVersion() {
         addresses[entity][key] = value;
@@ -68,6 +80,10 @@ constructor () {
      * @param entity The keccak256 hash of the contract's address
      * @param key The specified mapping key
      * @param value The specified boolean value
+     * 
+     * Requirements:
+     *
+     * - Only callable by the latest version of any Eternal contract
      */
     function setBool(bytes32 entity, bytes32 key, bool value) external override onlyLatestVersion() {
         bools[entity][key] = value;
@@ -78,6 +94,10 @@ constructor () {
      * @param entity The keccak256 hash of the contract's address
      * @param key The specified mapping key
      * @param value The specified bytes32 value
+     * 
+     * Requirements:
+     *
+     * - Only callable by the latest version of any Eternal contract
      */
     function setBytes(bytes32 entity, bytes32 key, bytes32 value) external override onlyLatestVersion() {
         bytes32s[entity][key] = value;
@@ -88,6 +108,10 @@ constructor () {
      * @param key The specified mapping key
      * @param index The specified index of the array's element being modified
      * @param value The specified uint256 value
+     * 
+     * Requirements:
+     *
+     * - Only callable by the latest version of any Eternal contract
      */
     function setUintArrayValue(bytes32 key, uint256 index, uint256 value) external override onlyLatestVersion() {
         if (index == 0) {
@@ -102,6 +126,10 @@ constructor () {
      * @param key The specified mapping key
      * @param index The specified index of the array's element being modified
      * @param value The specified address value
+     * 
+     * Requirements:
+     *
+     * - Only callable by the latest version of any Eternal contract
      */
     function setAddressArrayValue(bytes32 key, uint256 index, address value) external override onlyLatestVersion() {
         if (index == 0) {
@@ -116,6 +144,10 @@ constructor () {
      * @param key The specified mapping key
      * @param index The specified index of the array's element being modified
      * @param value The specified boolean value
+     * 
+     * Requirements:
+     *
+     * - Only callable by the latest version of any Eternal contract
      */
     function setBoolArrayValue(bytes32 key, uint256 index, bool value) external override onlyLatestVersion() {
         if (index == 0) {
@@ -130,6 +162,10 @@ constructor () {
      * @param key The specified mapping key
      * @param index The specified index of the array's element being modified
      * @param value The specified bytes32value
+     * 
+     * Requirements:
+     *
+     * - Only callable by the latest version of any Eternal contract
      */
     function setBytesArrayValue(bytes32 key, uint256 index, bytes32 value) external override onlyLatestVersion() {
         if (index == 0) {
@@ -226,6 +262,10 @@ constructor () {
      * @notice Deletes a uint256 array's element for a given key and index
      * @param key The specified mapping key
      * @param index The specified index of the desired element
+     * 
+     * Requirements:
+     *
+     * - Only callable by the latest version of any Eternal contract
      */
     function deleteUint(bytes32 key, uint256 index) external override onlyLatestVersion() {
         uint256 length = manyUints[key].length;
@@ -237,6 +277,10 @@ constructor () {
      * @notice Deletes an address array's element for a given key and index
      * @param key The specified mapping key
      * @param index The specified index of the desired element
+     * 
+     * Requirements:
+     *
+     * - Only callable by the latest version of any Eternal contract
      */
     function deleteAddress(bytes32 key, uint256 index) external override onlyLatestVersion() {
         uint256 length = manyAddresses[key].length;
@@ -248,6 +292,10 @@ constructor () {
      * @notice Deletes a boolean array's element for a given key and index
      * @param key The specified mapping key
      * @param index The specified index of the desired element
+     * 
+     * Requirements:
+     *
+     * - Only callable by the latest version of any Eternal contract
      */
     function deleteBool(bytes32 key, uint256 index) external override onlyLatestVersion() {
         uint256 length = manyBools[key].length;
@@ -259,6 +307,10 @@ constructor () {
      * @notice Deletes a bytes32 array's element for a given key and index
      * @param key The specified mapping key
      * @param index The specified index of the desired element
+     * 
+     * Requirements:
+     *
+     * - Only callable by the latest version of any Eternal contract
      */
     function deleteBytes(bytes32 key, uint256 index) external override onlyLatestVersion() {
         uint256 length = manyBytes[key].length;
