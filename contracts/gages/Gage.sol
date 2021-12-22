@@ -55,7 +55,6 @@ abstract contract Gage is Context, IGage {
         capacity = _users;
         loyalty = _loyalty;
         eternalStorage = IEternalStorage(_eternalStorage);
-
     }      
 
     /////–––««« Variable state-inspection functions »»»––––\\\\\
