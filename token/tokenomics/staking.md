@@ -12,4 +12,4 @@ ETRNL will automatically reward users with a percentage of all transactions. Use
 
 ### Active Staking
 
-Users may also stake their tokens on the Eternal platform to indefinitely become a part of the Eternal Fund's treasury. This will reward them with a percentage of all gaging fees. Passive staking rewards are still earned while active staking.&#x20;
+Users may also stake their tokens on the Eternal platform to indefinitely become a part of the Eternal Fund's treasury. This will reward them with a percentage of all gaging rewards and fees. Passive staking rewards are not earned while active staking.&#x20;
