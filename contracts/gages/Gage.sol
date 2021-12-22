@@ -14,14 +14,17 @@ import "../interfaces/IGage.sol";
  */
 abstract contract Gage is Context, IGage {
 
-    // Holds all users' information in the gage
-    mapping (address => UserData) internal userData;
+/////–––««« Variables: Addresses and Interfaces »»»––––\\\\\
 
     // The Eternal Storage
     IEternalStorage public immutable eternalStorage;
     // The Eternal Treasury
     IEternalTreasury internal treasury;
 
+/////–––««« Variables: Gage data »»»––––\\\\\
+
+    // Holds all users' information in the gage
+    mapping (address => UserData) internal userData;
     // The id of the gage
     uint256 internal immutable id;  
     // The maximum number of users in the gage
@@ -32,6 +35,8 @@ abstract contract Gage is Context, IGage {
     Status internal status;
     // Determines whether the gage is a loyalty gage or not       
     bool private immutable loyalty;
+
+/////–––««« Constructor »»»––––\\\\\
     
     constructor (uint256 _id, uint256 _users, address _eternalStorage, bool _loyalty) {
         require(users > 1, "Gage needs at least two users");
@@ -41,7 +46,7 @@ abstract contract Gage is Context, IGage {
         eternalStorage = IEternalStorage(_eternalStorage);
     }   
 
-    /////–––««« Variable state-inspection functions »»»––––\\\\\
+/////–––««« Variable state-inspection functions »»»––––\\\\\
 
     /**
      * @notice View the number of stakeholders in the gage (if it isn't yet active)

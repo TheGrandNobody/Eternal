@@ -11,13 +11,17 @@ import "../interfaces/ILoyaltyGage.sol";
  */
 contract LoyaltyGage is Gage, ILoyaltyGage {
 
+/////–––««« Variables: Addresses and Interfaces »»»––––\\\\\
+
     // Address of the stakeholder which pays the discount in a loyalty gage
     address private immutable distributor;
     // Address of the stakeholder which benefits from the discount in a loyalty gage
     address private immutable receiver;
     // The asset used in the condition
     IERC20 private assetOfReference;
-    
+
+/////–––««« Variables: Condition computation »»»––––\\\\\
+
     // The percentage change condition for the total token supply (x 10 ** 11)
     uint256 private immutable percent;
     // The total supply at the time of the deposit
