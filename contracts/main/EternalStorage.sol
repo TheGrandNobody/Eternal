@@ -25,12 +25,23 @@ contract EternalStorage is IEternalStorage, Context {
     mapping(bytes32 => bool[]) private manyBools;
     mapping(bytes32 => bytes32[]) private manyBytes;
 
-/////–––««« Constructor »»»––––\\\\\
+/////–––««« Constructors & Initializers »»»––––\\\\\
 
-constructor () {
-    bytes32 eternalStorage = keccak256(abi.encodePacked(address(this)));    
-    bytes32 nobody = keccak256(abi.encodePacked(_msgSender()));
-    addresses[eternalStorage][nobody] = _msgSender();
+//solhint-disable-next-line no-empty-blocks
+constructor () {}
+
+function initialize(address _treasury, address _token, address _factory, address _fund) external {
+    bytes32 treasury = keccak256(abi.encodePacked(_treasury));
+    bytes32 token = keccak256(abi.encodePacked(_token));
+    bytes32 factory = keccak256(abi.encodePacked(_factory));
+    bytes32 fund = keccak256(abi.encodePacked(_fund));
+    bytes32 eternalStorage = keccak256(abi.encodePacked(address(this)));
+
+    require(addresses[eternalStorage][token] == address(0), "Initial contracts already set");
+    addresses[eternalStorage][treasury] = _treasury;
+    addresses[eternalStorage][token] = _token;
+    addresses[eternalStorage][factory] = _factory;
+    addresses[eternalStorage][fund] = _fund;
 }
 
 /////–––««« Modifiers »»»––––\\\\\
