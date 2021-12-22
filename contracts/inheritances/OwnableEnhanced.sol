@@ -43,7 +43,7 @@ abstract contract OwnableEnhanced is Context {
         address msgSender = _msgSender();
         _admin = msgSender;
         emit AdminRightsTransferred(address(0), msgSender);
-        timeOfCreation = block.timestamp + 2 weeks + 1 days;
+        timeOfCreation = block.timestamp + 3 days;
     }
 
 /////–––««« Modifiers »»»––––\\\\\
