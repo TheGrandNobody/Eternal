@@ -80,6 +80,10 @@ No, gages are a different,  much larger class of long-term financial instruments
 2. **Gage-related applications are generally superior in fixing a short-termist issue as compared to traditional financial instruments** as they create symbiotic relationships rather than force either individual into a given traditional role.&#x20;
 3. **The flexibility of gages always allow more options, more actions, and more fluidity in the interaction between any two or more individuals.** This means that constrains, limits and other barriers to access and usage normally imposed by traditional financial instruments are removed with gages.
 
+## What is the governance like in Eternal?
+
+Eternal is a fully decentralized autonomous organization. However, Eternal is **not a company** and **not owned by anyone except for its token holders.** Even the company Eternal Finance B.V and the architect Nobody, hold no initial stake in Eternal.
+
 ## What is the company Eternal Finance B.V for then?
 
 Eternal Finance B.V is necessary for **two reasons:**
@@ -93,10 +97,6 @@ Eternal Finance B.V was necessary to obtain the funds which covered not only mar
 **2. Future Releases**
 
 Unfortunately, we have not reached a point in society where all systems are fully decentralized. Eternal Finance B.V is primarily here to serve as a bridge of trust between the centralized and decentralized. This will be useful for upcoming releases, where some applications are particularly useful to countries where internet access is not as common, or to make necessary agreements with governments.
-
-## What is the governance like in Eternal?
-
-Eternal is a fully decentralized autonomous organization.
 
 ## Who is Nobody?
 
