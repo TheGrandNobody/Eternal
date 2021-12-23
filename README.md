@@ -8,8 +8,6 @@ description: A summary of Eternal, what it is and what it does
 
 Eternal is the world's first long-termist decentralized gaging platform, **aiming to popularize a new class of long-term financial instruments, gages, as a solution to a $1.7 trillion problem named short-termism.**
 
-However Eternal is **not a company** and **not owned by anyone except for its token holders.** Even the company Eternal Finance B.V and the architect Nobody, hold no initial stake in Eternal.
-
 More than that, Eternal is an attempt at demonstrating the significant advantages of neo-long-termist strategies. We begin doing so by **giving you the opportunity to provide liquidity on our platform at a 50% discount as well as being paid for it, simultaneously, whilst remaining economically sustainable**.&#x20;
 
 ## What is short-termism?
