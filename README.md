@@ -98,15 +98,7 @@ Unfortunately, we have not reached a point in society where all systems are full
 
 ## What is the governance like in Eternal?
 
-In the **second quarter post-launch**, the Eternal Fund will be released and Eternal will go from having Nobody as the initial admin, to nobody as the admin. Meaning, Eternal will become a fully decentralized autonomous organization. This decision was made for **two reasons:**
-
-**1. Community Input**
-
-The best systems have the input of the users, not just the architect. This means that the Eternal Fund needs to be designed with the community's opinion taken into account.
-
-**2. Treasury**
-
-The Eternal Fund holds a treasury funded by the Eternal token. However, it needs a minimum time period for it to accumulate some value. Do not worry, no one can access it, not even Nobody.
+Eternal is a fully decentralized autonomous organization.
 
 ## Who is Nobody?
 
