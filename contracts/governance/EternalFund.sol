@@ -465,7 +465,7 @@ contract EternalFund is IEternalFund {
     function getPriorVotes(address account, uint256 blockNumber) public view override returns (uint256) {
         require(blockNumber < block.number, "Block is not yet finalized");
         uint256 nCheckpoints = eternalStorage.getUint(entity, keccak256(abi.encodePacked("numCheckpoints", account)));
-`
+
         if (nCheckpoints == 0) {
             // No checkpoints means no votes
             return 0;
