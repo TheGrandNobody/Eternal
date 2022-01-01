@@ -358,41 +358,6 @@ contract EternalToken is IEternalToken, OwnableEnhanced {
             storeLiquidityFunds(sender, amount * liquidityRate / 100000, reflectedAmount * liquidityRate / 100000);
         }
     }
-
-    /**
-     * @notice Burns a given amount of ETRNL.
-     * @param amount The amount of ETRNL being burned
-     * @return True if the burn is successful
-     *
-     * Requirements:
-     * 
-     * - Cannot burn from the burn address
-     * - Burn amount cannot be greater than the msgSender's balance
-     */
-    function burn(uint256 amount) external returns (bool) {
-        require(_msgSender() != address(0), "Burn from the zero address");
-        uint256 balance = balanceOf(_msgSender());
-        require(balance >= amount, "Burn amount exceeds balance");
-
-        // Subtract the amounts from the sender before so we can reuse _burn elsewhere
-        uint256 reflectedAmount;
-        bool senderExcludedFromFees = eternalStorage.getBool(entity, keccak256(abi.encodePacked("isExcludedFromFees", _msgSender())));
-        bool senderExcludedFromRewards = eternalStorage.getBool(entity, keccak256(abi.encodePacked("isExcludedFromRewards", _msgSender())));
-        (,reflectedAmount,) = getValues(amount, !senderExcludedFromFees);
-        bytes32 reflectedSenderBalance = keccak256(abi.encodePacked("reflectedBalances", _msgSender()));
-        uint256 senderReflectedBalance = eternalStorage.getUint(entity, reflectedSenderBalance);
-        eternalStorage.setUint(entity, reflectedSenderBalance, senderReflectedBalance - reflectedAmount);
-
-        if (senderExcludedFromRewards) {
-            bytes32 trueSenderBalance = keccak256(abi.encodePacked("trueBalances", _msgSender()));
-            uint256 senderTrueBalance = eternalStorage.getUint(entity, trueSenderBalance);
-            eternalStorage.setUint(entity, trueSenderBalance, senderTrueBalance - amount);
-        }
-        
-        _burn(_msgSender(), amount, reflectedAmount);
-
-        return true;
-    }
     
     /**
      * @notice Burns the specified amount of ETRNL for a given sender by sending them to the 0x0 address.
