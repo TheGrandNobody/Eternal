@@ -5,16 +5,19 @@ import "../interfaces/IEternalFund.sol";
 import "../interfaces/IEternalStorage.sol";
 import "../interfaces/ITimelock.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/utils/Context.sol";
 /**
  * @title The Eternal Fund contract
  * @author Taken from Compound Finance (COMP) and tweaked/detailed by Nobody (me)
  * @notice The Eternal Fund serves as the governing body of Eternal
  */
-contract EternalFund is IEternalFund {
+contract EternalFund is IEternalFund, Context {
 
 /////–––««« Variables: Interfaces and Addresses »»»––––\\\\\
     // The name of this contract
     string public constant name = "Eternal Fund";
+    // The keccak256 hash of the Eternal Token address
+    bytes32 public immutable entity;
 
     // The timelock interface
     ITimelock public timelock;
@@ -103,6 +106,8 @@ contract EternalFund is IEternalFund {
         eternal = IERC20(_eternal);
         eternalStorage = IEternalStorage(_eternalStorage);
         guardian = _guardian;
+
+        entity = keccak256(abi.encodePacked(_eternal));
     }
 
 /////–––««« Variable state-inspection functions »»»––––\\\\\
@@ -441,6 +446,7 @@ contract EternalFund is IEternalFund {
         timelock.executeTransaction(address(timelock), 0, "setPendingAdmin(address)", abi.encode(newPendingAdmin), eta);
     }
 
+/////–––««« Governance-related functions »»»––––\\\\\
 
     /**
      * @notice Gets the current votes balance for a given account
@@ -500,13 +506,13 @@ contract EternalFund is IEternalFund {
     function delegate(address delegatee) external override {
         bytes32 _delegate = keccak256(abi.encodePacked("delegates", _msgSender()));
         address currentDelegate = eternalStorage.getAddress(entity, _delegate);
-        uint256 delegatorBalance = balanceOf(_msgSender());
+        uint256 delegatorBalance = eternal.balanceOf(_msgSender());
 
         eternalStorage.setAddress(entity, _delegate, delegatee);
 
         emit DelegateChanged(_msgSender(), currentDelegate, delegatee);
 
-        _moveDelegates(currentDelegate, delegatee, delegatorBalance);
+        moveDelegates(currentDelegate, delegatee, delegatorBalance);
     }
 
     /**
@@ -515,7 +521,8 @@ contract EternalFund is IEternalFund {
      * @param dstRep The delegate to whom we are transferring votes
      * @param amount The specified amount of votes
      */
-    function _moveDelegates(address srcRep, address dstRep, uint256 amount) private {
+    function moveDelegates(address srcRep, address dstRep, uint256 amount) public override {
+        require(_msgSender() == address(this) || _msgSender() == address(eternal), "Only callable by Eternal");
         if (srcRep != dstRep && amount > 0) {
             if (srcRep != address(0)) {
                 uint256 srcRepNum = eternalStorage.getUint(entity, keccak256(abi.encodePacked("numCheckpoints", srcRep)));
