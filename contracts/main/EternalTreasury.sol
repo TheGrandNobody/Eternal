@@ -193,6 +193,12 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
         }
     }
 
+    function removeLiquidity(address rAsset, uint256 providedAsset, address receiver) private returns(uint256, uint256) {
+        (uint256 minETRNL, uint256 minAsset,) = computeMinAmounts(rAsset, address(eternal), providedAsset, 200);
+        uint256 liquidity = eternalStorage.getUint(entity, keccak256(abi.encodePacked("liquidity", receiver, rAsset)));
+        return joeRouter.removeLiquidity(address(eternal), rAsset, liquidity, minETRNL, minAsset, address(this), block.timestamp);
+    }
+
 /////–––««« Gage-logic functions »»»––––\\\\\
 
     /**
@@ -252,16 +258,13 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
         require(_msgSender() == gageAddress, "msg.sender must be the gage");
 
         // Fetch the liquid gage data
-        ILoyaltyGage gage = ILoyaltyGage(gageAddress);
-        (address rAsset,, uint256 rRisk) = gage.viewUserData(receiver);
-        (,uint256 dAmount, uint256 dRisk) = gage.viewUserData(address(this));
-        uint256 liquidity = eternalStorage.getUint(entity, keccak256(abi.encodePacked("liquidity", receiver, rAsset)));
+        (address rAsset,, uint256 rRisk) = ILoyaltyGage(gageAddress).viewUserData(receiver);
+        (,uint256 dAmount, uint256 dRisk) = ILoyaltyGage(gageAddress).viewUserData(address(this));
         uint256 providedAsset = eternalStorage.getUint(entity, keccak256(abi.encodePacked("amountProvided", receiver, rAsset)));
 
         // Remove the liquidity for this gage
-        (uint256 minETRNL, uint256 minAsset,) = computeMinAmounts(rAsset, address(eternal), providedAsset, 200);
-        (uint256 amountETRNL, uint256 amountAsset) = joeRouter.removeLiquidity(address(eternal), rAsset, liquidity, minETRNL, minAsset, address(this), block.timestamp);
-        
+        (uint256 amountETRNL, uint256 amountAsset) = removeLiquidity(rAsset, providedAsset, receiver);
+
         // Compute and transfer the net gage deposit + any rewards due to the receiver
         uint256 eternalRewards = amountETRNL > dAmount ? amountETRNL - dAmount : 0;
         uint256 eternalFee = eternalStorage.getUint(entity, feeRate) * providedAsset / (10 ** 5);
@@ -279,8 +282,10 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
         require(IERC20(rAsset).transfer(receiver, amountAsset - eternalFee), "Failed to transfer ERC20 reward");
 
         // Update staker's fees w.r.t the gage fee, gage rewards and liquidity rewards
+        {
         uint256 totalFee = eternalRewards + (dAmount * eternalStorage.getUint(entity, feeRate) / (10 ** 5));
         eternalStorage.setUint(entity, reserveStakedBalances, eternalStorage.getUint(entity, reserveStakedBalances) - convertToReserve(totalFee));
+        }
     }
 
 /////–––««« Staking-logic functions »»»––––\\\\\

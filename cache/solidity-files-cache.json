@@ -2,8 +2,8 @@
   "_format": "hh-sol-cache-2",
   "files": {
     "/Users/sirnobody/Eternal/contracts/inheritances/OwnableEnhanced.sol": {
-      "lastModificationDate": 1627403434749,
-      "contentHash": "56fff55af6c4984a5a3db3959c2becd7",
+      "lastModificationDate": 1640193717436,
+      "contentHash": "a474b65981636b1f95c409fee456b46e",
       "sourceName": "contracts/inheritances/OwnableEnhanced.sol",
       "solcConfig": {
         "version": "0.8.0",
@@ -31,7 +31,7 @@
         "@openzeppelin/contracts/utils/Context.sol"
       ],
       "versionPragmas": [
-        "^0.8.0"
+        "0.8.0"
       ],
       "artifacts": [
         "OwnableEnhanced"
@@ -72,8 +72,8 @@
       ]
     },
     "/Users/sirnobody/Eternal/contracts/main/FundLock.sol": {
-      "lastModificationDate": 1628869271440,
-      "contentHash": "49d4f71c8a45b99f32d0e29c26230b0d",
+      "lastModificationDate": 1640202408677,
+      "contentHash": "09efcfa1b2a7648b86d9ec92073e155c",
       "sourceName": "contracts/main/FundLock.sol",
       "solcConfig": {
         "version": "0.8.0",
@@ -98,19 +98,18 @@
         }
       },
       "imports": [
-        "../inheritances/OwnableEnhanced.sol",
         "../interfaces/IEternalToken.sol"
       ],
       "versionPragmas": [
-        "^0.8.0"
+        "0.8.0"
       ],
       "artifacts": [
         "FundLock"
       ]
     },
     "/Users/sirnobody/Eternal/contracts/interfaces/IEternalToken.sol": {
-      "lastModificationDate": 1627403434749,
-      "contentHash": "1c840534ee7d1bd313461b8fa43f1b4c",
+      "lastModificationDate": 1640191559322,
+      "contentHash": "676ad80b9f775b92cd69236aeca8aa49",
       "sourceName": "contracts/interfaces/IEternalToken.sol",
       "solcConfig": {
         "version": "0.8.0",
@@ -139,7 +138,7 @@
         "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol"
       ],
       "versionPragmas": [
-        "^0.8.0"
+        "0.8.0"
       ],
       "artifacts": [
         "IEternalToken"
@@ -216,8 +215,8 @@
       ]
     },
     "/Users/sirnobody/Eternal/contracts/main/EternalToken.sol": {
-      "lastModificationDate": 1627403434749,
-      "contentHash": "12e73dc7226e87947ae1afad226e053b",
+      "lastModificationDate": 1641043697260,
+      "contentHash": "90bf6af718fafe17bb838fb74accd9b9",
       "sourceName": "contracts/main/EternalToken.sol",
       "solcConfig": {
         "version": "0.8.0",
@@ -243,20 +242,61 @@
       },
       "imports": [
         "../interfaces/IEternalToken.sol",
-        "../interfaces/IEternalLiquidity.sol",
+        "../interfaces/IEternalTreasury.sol",
+        "../interfaces/IEternalStorage.sol",
         "../inheritances/OwnableEnhanced.sol"
       ],
       "versionPragmas": [
-        "^0.8.0"
+        "0.8.0"
       ],
       "artifacts": [
         "EternalToken"
       ]
     },
-    "/Users/sirnobody/Eternal/contracts/interfaces/IEternalLiquidity.sol": {
-      "lastModificationDate": 1627403434749,
-      "contentHash": "9418d32abb2c828e7a1c5fed0d984e9c",
-      "sourceName": "contracts/interfaces/IEternalLiquidity.sol",
+    "/Users/sirnobody/Eternal/contracts/gages/Gage.sol": {
+      "lastModificationDate": 1640188474240,
+      "contentHash": "79090669481367d59bcdf127852f5d8a",
+      "sourceName": "contracts/gages/Gage.sol",
+      "solcConfig": {
+        "version": "0.8.0",
+        "settings": {
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "@openzeppelin/contracts/utils/Context.sol",
+        "@openzeppelin/contracts/token/ERC20/IERC20.sol",
+        "../interfaces/IEternalStorage.sol",
+        "../interfaces/IEternalTreasury.sol",
+        "../interfaces/IGage.sol"
+      ],
+      "versionPragmas": [
+        "0.8.0"
+      ],
+      "artifacts": [
+        "Gage"
+      ]
+    },
+    "/Users/sirnobody/Eternal/contracts/interfaces/IEternalStorage.sol": {
+      "lastModificationDate": 1640075736462,
+      "contentHash": "316dce223a0909cbc1aac0cf22f1f526",
+      "sourceName": "contracts/interfaces/IEternalStorage.sol",
       "solcConfig": {
         "version": "0.8.0",
         "settings": {
@@ -281,16 +321,84 @@
       },
       "imports": [],
       "versionPragmas": [
-        "^0.8.0"
+        "0.8.0"
       ],
       "artifacts": [
-        "IEternalLiquidity"
+        "IEternalStorage"
       ]
     },
-    "/Users/sirnobody/Eternal/contracts/main/EternalLiquidity.sol": {
-      "lastModificationDate": 1627403434749,
-      "contentHash": "ed5a7063e5773627f05c1136bfc1a09c",
-      "sourceName": "contracts/main/EternalLiquidity.sol",
+    "/Users/sirnobody/Eternal/contracts/interfaces/IEternalTreasury.sol": {
+      "lastModificationDate": 1640187056974,
+      "contentHash": "46f1fea159657b624bf6dbbf4bd15b86",
+      "sourceName": "contracts/interfaces/IEternalTreasury.sol",
+      "solcConfig": {
+        "version": "0.8.0",
+        "settings": {
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "0.8.0"
+      ],
+      "artifacts": [
+        "IEternalTreasury"
+      ]
+    },
+    "/Users/sirnobody/Eternal/contracts/interfaces/IGage.sol": {
+      "lastModificationDate": 1640185011902,
+      "contentHash": "e71014dea015e96fdf6ead28937e7f99",
+      "sourceName": "contracts/interfaces/IGage.sol",
+      "solcConfig": {
+        "version": "0.8.0",
+        "settings": {
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "0.8.0"
+      ],
+      "artifacts": [
+        "IGage"
+      ]
+    },
+    "/Users/sirnobody/Eternal/contracts/gages/LoyaltyGage.sol": {
+      "lastModificationDate": 1640188413880,
+      "contentHash": "d1a608fee2fe4de5858d349200386fea",
+      "sourceName": "contracts/gages/LoyaltyGage.sol",
       "solcConfig": {
         "version": "0.8.0",
         "settings": {
@@ -314,23 +422,133 @@
         }
       },
       "imports": [
-        "@pangolindex/exchange-contracts/contracts/pangolin-core/interfaces/IPangolinFactory.sol",
-        "@pangolindex/exchange-contracts/contracts/pangolin-periphery/interfaces/IPangolinRouter.sol",
-        "../interfaces/IEternalToken.sol",
-        "../interfaces/IEternalLiquidity.sol",
-        "../inheritances/OwnableEnhanced.sol"
+        "./Gage.sol",
+        "../interfaces/ILoyaltyGage.sol"
       ],
       "versionPragmas": [
-        "^0.8.0"
+        "0.8.0"
       ],
       "artifacts": [
-        "EternalLiquidity"
+        "LoyaltyGage"
       ]
     },
-    "/Users/sirnobody/Eternal/node_modules/@pangolindex/exchange-contracts/contracts/pangolin-core/interfaces/IPangolinFactory.sol": {
-      "lastModificationDate": 1627576171818,
-      "contentHash": "0cece940e3c7445637b8e966db2d341e",
-      "sourceName": "@pangolindex/exchange-contracts/contracts/pangolin-core/interfaces/IPangolinFactory.sol",
+    "/Users/sirnobody/Eternal/contracts/interfaces/ILoyaltyGage.sol": {
+      "lastModificationDate": 1640184584739,
+      "contentHash": "216ce8e5534d277413d43426e401f044",
+      "sourceName": "contracts/interfaces/ILoyaltyGage.sol",
+      "solcConfig": {
+        "version": "0.8.0",
+        "settings": {
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "./IGage.sol"
+      ],
+      "versionPragmas": [
+        "0.8.0"
+      ],
+      "artifacts": [
+        "ILoyaltyGage"
+      ]
+    },
+    "/Users/sirnobody/Eternal/contracts/main/EternalOffering.sol": {
+      "lastModificationDate": 1640201118275,
+      "contentHash": "df6f9c2e832de5f337b040aa3f23b13a",
+      "sourceName": "contracts/main/EternalOffering.sol",
+      "solcConfig": {
+        "version": "0.8.0",
+        "settings": {
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "../interfaces/IEternalToken.sol",
+        "../interfaces/ILoyaltyGage.sol",
+        "../gages/LoyaltyGage.sol",
+        "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoeRouter02.sol",
+        "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoeFactory.sol",
+        "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol"
+      ],
+      "versionPragmas": [
+        "0.8.0"
+      ],
+      "artifacts": [
+        "EternalOffering"
+      ]
+    },
+    "/Users/sirnobody/Eternal/node_modules/@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoeRouter02.sol": {
+      "lastModificationDate": 1632671105876,
+      "contentHash": "19e739009e61247925530af11d86abaf",
+      "sourceName": "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoeRouter02.sol",
+      "solcConfig": {
+        "version": "0.8.0",
+        "settings": {
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "./IJoeRouter01.sol"
+      ],
+      "versionPragmas": [
+        ">=0.6.2"
+      ],
+      "artifacts": [
+        "IJoeRouter02"
+      ]
+    },
+    "/Users/sirnobody/Eternal/node_modules/@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoeFactory.sol": {
+      "lastModificationDate": 1632671105875,
+      "contentHash": "0cf56447cc76fb66cb8dfc2d48a3c75c",
+      "sourceName": "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoeFactory.sol",
       "solcConfig": {
         "version": "0.8.0",
         "settings": {
@@ -358,13 +576,47 @@
         ">=0.5.0"
       ],
       "artifacts": [
-        "IPangolinFactory"
+        "IJoeFactory"
       ]
     },
-    "/Users/sirnobody/Eternal/node_modules/@pangolindex/exchange-contracts/contracts/pangolin-periphery/interfaces/IPangolinRouter.sol": {
-      "lastModificationDate": 1627576171819,
-      "contentHash": "dc96721ed3d13b27870460d2a2bd15e1",
-      "sourceName": "@pangolindex/exchange-contracts/contracts/pangolin-periphery/interfaces/IPangolinRouter.sol",
+    "/Users/sirnobody/Eternal/node_modules/@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol": {
+      "lastModificationDate": 1632671105875,
+      "contentHash": "5fe42995b6adec356838f1f44a9e0596",
+      "sourceName": "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol",
+      "solcConfig": {
+        "version": "0.8.0",
+        "settings": {
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        ">=0.5.0"
+      ],
+      "artifacts": [
+        "IJoePair"
+      ]
+    },
+    "/Users/sirnobody/Eternal/node_modules/@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoeRouter01.sol": {
+      "lastModificationDate": 1632671105875,
+      "contentHash": "135196f669206533dd41321cfda20cf9",
+      "sourceName": "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoeRouter01.sol",
       "solcConfig": {
         "version": "0.8.0",
         "settings": {
@@ -392,13 +644,92 @@
         ">=0.6.2"
       ],
       "artifacts": [
-        "IPangolinRouter"
+        "IJoeRouter01"
       ]
     },
-    "/Users/sirnobody/Eternal/contracts/main/Eternal.sol": {
-      "lastModificationDate": 1627814794044,
-      "contentHash": "3a58c61c9e901fdfbd8b4084820c72af",
-      "sourceName": "contracts/main/Eternal.sol",
+    "/Users/sirnobody/Eternal/contracts/main/EternalTreasury.sol": {
+      "lastModificationDate": 1641046084922,
+      "contentHash": "8f57c1dfac8561ceb99d94624bce16b5",
+      "sourceName": "contracts/main/EternalTreasury.sol",
+      "solcConfig": {
+        "version": "0.8.0",
+        "settings": {
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "../inheritances/OwnableEnhanced.sol",
+        "../interfaces/IEternalFactory.sol",
+        "../interfaces/IEternalToken.sol",
+        "../interfaces/IEternalTreasury.sol",
+        "../interfaces/IEternalStorage.sol",
+        "../interfaces/ILoyaltyGage.sol",
+        "@openzeppelin/contracts/token/ERC20/IERC20.sol",
+        "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoeRouter02.sol",
+        "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoeFactory.sol",
+        "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol"
+      ],
+      "versionPragmas": [
+        "0.8.0"
+      ],
+      "artifacts": [
+        "EternalTreasury"
+      ]
+    },
+    "/Users/sirnobody/Eternal/contracts/interfaces/IEternalFactory.sol": {
+      "lastModificationDate": 1640184593075,
+      "contentHash": "55e51dd08fa05402780b49544c88b639",
+      "sourceName": "contracts/interfaces/IEternalFactory.sol",
+      "solcConfig": {
+        "version": "0.8.0",
+        "settings": {
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "0.8.0"
+      ],
+      "artifacts": [
+        "IEternalFactory"
+      ]
+    },
+    "/Users/sirnobody/Eternal/contracts/main/EternalFactory.sol": {
+      "lastModificationDate": 1641042209196,
+      "contentHash": "1d141c91d93df489752eaa6a1ed653cf",
+      "sourceName": "contracts/main/EternalFactory.sol",
       "solcConfig": {
         "version": "0.8.0",
         "settings": {
@@ -423,19 +754,98 @@
       },
       "imports": [
         "../interfaces/IEternalToken.sol",
-        "@openzeppelin/contracts/utils/Context.sol"
+        "../interfaces/IEternalFactory.sol",
+        "../interfaces/IEternalStorage.sol",
+        "../interfaces/IEternalTreasury.sol",
+        "../interfaces/ILoyaltyGage.sol",
+        "../gages/LoyaltyGage.sol",
+        "../inheritances/OwnableEnhanced.sol"
       ],
       "versionPragmas": [
-        "^0.8.0"
+        "0.8.0"
       ],
       "artifacts": [
-        "Eternal"
+        "EternalFactory"
       ]
     },
-    "/Users/sirnobody/Eternal/contracts/main/EternalFund.sol": {
-      "lastModificationDate": 1629650428866,
-      "contentHash": "f7f77b1b2b4b35b9d5dabf0a066abe27",
-      "sourceName": "contracts/main/EternalFund.sol",
+    "/Users/sirnobody/Eternal/contracts/main/EternalStorage.sol": {
+      "lastModificationDate": 1640193359069,
+      "contentHash": "2cf0fc35110ed4c7dadd594a25c8aa6e",
+      "sourceName": "contracts/main/EternalStorage.sol",
+      "solcConfig": {
+        "version": "0.8.0",
+        "settings": {
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "@openzeppelin/contracts/utils/Context.sol",
+        "../interfaces/IEternalStorage.sol"
+      ],
+      "versionPragmas": [
+        "0.8.0"
+      ],
+      "artifacts": [
+        "EternalStorage"
+      ]
+    },
+    "/Users/sirnobody/Eternal/contracts/governance/EternalFund.sol": {
+      "lastModificationDate": 1641041416956,
+      "contentHash": "bc025fad6f1c049e722989bad839fcea",
+      "sourceName": "contracts/governance/EternalFund.sol",
+      "solcConfig": {
+        "version": "0.8.0",
+        "settings": {
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "../interfaces/IEternalToken.sol",
+        "../interfaces/ITimelock.sol"
+      ],
+      "versionPragmas": [
+        "0.8.0"
+      ],
+      "artifacts": [
+        "EternalFund"
+      ]
+    },
+    "/Users/sirnobody/Eternal/contracts/interfaces/ITimelock.sol": {
+      "lastModificationDate": 1640184821179,
+      "contentHash": "ab6fe3d5c1eedd8d182e64c3ca68ba92",
+      "sourceName": "contracts/interfaces/ITimelock.sol",
       "solcConfig": {
         "version": "0.8.0",
         "settings": {
@@ -460,16 +870,16 @@
       },
       "imports": [],
       "versionPragmas": [
-        "^0.8.0"
+        "0.8.0"
       ],
       "artifacts": [
-        "EternalFundV0"
+        "ITimelock"
       ]
     },
-    "/Users/sirnobody/Eternal/contracts/main/Test.sol": {
-      "lastModificationDate": 1629051336134,
-      "contentHash": "e759cbf2c785f9dbda7067da87802cad",
-      "sourceName": "contracts/main/Test.sol",
+    "/Users/sirnobody/Eternal/contracts/governance/Timelock.sol": {
+      "lastModificationDate": 1640188875011,
+      "contentHash": "b8b44573ba9405703458184a0cce41ed",
+      "sourceName": "contracts/governance/Timelock.sol",
       "solcConfig": {
         "version": "0.8.0",
         "settings": {
@@ -492,46 +902,14 @@
           }
         }
       },
-      "imports": [],
+      "imports": [
+        "../interfaces/ITimelock.sol"
+      ],
       "versionPragmas": [
-        "^0.8.0"
+        "0.8.0"
       ],
       "artifacts": [
-        "Test"
-      ]
-    },
-    "/Users/sirnobody/Eternal/contracts/Migrations.sol": {
-      "lastModificationDate": 1627403434749,
-      "contentHash": "dca04644d5044ab1b56860492280b57a",
-      "sourceName": "contracts/Migrations.sol",
-      "solcConfig": {
-        "version": "0.8.0",
-        "settings": {
-          "optimizer": {
-            "enabled": false,
-            "runs": 200
-          },
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [],
-      "versionPragmas": [
-        "^0.8.0"
-      ],
-      "artifacts": [
-        "Migrations"
+        "Timelock"
       ]
     }
   }

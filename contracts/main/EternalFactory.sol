@@ -119,6 +119,8 @@ contract EternalFactory is IEternalFactory, OwnableEnhanced {
         require(!eternalTreasury.viewUndergoingSwap(), "A liquidity swap is in progress");
 
         // Compute the percent change condition
+        uint256 percent;
+        {
         bytes32 eternalToken = keccak256(abi.encodePacked(address(eternal)));
         uint256 alpha = eternalStorage.getUint(eternalToken, keccak256(abi.encodePacked("alpha")));
         if (alpha == 0) {
@@ -127,13 +129,16 @@ contract EternalFactory is IEternalFactory, OwnableEnhanced {
         uint256 burnRate = eternalStorage.getUint(eternalToken, keccak256(abi.encodePacked("burnRate")));
         uint256 _timeConstant = eternalStorage.getUint(entity, timeConstant);
         uint256 _timeFactor = eternalStorage.getUint(entity, timeFactor);
-        uint256 percent = burnRate * alpha * (10 ** 18) * _timeConstant * _timeFactor / eternal.totalSupply();
+        percent = burnRate * alpha * (10 ** 18) * _timeConstant * _timeFactor / eternal.totalSupply();
+        }
 
         // Incremement the lastId tracker and the number of active liquid gages
         uint256 idLast = eternalStorage.getUint(entity, lastId) + 1;
+        {
         uint256 totalGagesLiquid = eternalStorage.getUint(entity, totalLiquidGages);
         eternalStorage.setUint(entity, lastId, idLast);
         eternalStorage.setUint(entity, totalLiquidGages, totalGagesLiquid + 1);
+        }
 
         // Deploy a new Gage
         LoyaltyGage newGage = new LoyaltyGage(idLast, percent, 2, false, address(eternalTreasury), _msgSender(), address(this));

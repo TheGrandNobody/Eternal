@@ -12,6 +12,8 @@ import "../interfaces/ITimelock.sol";
 contract EternalFund {
 
 /////–––««« Variables: Interfaces and Addresses »»»––––\\\\\
+    // The name of this contract
+    string public constant name = "Eternal Fund";
 
     // The timelock interface
     ITimelock public timelock;
