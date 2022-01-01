@@ -1,12 +1,12 @@
 //SPDX-License-Identifier: MIT
 pragma solidity 0.8.0;
 
-import "../interfaces/IEternalToken.sol";
 import "../interfaces/ILoyaltyGage.sol";
 import "../gages/LoyaltyGage.sol";
 import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoeRouter02.sol";
 import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoeFactory.sol";
 import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 /**
  * @title Contract for the Eternal gaging platform
@@ -25,7 +25,7 @@ contract EternalOffering {
     // The Joe factory interface
     IJoeFactory public immutable joeFactory;
     // The Eternal token interface
-    IEternalToken public immutable eternal;
+    IERC20 public immutable eternal;
 
     // The address of the Eternal Treasury
     address public immutable treasury;
@@ -73,7 +73,7 @@ contract EternalOffering {
 
     constructor (address _eternal, address _treasury) {
         // Set the initial Eternal token and storage interfaces
-        eternal = IEternalToken(_eternal);
+        eternal = IERC20(_eternal);
         IJoeRouter02 _joeRouter = IJoeRouter02(0x60aE616a2155Ee3d9A68541Ba4544862310933d4);
         IJoeFactory _joeFactory = IJoeFactory(_joeRouter.factory());
         joeRouter = _joeRouter;

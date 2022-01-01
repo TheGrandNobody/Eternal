@@ -1,13 +1,13 @@
 //SPDX-License-Identifier: MIT
 pragma solidity 0.8.0;
 
-import "../interfaces/IEternalToken.sol";
 import "../interfaces/IEternalFactory.sol";
 import "../interfaces/IEternalStorage.sol";
 import "../interfaces/IEternalTreasury.sol";
 import "../interfaces/ILoyaltyGage.sol";
 import "../gages/LoyaltyGage.sol";
 import "../inheritances/OwnableEnhanced.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 /**
  * @title Contract for the Eternal gaging platform
@@ -21,7 +21,7 @@ contract EternalFactory is IEternalFactory, OwnableEnhanced {
     // The Eternal shared storage interface
     IEternalStorage public immutable eternalStorage;
     // The Eternal token interface
-    IEternalToken private eternal;
+    IERC20 private eternal;
     // The Eternal treasury interface
     IEternalTreasury private eternalTreasury;
 
@@ -64,7 +64,7 @@ contract EternalFactory is IEternalFactory, OwnableEnhanced {
 
     constructor (address _eternal, address _eternalStorage) {
         // Set the initial Eternal token and storage interfaces
-        eternal = IEternalToken(_eternal);
+        eternal = IERC20(_eternal);
         eternalStorage = IEternalStorage(_eternalStorage);
 
         // Initialize keccak256 hashes
@@ -169,6 +169,6 @@ contract EternalFactory is IEternalFactory, OwnableEnhanced {
      * @param newContract The new address for the Eternal Token contract
      */
     function setEternalToken(address newContract) external override onlyFund {
-        eternal = IEternalToken(newContract);
+        eternal = IERC20(newContract);
     }
 }

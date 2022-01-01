@@ -3,7 +3,6 @@ pragma solidity 0.8.0;
 
 import "../inheritances/OwnableEnhanced.sol";
 import "../interfaces/IEternalFactory.sol";
-import "../interfaces/IEternalToken.sol";
 import "../interfaces/IEternalTreasury.sol";
 import "../interfaces/IEternalStorage.sol";
 import "../interfaces/ILoyaltyGage.sol";
@@ -30,7 +29,7 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
     // The Eternal factory interface
     IEternalFactory private eternalFactory;
     // The Eternal token interface
-    IEternalToken private eternal;
+    IERC20 private eternal;
     // The address of the ETRNL/AVAX pair
     address private joePair;
     // The keccak256 hash of this contract's address
@@ -79,7 +78,7 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
         // Set initial Storage, Factory and Token addresses
         eternalStorage = IEternalStorage(_eternalStorage);
         eternalFactory = IEternalFactory(_eternalFactory);
-        eternal = IEternalToken(_eternal);
+        eternal = IERC20(_eternal);
 
         // Initialize the Trader Joe router
         IJoeRouter02 _joeRouter = IJoeRouter02(0x60aE616a2155Ee3d9A68541Ba4544862310933d4);
@@ -480,6 +479,6 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
      * - Only callable by the Eternal Fund
      */
     function setEternalToken(address newContract) external override onlyFund {
-        eternal = IEternalToken(newContract);
+        eternal = IERC20(newContract);
     }
  }
