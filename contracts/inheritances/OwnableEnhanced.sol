@@ -60,7 +60,7 @@ abstract contract OwnableEnhanced is Context {
      * @dev Throws if called by any account other than the fund.
      */
     modifier onlyFund() {
-        require(fund() == _msgSender(), "Caller is not the fund");
+        require(_msgSender() == fund() || _msgSender() == address(this), "Caller is not the fund");
         _;
     }
 
@@ -97,7 +97,7 @@ abstract contract OwnableEnhanced is Context {
      *
      * - New admin cannot be the zero address
      */
-    function attributeFundRights(address newFund) public virtual onlyAdmin onlyFund {
+    function attributeFundRights(address newFund) public virtual onlyFund {
         require(newFund != address(0), "New fund is the zero address");
         _fund = newFund;
         emit FundRightsAttributed(newFund);
