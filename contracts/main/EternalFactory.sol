@@ -1,13 +1,13 @@
 //SPDX-License-Identifier: MIT
 pragma solidity 0.8.0;
 
-import "../interfaces/IEternalToken.sol";
 import "../interfaces/IEternalFactory.sol";
 import "../interfaces/IEternalStorage.sol";
 import "../interfaces/IEternalTreasury.sol";
 import "../interfaces/ILoyaltyGage.sol";
 import "../gages/LoyaltyGage.sol";
 import "../inheritances/OwnableEnhanced.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 /**
  * @title Contract for the Eternal gaging platform
@@ -21,7 +21,7 @@ contract EternalFactory is IEternalFactory, OwnableEnhanced {
     // The Eternal shared storage interface
     IEternalStorage public immutable eternalStorage;
     // The Eternal token interface
-    IEternalToken private eternal;
+    IERC20 private eternal;
     // The Eternal treasury interface
     IEternalTreasury private eternalTreasury;
 
@@ -64,7 +64,7 @@ contract EternalFactory is IEternalFactory, OwnableEnhanced {
 
     constructor (address _eternal, address _eternalStorage) {
         // Set the initial Eternal token and storage interfaces
-        eternal = IEternalToken(_eternal);
+        eternal = IERC20(_eternal);
         eternalStorage = IEternalStorage(_eternalStorage);
 
         // Initialize keccak256 hashes
@@ -119,6 +119,8 @@ contract EternalFactory is IEternalFactory, OwnableEnhanced {
         require(!eternalTreasury.viewUndergoingSwap(), "A liquidity swap is in progress");
 
         // Compute the percent change condition
+        uint256 percent;
+        {
         bytes32 eternalToken = keccak256(abi.encodePacked(address(eternal)));
         uint256 alpha = eternalStorage.getUint(eternalToken, keccak256(abi.encodePacked("alpha")));
         if (alpha == 0) {
@@ -127,13 +129,16 @@ contract EternalFactory is IEternalFactory, OwnableEnhanced {
         uint256 burnRate = eternalStorage.getUint(eternalToken, keccak256(abi.encodePacked("burnRate")));
         uint256 _timeConstant = eternalStorage.getUint(entity, timeConstant);
         uint256 _timeFactor = eternalStorage.getUint(entity, timeFactor);
-        uint256 percent = burnRate * alpha * (10 ** 18) * _timeConstant * _timeFactor / eternal.totalSupply();
+        percent = burnRate * alpha * (10 ** 18) * _timeConstant * _timeFactor / eternal.totalSupply();
+        }
 
         // Incremement the lastId tracker and the number of active liquid gages
         uint256 idLast = eternalStorage.getUint(entity, lastId) + 1;
+        {
         uint256 totalGagesLiquid = eternalStorage.getUint(entity, totalLiquidGages);
         eternalStorage.setUint(entity, lastId, idLast);
         eternalStorage.setUint(entity, totalLiquidGages, totalGagesLiquid + 1);
+        }
 
         // Deploy a new Gage
         LoyaltyGage newGage = new LoyaltyGage(idLast, percent, 2, false, address(eternalTreasury), _msgSender(), address(this));
@@ -164,6 +169,6 @@ contract EternalFactory is IEternalFactory, OwnableEnhanced {
      * @param newContract The new address for the Eternal Token contract
      */
     function setEternalToken(address newContract) external override onlyFund {
-        eternal = IEternalToken(newContract);
+        eternal = IERC20(newContract);
     }
 }

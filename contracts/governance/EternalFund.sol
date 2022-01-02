@@ -1,22 +1,30 @@
 //SPDX-License-Identifier: MIT
 pragma solidity 0.8.0;
 
-import "../interfaces/IEternalToken.sol";
+import "../interfaces/IEternalFund.sol";
+import "../interfaces/IEternalStorage.sol";
 import "../interfaces/ITimelock.sol";
-
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/utils/Context.sol";
 /**
  * @title The Eternal Fund contract
  * @author Taken from Compound Finance (COMP) and tweaked/detailed by Nobody (me)
  * @notice The Eternal Fund serves as the governing body of Eternal
  */
-contract EternalFund {
+contract EternalFund is IEternalFund, Context {
 
 /////–––««« Variables: Interfaces and Addresses »»»––––\\\\\
+    // The name of this contract
+    string public constant name = "Eternal Fund";
+    // The keccak256 hash of the Eternal Token address
+    bytes32 public immutable entity;
 
     // The timelock interface
     ITimelock public timelock;
     // The Eternal token interface
-    IEternalToken public eternal;
+    IERC20 public eternal;
+    // The Eternal storage interface
+    IEternalStorage public eternalStorage;
     // The address of the Governor Guardian
     address public guardian;
 
@@ -93,10 +101,13 @@ contract EternalFund {
 
 /////–––««« Constructor »»»––––\\\\\
 
-    constructor (address _timelock, address _eternal, address _guardian) {
+    constructor (address _timelock, address _eternal, address _eternalStorage, address _guardian) {
         timelock = ITimelock(_timelock);
-        eternal = IEternalToken(_eternal);
+        eternal = IERC20(_eternal);
+        eternalStorage = IEternalStorage(_eternalStorage);
         guardian = _guardian;
+
+        entity = keccak256(abi.encodePacked(_eternal));
     }
 
 /////–––««« Variable state-inspection functions »»»––––\\\\\
@@ -151,7 +162,7 @@ contract EternalFund {
      * - Proposer can only have one live proposal at a time
      */
     function propose(address[] memory targets, uint256[] memory values, string[] memory signatures, bytes[] memory calldatas, string memory description) public returns (uint256) {
-        require(eternal.getPriorVotes(msg.sender, block.number - 1) > proposalThreshold(), "Vote balance below threshold");
+        require(getPriorVotes(msg.sender, block.number - 1) > proposalThreshold(), "Vote balance below threshold");
         require(targets.length == values.length && targets.length == signatures.length && targets.length == calldatas.length, "Arity mismatch in proposal");
         require(targets.length != 0, "Must provide actions");
         require(targets.length <= proposalMaxOperations(), "Too many actions");
@@ -255,7 +266,7 @@ contract EternalFund {
         require(_state != ProposalState.Executed, "Cannot cancel executed proposal");
 
         Proposal storage proposal = proposals[proposalId];
-        require(eternal.getPriorVotes(proposal.proposer, block.number - 1) < proposalThreshold(), "Proposer above threshold");
+        require(getPriorVotes(proposal.proposer, block.number - 1) < proposalThreshold(), "Proposer above threshold");
 
         proposal.canceled = true;
         for (uint256 i = 0; i < proposal.targets.length; i++) {
@@ -372,7 +383,7 @@ contract EternalFund {
         }
         Receipt storage receipt = proposal.receipts[voter];
         require(receipt.hasVoted == false, "Voter already voted");
-        uint256 votes = eternal.getPriorVotes(voter, proposal.startBlock);
+        uint256 votes = getPriorVotes(voter, proposal.startBlock);
 
         if (support) {
             proposal.forVotes = proposal.forVotes + votes;
@@ -433,5 +444,118 @@ contract EternalFund {
     function __executeSetTimelockPendingAdmin(address newPendingAdmin, uint256 eta) public {
         require(msg.sender == guardian, "Caller must be the guardian");
         timelock.executeTransaction(address(timelock), 0, "setPendingAdmin(address)", abi.encode(newPendingAdmin), eta);
+    }
+
+/////–––««« Governance-related functions »»»––––\\\\\
+
+    /**
+     * @notice Gets the current votes balance for a given account
+     * @param account The address of the specified account
+     * @return The current number of votes of the account
+     */
+    function getCurrentVotes(address account) public view override returns (uint256) {
+        uint256 nCheckpoints = eternalStorage.getUint(entity, keccak256(abi.encodePacked("numCheckpoints", account)));
+        return eternalStorage.getUint(entity, keccak256(abi.encodePacked("votes", account, nCheckpoints - 1)));
+    }
+
+    /**
+     * @notice Determine the number of votes of a given account prior to a given block
+     * @param account The address of specified account
+     * @param blockNumber The number of the specified block
+     * @return The number of votes of the account before/by this block
+     *
+     * Requirements:
+     * 
+     * - The given block must be finalized
+     */
+    function getPriorVotes(address account, uint256 blockNumber) public view override returns (uint256) {
+        require(blockNumber < block.number, "Block is not yet finalized");
+        uint256 nCheckpoints = eternalStorage.getUint(entity, keccak256(abi.encodePacked("numCheckpoints", account)));
+
+        if (nCheckpoints == 0) {
+            // No checkpoints means no votes
+            return 0;
+        } else if (eternalStorage.getUint(entity, keccak256(abi.encodePacked("blocks", account, nCheckpoints - 1))) <= blockNumber) {
+            // Votes for the most recent checkpoint
+            return eternalStorage.getUint(entity, keccak256(abi.encodePacked("votes", account, nCheckpoints - 1)));
+        } else if (eternalStorage.getUint(entity, keccak256(abi.encodePacked("blocks", account, uint256(0)))) > blockNumber) {
+            // Only having checkpoints after the given block number means no votes
+            return 0;
+        }
+
+        uint256 lower = 0;
+        uint256 upper = nCheckpoints - 1;
+        while (upper > lower) {
+            uint256 center = upper - (upper - lower) / 2; // ceil, avoiding overflow
+            uint256 thisBlock = eternalStorage.getUint(entity, keccak256(abi.encodePacked("blocks", account, center)));
+            if (thisBlock == blockNumber) {
+                return eternalStorage.getUint(entity, keccak256(abi.encodePacked("votes", account, center)));
+            } else if (thisBlock < blockNumber) {
+                lower = center;
+            } else {
+                upper = center - 1;
+            }
+        }
+        return eternalStorage.getUint(entity, keccak256(abi.encodePacked("votes", account, lower)));
+    }
+
+    /**
+     * @notice Delegates the message sender's vote balance to a given user
+     * @param delegatee The address of the user to whom the vote balance is being added to
+     */
+    function delegate(address delegatee) external override {
+        bytes32 _delegate = keccak256(abi.encodePacked("delegates", _msgSender()));
+        address currentDelegate = eternalStorage.getAddress(entity, _delegate);
+        uint256 delegatorBalance = eternal.balanceOf(_msgSender());
+
+        eternalStorage.setAddress(entity, _delegate, delegatee);
+
+        emit DelegateChanged(_msgSender(), currentDelegate, delegatee);
+
+        moveDelegates(currentDelegate, delegatee, delegatorBalance);
+    }
+
+    /**
+     * @notice Transfer part of a given delegates' voting balance to another new delegate
+     * @param srcRep The delegate from whom we are deducting votes
+     * @param dstRep The delegate to whom we are transferring votes
+     * @param amount The specified amount of votes
+     */
+    function moveDelegates(address srcRep, address dstRep, uint256 amount) public override {
+        require(_msgSender() == address(this) || _msgSender() == address(eternal), "Only callable by Eternal");
+        if (srcRep != dstRep && amount > 0) {
+            if (srcRep != address(0)) {
+                uint256 srcRepNum = eternalStorage.getUint(entity, keccak256(abi.encodePacked("numCheckpoints", srcRep)));
+                uint256 srcRepOld = srcRepNum > 0 ? eternalStorage.getUint(entity, keccak256(abi.encodePacked("votes", srcRep, srcRepNum - 1))) : 0;
+                uint256 srcRepNew = srcRepOld - amount;
+                _writeCheckpoint(srcRep, srcRepNum, srcRepOld, srcRepNew);
+            }
+
+            if (dstRep != address(0)) {
+                uint256 dstRepNum = eternalStorage.getUint(entity, keccak256(abi.encodePacked("numCheckpoints", dstRep)));
+                uint256 dstRepOld = dstRepNum > 0 ? eternalStorage.getUint(entity, keccak256(abi.encodePacked("votes", dstRep, dstRepNum - 1))) : 0;
+                uint256 dstRepNew = dstRepOld + amount;
+                _writeCheckpoint(dstRep, dstRepNum, dstRepOld, dstRepNew);
+            }
+        }
+    }
+
+    /**
+     * @notice Update a given user's voting balance for the current block
+     * @param delegatee The address of the specified user
+     * @param nCheckpoints The number of times the voting balance of the user has been updated
+     * @param oldVotes The old voting balance of the user
+     * @param newVotes The new voting balance of the user
+     */
+    function _writeCheckpoint(address delegatee, uint256 nCheckpoints, uint256 oldVotes,uint256 newVotes) private {
+        if (nCheckpoints > 0 && eternalStorage.getUint(entity, keccak256(abi.encodePacked("blocks", delegatee, nCheckpoints - 1))) == block.number) {
+            eternalStorage.setUint(entity, keccak256(abi.encodePacked("votes", delegatee, nCheckpoints - 1)), newVotes);
+        } else {
+            eternalStorage.setUint(entity, keccak256(abi.encodePacked("votes", delegatee, nCheckpoints)), newVotes);
+            eternalStorage.setUint(entity, keccak256(abi.encodePacked("blocks", delegatee, nCheckpoints)), block.number);
+            eternalStorage.setUint(entity, keccak256(abi.encodePacked("numCheckpoints", delegatee)), nCheckpoints + 1);
+        }
+        
+        emit DelegateVotesChanged(delegatee, oldVotes, newVotes);
     }
 }

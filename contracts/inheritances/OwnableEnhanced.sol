@@ -23,10 +23,8 @@ abstract contract OwnableEnhanced is Context {
 /////–––««« Variables: Addresses, Events and Locking »»»––––\\\\\
 
     address private _admin;
-    address private _previousAdmin;
     address private _fund;
 
-    event AdminRightsTransferred(address indexed previousAdmin, address indexed newAdmin);
     event FundRightsAttributed(address indexed newFund);
 
     uint256 private _lockPeriod;
@@ -42,7 +40,6 @@ abstract contract OwnableEnhanced is Context {
     constructor () {
         address msgSender = _msgSender();
         _admin = msgSender;
-        emit AdminRightsTransferred(address(0), msgSender);
         ownershipDeadline = block.timestamp + 3 days;
     }
 
@@ -52,7 +49,7 @@ abstract contract OwnableEnhanced is Context {
      */
     modifier onlyAdmin() {
         require(admin() == _msgSender(), "Caller is not the admin");
-        require(ownershipDeadline < block.timestamp, "Admin's rights are over");
+        require(ownershipDeadline > block.timestamp, "Admin's rights are over");
         _;
     }
 
@@ -60,7 +57,7 @@ abstract contract OwnableEnhanced is Context {
      * @dev Throws if called by any account other than the fund.
      */
     modifier onlyFund() {
-        require(fund() == _msgSender(), "Caller is not the fund");
+        require(_msgSender() == fund() || _msgSender() == address(this), "Caller is not the fund");
         _;
     }
 
@@ -80,13 +77,6 @@ abstract contract OwnableEnhanced is Context {
         return _fund;
     }
 
-    /**
-     * @dev View the amount of time (in seconds) left before the previous admin can regain admin rights
-     */
-    function getUnlockTime() public view returns (uint256) {
-        return _lockPeriod;
-    }
-
 /////–––««« Ownable-logic functions »»»––––\\\\\
 
     /**
@@ -97,7 +87,7 @@ abstract contract OwnableEnhanced is Context {
      *
      * - New admin cannot be the zero address
      */
-    function attributeFundRights(address newFund) public virtual onlyAdmin onlyFund {
+    function attributeFundRights(address newFund) public virtual onlyFund {
         require(newFund != address(0), "New fund is the zero address");
         _fund = newFund;
         emit FundRightsAttributed(newFund);

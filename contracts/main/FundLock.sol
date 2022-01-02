@@ -1,7 +1,7 @@
 //SPDX-License-Identifier: MIT
 pragma solidity 0.8.0;
 
-import "../interfaces/IEternalToken.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 /**
  * @title FundLock contract
@@ -11,7 +11,7 @@ import "../interfaces/IEternalToken.sol";
 contract FundLock {
 
     // The Eternal Token interface
-    IEternalToken public immutable eternal;
+    IERC20 public immutable eternal;
 
     // The address of the recipient
     address public immutable recipient;
@@ -24,7 +24,7 @@ contract FundLock {
     uint256 public immutable gamma;
 
     constructor (address _eternal, address _recipient, uint256 _totalAmount, uint256 _maxSupply, uint256 _gamma) {
-        eternal = IEternalToken(_eternal);
+        eternal = IERC20(_eternal);
         recipient = _recipient;
         totalAmount = _totalAmount * (10 ** 18);
         maxSupply = _maxSupply;
