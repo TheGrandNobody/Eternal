@@ -113,10 +113,10 @@ contract EternalToken is IERC20, IERC20Metadata, OwnableEnhanced {
         eternalStorage.setUint(entity, totalReflectedSupply, rSupply);
         eternalStorage.setUint(entity, tokenLiquidityThreshold, (10 ** 10) * (10 ** 18) / 1000);
         // Distribute supply (10% and 5% to send to FundLock contracts, 42.5% to Treasury and 42.5% to the IGO contract)
-        eternalStorage.setUint(entity, keccak256(abi.encodePacked("reflectedBalances", _seedLock)), rSupply * 10 / 100);
-        eternalStorage.setUint(entity, keccak256(abi.encodePacked("reflectedBalances", _privLock)), rSupply * 5 / 100);
-        eternalStorage.setUint(entity, keccak256(abi.encodePacked("reflectedBalances", _offering)), rSupply * 425 / 1000);
-        eternalStorage.setUint(entity, keccak256(abi.encodePacked("reflectedBalances", _eternalTreasury)), rSupply * 425 / 1000);
+        eternalStorage.setUint(entity, keccak256(abi.encodePacked("reflectedBalances", _seedLock)), (rSupply / 100) * 10 );
+        eternalStorage.setUint(entity, keccak256(abi.encodePacked("reflectedBalances", _privLock)), (rSupply / 100) * 5);
+        eternalStorage.setUint(entity, keccak256(abi.encodePacked("reflectedBalances", _offering)), (rSupply / 1000) * 425);
+        eternalStorage.setUint(entity, keccak256(abi.encodePacked("reflectedBalances", _eternalTreasury)), (rSupply / 1000) * 425);
 
         // Exclude this contract from rewards and fees
         excludeFromReward(address(this));
