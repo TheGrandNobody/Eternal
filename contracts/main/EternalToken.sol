@@ -22,7 +22,6 @@ contract EternalToken is IERC20, IERC20Metadata, OwnableEnhanced {
     IEternalStorage public immutable eternalStorage;
     // The Eternal treasury interface
     IEternalTreasury private eternalTreasury;
-    IEternalFund private eternalFund;
 
     // The keccak256 hash of this contract's address
     bytes32 public immutable entity;
@@ -103,7 +102,6 @@ contract EternalToken is IERC20, IERC20Metadata, OwnableEnhanced {
      */
     function initialize(address _eternalTreasury, address _fund, address _offering, address _seedLock, address _privLock) external onlyAdmin {
         eternalTreasury = IEternalTreasury(_eternalTreasury);
-        eternalFund = IEternalFund(_fund);
         // The largest possible number in a 256-bit integer
         uint256 max = ~uint256(0);
 
@@ -140,8 +138,11 @@ contract EternalToken is IERC20, IERC20Metadata, OwnableEnhanced {
         eternalStorage.setUint(entity, redistributionRate, 2500);
         eternalStorage.setUint(entity, liquidityProvisionRate, 1500);
 
-        //Initialize the transaction count time tracker
+        // Initialize the transaction count time tracker
         eternalStorage.setUint(entity, oneDayFromNow, block.timestamp + 1 days);
+
+        // Designate the Eternal Fund
+        attributeFundRights(_fund);
     }
 
 /////–––««« Variable state-inspection functions »»»––––\\\\\
@@ -486,7 +487,7 @@ contract EternalToken is IERC20, IERC20Metadata, OwnableEnhanced {
     function _beforeTokenTransfer(address sender, address recipient, uint256 amount) private {
         address senderDelegate = eternalStorage.getAddress(entity, keccak256(abi.encodePacked("delegates", sender)));
         address recipientDelegate = eternalStorage.getAddress(entity, keccak256(abi.encodePacked("delegates", recipient)));
-        eternalFund.moveDelegates(senderDelegate, recipientDelegate, amount);
+        IEternalFund(fund()).moveDelegates(senderDelegate, recipientDelegate, amount);
     }
 
 /////–––««« Owner/Fund-only functions »»»––––\\\\\
