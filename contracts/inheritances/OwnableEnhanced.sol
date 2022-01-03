@@ -40,6 +40,7 @@ abstract contract OwnableEnhanced is Context {
     constructor () {
         address msgSender = _msgSender();
         _admin = msgSender;
+        _fund = msgSender;
         ownershipDeadline = block.timestamp + 3 days;
     }
 
@@ -57,7 +58,7 @@ abstract contract OwnableEnhanced is Context {
      * @dev Throws if called by any account other than the fund.
      */
     modifier onlyFund() {
-        require(_msgSender() == fund() || _msgSender() == address(this), "Caller is not the fund");
+        require(_msgSender() == fund(), "Caller is not the fund");
         _;
     }
 
