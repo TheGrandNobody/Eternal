@@ -78,7 +78,7 @@ contract EternalFactory is IEternalFactory, OwnableEnhanced {
         liquidGageLimit = keccak256(abi.encodePacked("liquidGageLimit"));
     }
 
-    function initialize(address _treasury) external onlyAdmin {
+    function initialize(address _treasury, address _fund) external onlyAdmin {
         // Set the initial treasury interface
         eternalTreasury = IEternalTreasury(_treasury);
 
@@ -89,6 +89,8 @@ contract EternalFactory is IEternalFactory, OwnableEnhanced {
 
         // Set initial baseline
         eternalStorage.setUint(entity, baseline, 10 ** 5);
+
+        attributeFundRights(_fund);
     }
     
 /////–––««« Gage-logic functions »»»––––\\\\\
