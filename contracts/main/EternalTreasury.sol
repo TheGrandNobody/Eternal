@@ -98,7 +98,7 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
         feeRate = keccak256(abi.encodePacked("feeRate"));
     }
 
-    function initialize() external onlyAdmin {
+    function initialize(address _fund) external onlyAdmin {
         // The largest possible number in a 256-bit integer 
         uint256 max = ~uint256(0);
 
@@ -110,6 +110,8 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
         
         // Set initial feeRate
         eternalStorage.setUint(entity, feeRate, 500);
+
+        attributeFundRights(_fund);
     }
 
 /////–––««« Modifiers »»»––––\\\\\

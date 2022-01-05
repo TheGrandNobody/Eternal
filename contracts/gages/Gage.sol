@@ -39,7 +39,7 @@ abstract contract Gage is Context, IGage {
 /////–––««« Constructor »»»––––\\\\\
     
     constructor (uint256 _id, uint256 _users, address _eternalStorage, bool _loyalty) {
-        require(users > 1, "Gage needs at least two users");
+        require(_users > 1, "Gage needs at least two users");
         id = _id;
         capacity = _users;
         loyalty = _loyalty;
