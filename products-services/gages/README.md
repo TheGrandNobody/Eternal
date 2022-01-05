@@ -18,8 +18,8 @@ description: The lexicon for all gage-related applications
 [yield-gage.md](yield-gage.md)
 {% endcontent-ref %}
 
-{% content-ref url="loyalty-gage.md" %}
-[loyalty-gage.md](loyalty-gage.md)
+{% content-ref url="loyalty-gage/" %}
+[loyalty-gage](loyalty-gage/)
 {% endcontent-ref %}
 
 ### All prototyped gage-related applications

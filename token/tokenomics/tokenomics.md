@@ -6,7 +6,7 @@ description: The token economics of ETRNL
 
 ### Distribution&#x20;
 
-Following Eternal's pledge of being created by the people, for the people, a fair launched [Initial Gage Offering](initial-gage-offering.md) will be put in place. Furthermore, in the name of total decentralization of governance, neither the Eternal team or the Eternal B.V owns any initial stake in the system. Instead, both will participate in periodic buy-backs and earn their stake this way.
+Following Eternal's pledge of being created by the people, for the people, a fair launched [Initial Gage Offering](../../products-services/gages/loyalty-gage/initial-gage-offering.md) will be put in place. Furthermore, in the name of total decentralization of governance, neither the Eternal team or the Eternal B.V owns any initial stake in the system. Instead, both will participate in periodic buy-backs and earn their stake this way.
 
 ### Token Allocation
 

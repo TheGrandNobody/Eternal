@@ -58,7 +58,7 @@ The developed gage-related applications, are not only designed and proven to **e
 
 **Short-termism arises as a result of poor dynamics between individuals.** For example, back to our firm-investor dilemma, one of the main reasons firms are short-termist is because of their unhealthy relationships with investors, who are also short-termist. **Gages are particularly useful when it comes to creating win-win relationships between two or more individuals.**
 
-For this specific dilemma we propose a solution with [loyalty gages](products-services/gages/loyalty-gage.md).
+For this specific dilemma we propose a solution with [loyalty gages](products-services/gages/loyalty-gage/).
 
 But that is not the end of it.
 
