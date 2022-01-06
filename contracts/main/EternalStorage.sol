@@ -15,12 +15,14 @@ contract EternalStorage is IEternalStorage, Context {
 
     // Scalars
     mapping (bytes32 => mapping (bytes32 => uint256)) private uints;
+    mapping (bytes32 => mapping (bytes32 => int256)) private ints;
     mapping (bytes32 => mapping (bytes32 => address)) private addresses;
     mapping (bytes32 => mapping (bytes32 => bool)) private bools;
     mapping (bytes32 => mapping (bytes32 => bytes32)) private bytes32s;
 
     // Multi-value variables
     mapping(bytes32 => uint256[]) private manyUints;
+    mapping(bytes32 => int256[]) private manyInts;
     mapping(bytes32 => address[]) private manyAddresses;
     mapping(bytes32 => bool[]) private manyBools;
     mapping(bytes32 => bytes32[]) private manyBytes;
@@ -73,6 +75,20 @@ function initialize(address _treasury, address _token, address _factory, address
     }
 
     /**
+     * @notice Sets an int256 value for a given contract and key
+     * @param entity The keccak256 hash of the contract's address
+     * @param key The specified mapping key
+     * @param value The specified int256 value
+     * 
+     * Requirements:
+     *
+     * - Only callable by the latest version of any Eternal contract
+     */
+    function setInt(bytes32 entity, bytes32 key, int256 value) external override onlyLatestVersion {
+        ints[entity][key] = value;
+    }
+
+    /**
      * @notice Sets an address value for a given contract and key
      * @param entity The keccak256 hash of the contract's address
      * @param key The specified mapping key
@@ -115,7 +131,7 @@ function initialize(address _treasury, address _token, address _factory, address
     }    
 
     /**
-     * @notice Sets or pushes a uin256 array's element's value for a given key and index
+     * @notice Sets or pushes a uint256 array's element's value for a given key and index
      * @param key The specified mapping key
      * @param index The specified index of the array's element being modified
      * @param value The specified uint256 value
@@ -129,6 +145,24 @@ function initialize(address _treasury, address _token, address _factory, address
             manyUints[key].push(value);
         } else {
             manyUints[key][index] = value;
+        }
+    }
+
+    /**
+     * @notice Sets or pushes an int256 array's element's value for a given key and index
+     * @param key The specified mapping key
+     * @param index The specified index of the array's element being modified
+     * @param value The specified int256 value
+     * 
+     * Requirements:
+     *
+     * - Only callable by the latest version of any Eternal contract
+     */
+    function setIntArrayValue(bytes32 key, uint256 index, int256 value) external override onlyLatestVersion {
+        if (index == 0) {
+            manyInts[key].push(value);
+        } else {
+            manyInts[key][index] = value;
         }
     }
 
@@ -198,6 +232,16 @@ function initialize(address _treasury, address _token, address _factory, address
     }
 
     /**
+     * @notice Returns an int256 value for a given contract and key
+     * @param entity The keccak256 hash of the specified contract
+     * @param key The specified mapping key
+     * @return The int256 value mapped to the key
+     */
+    function getInt(bytes32 entity, bytes32 key) external view override returns (int256) {
+        return ints[entity][key];
+    }
+
+    /**
      * @notice Returns an address value for a given contract and key
      * @param entity The keccak256 hash of the specified contract
      * @param key The specified mapping key
@@ -235,6 +279,16 @@ function initialize(address _treasury, address _token, address _factory, address
      */
     function getUintArrayValue(bytes32 key, uint256 index) external view override returns (uint256) {
         return manyUints[key][index];
+    }
+
+    /**
+     * @notice Returns an int256 array's element's value for a given key and index
+     * @param key The specified mapping key
+     * @param index The specified index of the desired element
+     * @return The int256 value at the specified index for the specified array
+     */
+    function getIntArrayValue(bytes32 key, uint256 index) external view override returns (int256) {
+        return manyInts[key][index];
     }
 
     /**
@@ -282,6 +336,21 @@ function initialize(address _treasury, address _token, address _factory, address
         uint256 length = manyUints[key].length;
         manyUints[key][index] = manyUints[key][length - 1];
         manyUints[key].pop();
+    }
+
+    /** 
+     * @notice Deletes an int256 array's element for a given key and index
+     * @param key The specified mapping key
+     * @param index The specified index of the desired element
+     * 
+     * Requirements:
+     *
+     * - Only callable by the latest version of any Eternal contract
+     */
+    function deleteInt(bytes32 key, uint256 index) external override onlyLatestVersion {
+        uint256 length = manyInts[key].length;
+        manyInts[key][index] = manyInts[key][length - 1];
+        manyInts[key].pop();
     }
 
     /** 
@@ -338,6 +407,15 @@ function initialize(address _treasury, address _token, address _factory, address
      */
     function lengthUint(bytes32 key) external view override returns (uint256) {
         return manyUints[key].length;
+    }
+
+    /**
+     * @notice Returns the length of an int256 array for a given key
+     * @param key The specified mapping key
+     * @return The length of the array mapped to the key
+     */
+    function lengthInt(bytes32 key) external view override returns (uint256) {
+        return manyInts[key].length;
     }
 
     /**
