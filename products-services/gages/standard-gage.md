@@ -12,7 +12,9 @@ description: The simplest form of the gage.
 
 **Condition:** Non-withdrawal of deposit
 
-**Less **<mark style="color:red;">**Risk**</mark>**, More **<mark style="color:green;">**Reward:**</mark> A standard gage's risk to reward is always equal to $$n-1$$ , where $$n$$ is the number of users. There is a mathematical proof for this in _Introduction to Gages_.
+**Less **<mark style="color:red;">**Risk**</mark>**, More **<mark style="color:green;">**Reward:**</mark> A standard gage's risk to reward is always equal to $$n-1$$ , where $$n$$ is the number of users (see equation below).
+
+$$R = \frac{\gamma x(n-1)}{\gamma x} = n-1$$
 
 ### <mark style="color:blue;">**Example**</mark>
 

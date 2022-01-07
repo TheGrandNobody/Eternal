@@ -14,9 +14,13 @@ description: A solution to decentralized corporate short-termism.
 
 **Receiver Condition:** Non-withdrawal of deposit
 
+**Less **<mark style="color:red;">**Risk**</mark>**, More **<mark style="color:green;">**Reward:**</mark> A liquid gage's risk to reward is always greater than or equal to 2:1 as long as the receiver risk, $$\mu$$, is no more than twice the distributor risk, $$\gamma$$. Given a deposit $$x$$, this is shown by the calculation of the risk to reward $$R$$:
+
+$$R = \frac{2\gamma x}{(\mu - \gamma)x} = \frac{2\gamma}{\mu - \gamma} = \frac{2\gamma}{2\gamma- \gamma} = 2$$
+
 <mark style="color:green;">**Bonus:**</mark> A given amount of an asset is instantly available to the receiver upon activation of the gage.
 
-<mark style="color:yellow;">**Discount:**</mark>** **<mark style="color:red;">****</mark> The receiver is able to buy an asset at a specific price significantly lower than the current price.
+<mark style="color:yellow;">**Discount:**</mark>** **<mark style="color:red;">****</mark> The receiver is able to provide liquidity using half of the asset amounts needed.
 
 <mark style="color:orange;">**Symb**</mark><mark style="color:green;">**iosis:**</mark>** ** Loyalty gages create symbiotic relationships between any given distributor and receiver.
 

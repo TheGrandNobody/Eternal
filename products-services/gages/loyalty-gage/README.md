@@ -6,7 +6,7 @@ description: A solution to corporate short-termism.
 
 ### <mark style="color:blue;">Definition</mark>
 
-<mark style="color:purple;">Loyalty gages involve an entity or individual distributing an asset (</mark><mark style="color:purple;">**the distributor**</mark><mark style="color:purple;">), to another entity or individual receiving said asset (</mark><mark style="color:purple;">**the receiver**</mark><mark style="color:purple;">). A bonus is rewarded to the receiver either in terms of the risked percentage or another asset. The risked percentage of the distributor is always lower than that of the receiver.</mark>
+<mark style="color:purple;">Loyalty gages involve an entity or individual distributing an asset (</mark><mark style="color:purple;">**the distributor**</mark><mark style="color:purple;">), to another entity or individual receiving said asset (</mark><mark style="color:purple;">**the receiver**</mark><mark style="color:purple;">). A bonus is rewarded to the receiver either in terms of the risk percentage or another asset. The risk percentage of the distributor is always lower than that of the receiver.</mark>
 
 ### Properties
 
@@ -17,6 +17,10 @@ In traditional finance, the condition is generally set to re-issuance of shares.
 {% endhint %}
 
 **Receiver Condition:** Non-withdrawal of deposit
+
+**Less **<mark style="color:red;">**Risk**</mark>**, More **<mark style="color:green;">**Reward:**</mark> A loyalty gage's risk to reward is always greater than or equal to 2:1 as long as the receiver risk, $$\mu$$, is no more than twice the distributor risk, $$\gamma$$. Given a deposit $$x$$, this is shown by the calculation of the risk to reward $$R$$:
+
+$$R = \frac{2\gamma x}{(\mu - \gamma)x} = \frac{2\gamma}{\mu - \gamma} = \frac{2\gamma}{2\gamma- \gamma} = 2$$
 
 <mark style="color:green;">**Bonus:**</mark> A given amount of an asset is instantly available to the receiver upon activation of the gage.
 
