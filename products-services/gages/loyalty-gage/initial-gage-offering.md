@@ -12,7 +12,7 @@ description: >-
 
 ### **Procedure**
 
-In an **ILO**, individuals deposit a given asset and receive the Blockchain project's token in return.&#x20;
+In an **ILO**, individuals deposit a given asset and receive the blockchain project's token in return.&#x20;
 
 In an **IGO**, the procedure remains the same, except individuals are also given the alternative choice of gaining a significant bonus percentage of the amount of tokens they initially want, on the condition they deposit this initial amount to a [loyalty gage](./) between the user and the Blockchain project.
 
