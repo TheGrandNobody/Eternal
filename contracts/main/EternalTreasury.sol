@@ -273,7 +273,7 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
             require(eternal.transfer(receiver, amountETRNL * dRisk / (10 ** 4)), "Failed to transfer ETRNL reward");
             // Compute the net liquidity rewards left to distribute to stakers
             //solhint-disable-next-line reentrancy
-            eternalRewards -= eternalRewards * dRisk / (10 ** 4);
+            eternalRewards = eternalRewards == 0 ? 0 : eternalRewards - (eternalRewards * dRisk / (10 ** 4));
         } else {
             amountAsset -= amountAsset * rRisk / (10 ** 4);
             // Compute the net liquidity rewards + gage deposit left to distribute to staker
@@ -283,6 +283,7 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
         require(IERC20(rAsset).transfer(receiver, amountAsset - eternalFee), "Failed to transfer ERC20 reward");
 
         // Update staker's fees w.r.t the gage fee, gage rewards and liquidity rewards
+        // Fees and rewards are both calculated in terms of ETRNL
         {
         uint256 totalFee = eternalRewards + (dAmount * eternalStorage.getUint(entity, feeRate) / (10 ** 5));
         eternalStorage.setUint(entity, reserveStakedBalances, eternalStorage.getUint(entity, reserveStakedBalances) - convertToReserve(totalFee));
