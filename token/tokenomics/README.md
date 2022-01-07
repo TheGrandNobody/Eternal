@@ -18,7 +18,7 @@ For all gages, regardless of centralized or decentralized applications, a small 
 
 ### 2. Automatic Liquidity Provision
 
-On every transaction with ETRNL, a small fee is computed. **ETRNL provides its own liquidity to decentralized exchanges** using a fraction of this fee. As the **LP-tokens received from this are locked away forever and only accessible by the Eternal Fund, this entails the autonomous creation and maintenance of a price floor for ETRNL.**
+On every transaction with ETRNL, a small fee is computed. **ETRNL provides its own liquidity to decentralized exchanges** using a fraction of this fee. As the **LP-tokens received from this are only accessible by the Eternal Fund, this entails the autonomous creation and maintenance of a price floor for ETRNL.**
 
 ### 3/4. Reward Redistribution & Funding (Indefinite Deflation)
 
