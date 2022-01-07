@@ -167,7 +167,9 @@ contract EternalOffering {
         uint256 liquidity;
         // Compute the minimum amounts needed to provide liquidity and the equivalent of the asset in ETRNL
         (uint256 minETRNL, uint256 minAsset, uint256 amountETRNL) = computeMinAmounts(asset, address(eternal), amount, 200);
-        require(amountETRNL + liquidityOffered[msg.sender] <= (10 ** 7) * (10 ** 18), "Amount exceeds the user limit");
+        // Calculate risk
+        uint256 rRisk = totalETRNLOffered < LIMIT / 4 ? 3100 : (totalETRNLOffered < LIMIT / 2 ? 2600 : (totalETRNLOffered < LIMIT * 3 / 4 ? 2100 : 1600));
+        require(amountETRNL + (amountETRNL * (rRisk - 100) / (10 ** 4)) + liquidityOffered[msg.sender] <= (10 ** 7) * (10 ** 18), "Amount exceeds the user limit");
 
         // Compute the percent change condition
         uint256 percent = 500 * BASELINE * (10 ** 18) * TIME_CONSTANT * TIME_FACTOR / eternal.totalSupply();
@@ -187,9 +189,6 @@ contract EternalOffering {
         } else {
             asset = joeRouter.WAVAX();
         }
-
-        // Calculate risk and join the gage for the user and the Eternal Offering contract
-        uint256 rRisk = totalETRNLOffered < LIMIT / 4 ? 3100 : (totalETRNLOffered < LIMIT / 2 ? 2600 : (totalETRNLOffered < LIMIT * 3 / 4 ? 2100 : 1600));
 
         // Add liquidity to the ETRNL/Asset pair
         require(eternal.approve(address(joeRouter), amountETRNL), "Approve failed");
