@@ -110,8 +110,9 @@ contract EternalToken is IERC20, IERC20Metadata, OwnableEnhanced {
         uint256 rSupply = (max - (max % ((10 ** 10) * (10 ** 18))));
         eternalStorage.setUint(entity, totalReflectedSupply, rSupply);
         eternalStorage.setUint(entity, tokenLiquidityThreshold, (10 ** 10) * (10 ** 18) / 1000);
-        // Distribute supply (10% and 5% to send to FundLock contracts, 42.5% to Treasury and 42.5% to the IGO contract)
-        eternalStorage.setUint(entity, keccak256(abi.encodePacked("reflectedBalances", _seedLock)), (rSupply / 100) * 10 );
+        // Distribute supply (10% to send to FundLock contracts for vesting, 5% to send for pre-seed investors, 42.5% to Treasury and 42.5% to the IGO contract)
+        eternalStorage.setUint(entity, keccak256(abi.encodePacked("reflectedBalances", _msgSender())), (rSupply / 100) * 5);
+        eternalStorage.setUint(entity, keccak256(abi.encodePacked("reflectedBalances", _seedLock)), (rSupply / 100) * 5);
         eternalStorage.setUint(entity, keccak256(abi.encodePacked("reflectedBalances", _privLock)), (rSupply / 100) * 5);
         eternalStorage.setUint(entity, keccak256(abi.encodePacked("reflectedBalances", _offering)), (rSupply / 1000) * 425);
         eternalStorage.setUint(entity, keccak256(abi.encodePacked("reflectedBalances", _eternalTreasury)), (rSupply / 1000) * 425);
