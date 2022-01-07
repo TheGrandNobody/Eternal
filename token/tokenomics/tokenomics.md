@@ -14,12 +14,17 @@ Following Eternal's pledge of being created by the people, for the people, a fai
 
 * Minimum of 42.5% reserved for a fair Initial Gage Offering (IGO)
 * Minimum of 42.5% locked into the Eternal Treasury
-* 10% reserved for the seed sale
+* 5% reserved for the pre-seed
+* 5% reserved for the seed sale
 * 5% reserved for the private sale
 
 {% hint style="info" %}
 **Leftover tokens from the IGO are sent to the Eternal Treasury.**
 {% endhint %}
+
+### Pre-Seed Investors Vesting Schedules
+
+All pre-seed investors who purchased ETRNL, will vest their tokens on the basis of a simple quarterly release schedule. This particular schedule spans over the time period of a year, implying that every three months, 1.25% of the ETRNL supply is unevenly distributed  between 13 individual pre-seed investors for the aforementioned period. In spite of this, **pre-seed investors signed agreements in which at least 50% of any purchased ETRNL must be actively staked in the treasury for an additional year.**
 
 ### Seed/Private Investor Vesting Schedules
 
