@@ -12,7 +12,7 @@ Following Eternal's pledge of being created by the people, for the people, a fai
 
 **Maximum/Total Initial Circulating Supply:** 10 billion
 
-* Minimum of 42.5% reserved for a fair launched Initial Gage Offering (IGO)
+* Minimum of 42.5% reserved for a fair Initial Gage Offering (IGO)
 * Minimum of 42.5% locked into the Eternal Treasury
 * 10% reserved for the seed sale
 * 5% reserved for the private sale
