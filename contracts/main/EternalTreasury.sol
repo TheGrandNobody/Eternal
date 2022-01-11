@@ -185,7 +185,7 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
      */
     function computeMinAmounts(address asset, address otherAsset, uint256 amountAsset, uint256 uncertainty) public view override returns(uint256 minOtherAsset, uint256 minAsset, uint256 amountOtherAsset) {
         // Get the reserve ratios for the Asset-otherAsset pair
-        (uint256 reserveAsset, uint256 reserveOtherAsset) = fetchPairReserves(asset, otherAsset);
+        (uint256 reserveAsset, uint256 reserveOtherAsset) = _fetchPairReserves(asset, otherAsset);
         // Determine a reasonable minimum amount of asset and otherAsset based on current reserves (with a tolerance =  1 / uncertainty)
         amountOtherAsset = joeRouter.quote(amountAsset, reserveAsset, reserveOtherAsset);
         if (uncertainty != 0) {
@@ -202,7 +202,7 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
      * @return reserveAsset The reserve amount of the first asset
      * @return reserveOtherAsset The reserve amount of the second asset
      */
-    function fetchPairReserves(address asset, address otherAsset) private view returns(uint256 reserveAsset, uint256 reserveOtherAsset) {
+    function _fetchPairReserves(address asset, address otherAsset) private view returns(uint256 reserveAsset, uint256 reserveOtherAsset) {
         (uint256 reserveA, uint256 reserveB,) = IJoePair(joeFactory.getPair(asset, otherAsset)).getReserves();
         (reserveAsset, reserveOtherAsset) = asset < otherAsset ? (reserveA, reserveB) : (reserveB, reserveA);
     }
@@ -214,7 +214,7 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
      * @param receiver The address of the liquid gage's receiver
      * @return The amount of ETRNL and Asset obtained from removing liquidity
      */
-    function removeLiquidity(address rAsset, uint256 providedAsset, address receiver) private returns(uint256, uint256) {
+    function _removeLiquidity(address rAsset, uint256 providedAsset, address receiver) private returns(uint256, uint256) {
         (uint256 minETRNL, uint256 minAsset,) = computeMinAmounts(rAsset, address(eternal), providedAsset, 200);
         uint256 liquidity = eternalStorage.getUint(entity, keccak256(abi.encodePacked("liquidity", receiver, rAsset)));
         return joeRouter.removeLiquidity(address(eternal), rAsset, liquidity, minETRNL/2, minAsset/2, address(this), block.timestamp);
@@ -226,14 +226,14 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
      * @param asset The address of the asset being swapped
      * @return minAsset The minimum amount of tokens received from the swap with a 1% uncertainty
      */
-    function swapTokensForETRNL(uint256 amount, address asset) private returns(uint256 minAsset) {
+    function _swapTokensForETRNL(uint256 amount, address asset) private returns(uint256 minAsset) {
         address[] memory path = new address[](2);
         path[0] = asset;
         path[1] = address(eternal);
 
         // Calculate the minimum amount of ETRNL to swap the asset for (with a tolerance of 1%)
-        (uint256 reserveETRNL, uint256 reserveAsset) = fetchPairReserves(address(eternal), asset);
-        minAsset = computeMinSwapAmount(amount, reserveAsset, reserveETRNL, 100);
+        (uint256 reserveETRNL, uint256 reserveAsset) = _fetchPairReserves(address(eternal), asset);
+        minAsset = _computeMinSwapAmount(amount, reserveAsset, reserveETRNL, 100);
 
         // Swap the asset for ETRNL
         require(IERC20(asset).approve(address(joeRouter), amount), "Approve failed");
@@ -311,7 +311,7 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
         uint256 providedAsset = eternalStorage.getUint(entity, keccak256(abi.encodePacked("amountProvided", receiver, rAsset)));
 
         // Remove the liquidity for this gage
-        (uint256 amountETRNL, uint256 amountAsset) = removeLiquidity(rAsset, providedAsset, receiver);
+        (uint256 amountETRNL, uint256 amountAsset) = _removeLiquidity(rAsset, providedAsset, receiver);
 
         // Compute and transfer the net gage deposit + any rewards due to the receiver
         uint256 eternalRewards = amountETRNL > dAmount ? amountETRNL - dAmount : 0;
@@ -332,7 +332,7 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
         // Update staker's fees w.r.t the gage fee, gage rewards and liquidity rewards and buy ETRNL with the fee
         // Fees and rewards are both calculated in terms of ETRNL
         {
-        uint256 totalFee = eternalRewards + swapTokensForETRNL(eternalFee, rAsset);
+        uint256 totalFee = eternalRewards + _swapTokensForETRNL(eternalFee, rAsset);
         eternalStorage.setUint(entity, reserveStakedBalances, eternalStorage.getUint(entity, reserveStakedBalances) - convertToReserve(totalFee));
         }
     }
@@ -401,7 +401,7 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
      * @param reserveOtherAsset The reserve of the asset being swapped for
      * @param uncertainty The denominator of the percentage uncertainty if it were viewed as (1  / uncertainty)
      */
-    function computeMinSwapAmount(uint256 amountAsset, uint256 reserveAsset, uint256 reserveOtherAsset, uint256 uncertainty) private view returns(uint256 minOtherAsset) {
+    function _computeMinSwapAmount(uint256 amountAsset, uint256 reserveAsset, uint256 reserveOtherAsset, uint256 uncertainty) private view returns(uint256 minOtherAsset) {
         uint256 amountOtherAsset = joeRouter.getAmountOut(amountAsset, reserveAsset, reserveOtherAsset);
         minOtherAsset = amountOtherAsset - (amountOtherAsset / uncertainty);
     }
@@ -410,13 +410,13 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
      * @notice Swaps a given amount of ETRNL for AVAX using Trader Joe. (Used for auto-liquidity swaps)
      * @param amount The amount of ETRNL to be swapped for AVAX
      */
-    function swapETRNLForAVAX(uint256 amount, uint256 reserveETRNL, uint256 reserveAVAX) private {
+    function _swapETRNLForAVAX(uint256 amount, uint256 reserveETRNL, uint256 reserveAVAX) private {
         address[] memory path = new address[](2);
         path[0] = address(eternal);
         path[1] = joeRouter.WAVAX();
 
         // Calculate the minimum amount of AVAX to swap the ETRNL for (with a tolerance of 1%)
-        uint256 minAVAX = computeMinSwapAmount(amount, reserveETRNL, reserveAVAX, 100);
+        uint256 minAVAX = _computeMinSwapAmount(amount, reserveETRNL, reserveAVAX, 100);
 
         // Swap the ETRNL for AVAX
         require(eternal.approve(address(joeRouter), amount), "Approve failed");
@@ -450,11 +450,11 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
         uint256 amountETRNL = contractBalance - half;
 
         // Get the reserve ratios for the ETRNL-AVAX pair
-        (uint256 reserveETRNL, uint256 reserveAVAX) = fetchPairReserves(address(eternal), joeRouter.WAVAX());
+        (uint256 reserveETRNL, uint256 reserveAVAX) = _fetchPairReserves(address(eternal), joeRouter.WAVAX());
         // Capture the initial balance to later compute the difference
         uint256 initialBalance = address(this).balance;
         // Swap half the contract's ETRNL balance to AVAX
-        swapETRNLForAVAX(half, reserveETRNL, reserveAVAX);
+        _swapETRNLForAVAX(half, reserveETRNL, reserveAVAX);
         // Compute the amount of AVAX received from the swap
         uint256 amountAVAX = address(this).balance - initialBalance;
         
@@ -517,7 +517,7 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
      *
      * - Only callable by the Eternal Fund
      */
-    function setEternalFactory(address newContract) external override onlyFund {
+    function setEternalFactory(address newContract) external onlyFund {
         eternalFactory = IEternalFactory(newContract);
     }
 
@@ -529,7 +529,7 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
      *
      * - Only callable by the Eternal Fund
      */
-    function setEternalToken(address newContract) external override onlyFund {
+    function setEternalToken(address newContract) external onlyFund {
         eternal = IERC20(newContract);
     }
  }
