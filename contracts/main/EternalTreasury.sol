@@ -282,7 +282,7 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
         eternalStorage.setUint(entity, keccak256(abi.encodePacked("liquidity", receiver, asset)), liquidity);
 
         // Update the 24h count of ETRNL flowing out of the treasury
-        eternalFactory.updateCounters(providedAsset + (2 * providedAsset * dRisk / (10 ** 4)));
+        eternalFactory.updateCounters(2 * providedETRNL * dRisk / (10 ** 4));
         
         // Initialize the liquid gage and transfer the user's instant reward
         ILoyaltyGage(gage).initialize(asset, address(eternal), userAmount, providedETRNL, rRisk, dRisk);
