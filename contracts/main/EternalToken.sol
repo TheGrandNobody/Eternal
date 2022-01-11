@@ -473,6 +473,12 @@ contract EternalToken is IERC20, IERC20Metadata, OwnableEnhanced {
         }
     }
 
+    /**
+     * @notice Hook called by the _transfer function in order to update vote balances after a given transaction
+     * @param sender The initiator of the specified transaction
+     * @param recipient The destination address of the specified transaction
+     * @param amount The amount sent from the sender to the recipient in the transaction
+     */
     function _beforeTokenTransfer(address sender, address recipient, uint256 amount) private {
         address senderDelegate = eternalStorage.getAddress(entity, keccak256(abi.encodePacked("delegates", sender)));
         address recipientDelegate = eternalStorage.getAddress(entity, keccak256(abi.encodePacked("delegates", recipient)));
