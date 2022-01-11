@@ -132,7 +132,7 @@ contract EternalFactory is IEternalFactory, OwnableEnhanced {
         require(userRisk > 0, "This asset is not supported");
         require(asset != address(eternal), "Receiver can't deposit ETRNL");
         uint256 treasuryRisk = userRisk - eternalStorage.getUint(entity, riskConstant);
-        require(!gageLimitReached(asset, amount, treasuryRisk), "ETRNL treasury reserves are dry");
+        require(!_gageLimitReached(asset, amount, treasuryRisk), "ETRNL treasury reserves are dry");
         bool inLiquidGage = eternalStorage.getBool(entity, keccak256(abi.encodePacked("inLiquidGage", _msgSender(), asset)));
         require(!inLiquidGage, "Per-asset gaging limit reached");
         require(!eternalTreasury.viewUndergoingSwap(), "A liquidity swap is in progress");
@@ -164,7 +164,7 @@ contract EternalFactory is IEternalFactory, OwnableEnhanced {
         return idLast;
     }
 
-    function gageLimitReached(address asset, uint256 amountAsset, uint256 risk) private view returns(bool limitReached) {
+    function _gageLimitReached(address asset, uint256 amountAsset, uint256 risk) private view returns(bool limitReached) {
         bytes32 treasury = keccak256(abi.encode(address(eternalTreasury)));
         // Convert the asset to ETRNL if it isn't already
         if (asset != address(eternal)) {
