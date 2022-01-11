@@ -26,9 +26,11 @@ contract EternalOffering {
     IJoeFactory public immutable joeFactory;
     // The Eternal token interface
     IERC20 public immutable eternal;
+    // The Eternal storage interface
+    IEternalStorage public immutable eternalStorage;
+    // The Eternal treasury interface
+    IEternalTreasury public immutable eternalTreasury;
 
-    // The address of the Eternal Treasury
-    address public immutable treasury;
     // The address of the ETRNL-MIM pair
     address public immutable mimPair;
     // The address of the ETRNL-AVAX pair
@@ -60,6 +62,8 @@ contract EternalOffering {
 
     // Keeps track of the latest Gage ID
     uint256 private lastId;
+    // The total amount of ETRNL needed for current active gages
+    uint256 private totalETRNLForGages;
     // The total number of ETRNL dispensed in this offering thus far
     uint256 private totalETRNLOffered;
     // The total number of MIM-ETRNL lp tokens acquired
@@ -71,8 +75,9 @@ contract EternalOffering {
 
 /////–––««« Constructor »»»––––\\\\\
 
-    constructor (address _eternal, address _treasury) {
+    constructor (address _eternal, address _treasury, address _storage) {
         // Set the initial Eternal token and storage interfaces
+        eternalStorage = IEternalStorage(_storage);
         eternal = IERC20(_eternal);
         IJoeRouter02 _joeRouter = IJoeRouter02(0x60aE616a2155Ee3d9A68541Ba4544862310933d4);
         IJoeFactory _joeFactory = IJoeFactory(_joeRouter.factory());
@@ -82,7 +87,7 @@ contract EternalOffering {
         // Create the pairs
         avaxPair = _joeFactory.getPair(_eternal, _joeRouter.WAVAX());
         mimPair = _joeFactory.createPair(_eternal, MIM);
-        treasury = _treasury;
+        eternalTreasury = IEternalTreasury(_treasury);
         offeringEnds = block.timestamp + 1 days;
     }
 
@@ -167,7 +172,9 @@ contract EternalOffering {
         uint256 liquidity;
         // Compute the minimum amounts needed to provide liquidity and the equivalent of the asset in ETRNL
         (uint256 minETRNL, uint256 minAsset, uint256 amountETRNL) = computeMinAmounts(asset, address(eternal), amount, 200);
-        require(amountETRNL + liquidityOffered[msg.sender] <= (10 ** 7) * (10 ** 18), "Amount exceeds the user limit");
+        // Calculate risk
+        uint256 rRisk = totalETRNLOffered < LIMIT / 4 ? 3100 : (totalETRNLOffered < LIMIT / 2 ? 2600 : (totalETRNLOffered < LIMIT * 3 / 4 ? 2100 : 1600));
+        require(amountETRNL + (amountETRNL * (rRisk - 100) / (10 ** 4)) + liquidityOffered[msg.sender] <= (10 ** 7) * (10 ** 18), "Amount exceeds the user limit");
 
         // Compute the percent change condition
         uint256 percent = 500 * BASELINE * (10 ** 18) * TIME_CONSTANT * TIME_FACTOR / eternal.totalSupply();
@@ -188,9 +195,6 @@ contract EternalOffering {
             asset = joeRouter.WAVAX();
         }
 
-        // Calculate risk and join the gage for the user and the Eternal Offering contract
-        uint256 rRisk = totalETRNLOffered < LIMIT / 4 ? 3100 : (totalETRNLOffered < LIMIT / 2 ? 2600 : (totalETRNLOffered < LIMIT * 3 / 4 ? 2100 : 1600));
-
         // Add liquidity to the ETRNL/Asset pair
         require(eternal.approve(address(joeRouter), amountETRNL), "Approve failed");
         if (asset == joeRouter.WAVAX()) {
@@ -205,7 +209,8 @@ contract EternalOffering {
 
         // Update the offering variables
         liquidityOffered[msg.sender] += providedETRNL + (providedETRNL * (rRisk - 100) / (10 ** 4));
-        totalETRNLOffered += providedETRNL + (providedETRNL * (rRisk - 100) / (10 ** 4));
+        totalETRNLOffered += providedETRNL + (2 * providedETRNL * (rRisk - 100) / (10 ** 4));
+        totalETRNLForGages += providedETRNL * (rRisk - 100) / (10 ** 4);
 
         // Initialize the loyalty gage and transfer the user's instant reward
         newGage.initialize(asset, address(eternal), amount, providedETRNL, rRisk, 1000);
@@ -239,6 +244,7 @@ contract EternalOffering {
             dAmount += dAmount * dRisk / (10 ** 4);
         } else {
             dAmount -= dAmount * rRisk / (10 ** 4);
+            totalETRNLForGages -= dAmount * rRisk / (10 ** 4);
         }
         require(eternal.transfer(receiver, dAmount), "Failed to transfer ETRNL");
     }
@@ -319,20 +325,29 @@ contract EternalOffering {
         uint256 avaxBal = address(this).balance;
         // Send the MIM and AVAX balance of this contract to the Eternal Treasury if there is any dust leftover
         if (mimBal > 0) {
-            require(IERC20(MIM).transfer(treasury, mimBal), "MIM Transfer failed");
+            require(IERC20(MIM).transfer(address(eternalTreasury), mimBal), "MIM Transfer failed");
         }
         if (avaxBal > 0) {
-            (bool success,) = treasury.call{value: avaxBal}("");
+            (bool success,) = address(eternalTreasury).call{value: avaxBal}("");
             require(success, "AVAX transfer failed");
         }
 
         // Send any leftover ETRNL from this offering to the Eternal Treasury
-        if (etrnlBal > 0) {
-            require(eternal.transfer(treasury, etrnlBal), "ETRNL transfer failed");
+        if (etrnlBal > totalETRNLForGages) {
+            bytes32 treasury = keccak256(abi.encodePacked(address(eternalTreasury)));
+            bytes32 reserveBalance = keccak256(abi.encodePacked("reserveBalances", address(eternalTreasury)));
+            bytes32 stakedBalance = keccak256(abi.encodePacked("stakedBalances", address(eternalTreasury)));
+            bytes32 reserveStakedBalances = keccak256(abi.encodePacked("reserveStakedBalances", address(eternalTreasury)));
+            bytes32 totalStakedBalances = keccak256(abi.encodePacked("totalStakedBalances", address(eternalTreasury)));
+            eternalStorage.setUint(treasury, reserveBalance, eternalStorage.getUint(treasury, reserveBalance) + eternalTreasury.convertToReserve(etrnlBal - totalETRNLForGages));
+            eternalStorage.setUint(treasury, stakedBalance, eternalStorage.getUint(treasury, stakedBalance) + etrnlBal - totalETRNLForGages);
+            eternalStorage.setUint(treasury, reserveStakedBalances, eternalStorage.getUint(treasury, reserveStakedBalances) + eternalTreasury.convertToReserve(etrnlBal - totalETRNLForGages));
+            eternalStorage.setUint(treasury, totalStakedBalances, eternalStorage.getUint(treasury, totalStakedBalances) + etrnlBal - totalETRNLForGages);
+            require(eternal.transfer(address(eternalTreasury), etrnlBal - totalETRNLForGages), "ETRNL transfer failed");
         }
 
         // Send the lp tokens earned from this offering to the Eternal Treasury
-        require(IERC20(avaxPair).transfer(treasury, totalLpAVAX), "Failed to transfer AVAX lp");
-        require(IERC20(mimPair).transfer(treasury, totalLpMIM), "Failed to transfer MIM lp");
+        require(IERC20(avaxPair).transfer(address(eternalTreasury), totalLpAVAX), "Failed to transfer AVAX lp");
+        require(IERC20(mimPair).transfer(address(eternalTreasury), totalLpMIM), "Failed to transfer MIM lp");
     }
 }

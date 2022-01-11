@@ -2,8 +2,6 @@
 pragma solidity 0.8.0;
 
 import "../interfaces/IEternalFactory.sol";
-import "../interfaces/IEternalStorage.sol";
-import "../interfaces/IEternalTreasury.sol";
 import "../interfaces/ILoyaltyGage.sol";
 import "../gages/LoyaltyGage.sol";
 import "../inheritances/OwnableEnhanced.sol";
@@ -44,12 +42,8 @@ contract EternalFactory is IEternalFactory, OwnableEnhanced {
 
     // Keeps track of the latest Gage ID
     bytes32 public immutable lastId;
-    // The total number of active liquid gages
-    bytes32 public immutable totalLiquidGages;
-    // The number of liquid gages that can possibly be active at a time
-    bytes32 public immutable liquidGageLimit;
 
-/////–––««« Variables: Constants, Factors and Estimates »»»––––\\\\\
+/////–––««« Variables: Constants, Factors and Limits »»»––––\\\\\
 
     // The holding time constant used in the percent change condition calculation (decided by the Eternal Fund) (x 10 ** 6)
     bytes32 public immutable timeFactor;
@@ -57,6 +51,22 @@ contract EternalFactory is IEternalFactory, OwnableEnhanced {
     bytes32 public immutable timeConstant;
     // The risk constant used in the calculation of the treasury's risk (x 10 ** 4)
     bytes32 public immutable riskConstant;
+    // The per-user limiting variable deciding the amount of ETRNL one can individually use from the treasury's reserves
+    bytes32 public immutable phi;
+    // The general limiting variable deciding the total amount of ETRNL which can be used from the treasury's reserves
+    bytes32 public immutable psi;
+
+/////–––««« Variables: Counters and Estimates »»»––––\\\\\
+    // The total number of ETRNL transacted with fees in the last full 24h period
+    bytes32 public immutable alpha;
+    // The total number of ETRNL transacted with fees in the current 24h period (ongoing)
+    bytes32 public immutable transactionCount;
+    // The potential amount of ETRNL set to flow out of the treasury in the last full 24h period
+    bytes32 public immutable beta;
+    // The the potential amount of ETRNL set to flow out of the treasury in the current 24h period (ongoing)
+    bytes32 public immutable outflowingETRNL;
+    // Keeps track of the UNIX time to recalculate the average transaction estimate
+    bytes32 public immutable oneDayFromNow;
     // The minimum token value estimate of transactions in 24h, used in case the alpha value is not determined yet
     bytes32 public immutable baseline;
 
@@ -74,21 +84,29 @@ contract EternalFactory is IEternalFactory, OwnableEnhanced {
         timeConstant = keccak256(abi.encodePacked("timeConstant"));
         riskConstant = keccak256(abi.encodePacked("riskConstant"));
         baseline = keccak256(abi.encodePacked("baseline"));
-        totalLiquidGages = keccak256(abi.encodePacked("totalLiquidGages"));
-        liquidGageLimit = keccak256(abi.encodePacked("liquidGageLimit"));
+        phi = keccak256(abi.encodePacked("phi"));
+        psi = keccak256(abi.encodePacked("psi"));
+        alpha = keccak256(abi.encodePacked("alpha"));
+        transactionCount = keccak256(abi.encodePacked("transactionCount"));
+        oneDayFromNow = keccak256(abi.encodePacked("oneDayFromNow"));
+        beta = keccak256(abi.encodePacked("beta"));
+        outflowingETRNL = keccak256(abi.encodePacked("outflowingETRNL"));
     }
 
     function initialize(address _treasury, address _fund) external onlyAdmin {
         // Set the initial treasury interface
         eternalTreasury = IEternalTreasury(_treasury);
 
-        // Set initial constants and factors
+        // Set initial constants, factors and limiting variables
         eternalStorage.setUint(entity, timeFactor, 2 * (10 ** 6));
         eternalStorage.setUint(entity, timeConstant, 15);
         eternalStorage.setUint(entity, riskConstant, 100);
-
+        eternalStorage.setUint(entity, phi, 175 * (10 ** 4) * (10 ** 18));
+        eternalStorage.setUint(entity, psi, 250 * (10 ** 7) * (10 ** 18));
         // Set initial baseline
         eternalStorage.setUint(entity, baseline, 10 ** 5);
+        // Initialize the transaction count time tracker
+        eternalStorage.setUint(entity, oneDayFromNow, block.timestamp + 1 days);
 
         attributeFundRights(_fund);
     }
@@ -112,10 +130,9 @@ contract EternalFactory is IEternalFactory, OwnableEnhanced {
         // Checks
         uint256 userRisk = eternalStorage.getUint(entity, keccak256(abi.encodePacked("risk", asset)));
         require(userRisk > 0, "This asset is not supported");
-        uint256 gageLimit = eternalStorage.getUint(entity, liquidGageLimit);
         require(asset != address(eternal), "Receiver can't deposit ETRNL");
-        uint256 liquidGages = eternalStorage.getUint(entity, totalLiquidGages);
-        require(liquidGages < gageLimit, "Liquid gage limit is reached");
+        uint256 treasuryRisk = userRisk - eternalStorage.getUint(entity, riskConstant);
+        require(!gageLimitReached(asset, amount, treasuryRisk), "ETRNL treasury reserves are dry");
         bool inLiquidGage = eternalStorage.getBool(entity, keccak256(abi.encodePacked("inLiquidGage", _msgSender(), asset)));
         require(!inLiquidGage, "Per-asset gaging limit reached");
         require(!eternalTreasury.viewUndergoingSwap(), "A liquidity swap is in progress");
@@ -123,37 +140,76 @@ contract EternalFactory is IEternalFactory, OwnableEnhanced {
         // Compute the percent change condition
         uint256 percent;
         {
-        bytes32 eternalToken = keccak256(abi.encodePacked(address(eternal)));
-        uint256 alpha = eternalStorage.getUint(eternalToken, keccak256(abi.encodePacked("alpha")));
-        if (alpha == 0) {
-            alpha = eternalStorage.getUint(entity, baseline);
-        }
-        uint256 burnRate = eternalStorage.getUint(eternalToken, keccak256(abi.encodePacked("burnRate")));
         uint256 _timeConstant = eternalStorage.getUint(entity, timeConstant);
         uint256 _timeFactor = eternalStorage.getUint(entity, timeFactor);
-        percent = burnRate * alpha * (10 ** 18) * _timeConstant * _timeFactor / eternal.totalSupply();
+        uint256 burnRate = eternalStorage.getUint(keccak256(abi.encodePacked(address(eternal))), keccak256(abi.encodePacked("burnRate")));
+        uint256 _alpha = eternalStorage.getUint(entity, alpha) == 0 ? eternalStorage.getUint(entity, baseline) : eternalStorage.getUint(entity, alpha);
+        percent = burnRate * _alpha * (10 ** 18) * _timeConstant * _timeFactor / eternal.totalSupply();
         }
 
-        // Incremement the lastId tracker and the number of active liquid gages
+        // Incremement the lastId tracker
         uint256 idLast = eternalStorage.getUint(entity, lastId) + 1;
-        {
-        uint256 totalGagesLiquid = eternalStorage.getUint(entity, totalLiquidGages);
         eternalStorage.setUint(entity, lastId, idLast);
-        eternalStorage.setUint(entity, totalLiquidGages, totalGagesLiquid + 1);
-        }
 
         // Deploy a new Gage
         LoyaltyGage newGage = new LoyaltyGage(idLast, percent, 2, false, address(eternalTreasury), _msgSender(), address(this));
         emit NewGage(idLast, address(newGage));
         eternalStorage.setAddress(entity, keccak256(abi.encodePacked("gages", idLast)), address(newGage));
 
-        //Transfer the deposit to the treasury, calculate risk and join the gage for the user and the treasury
-        uint256 treasuryRisk = userRisk - eternalStorage.getUint(entity, riskConstant);
+        //Transfer the deposit to the treasury and join the gage for the user and the treasury
         if (msg.value == 0) {
             require(IERC20(asset).transferFrom(_msgSender(), address(eternalTreasury), amount), "Failed to deposit asset");
         }
         eternalTreasury.fundEternalLiquidGage{value: msg.value}(address(newGage), _msgSender(), asset, amount, userRisk, treasuryRisk);
         return idLast;
+    }
+
+    function gageLimitReached(address asset, uint256 amountAsset, uint256 risk) private view returns(bool limitReached) {
+        bytes32 treasury = keccak256(abi.encode(address(eternalTreasury)));
+        // Convert the asset to ETRNL if it isn't already
+        if (asset != address(eternal)) {
+            (, , amountAsset) = eternalTreasury.computeMinAmounts(asset, address(eternal), amountAsset, 0);
+        }
+        uint256 _psi = eternalStorage.getUint(entity, psi);
+        uint256 totalStakedBalances = eternalStorage.getUint(treasury, keccak256(abi.encodePacked("reserveStakedBalances")));
+        uint256 userStakedBalances = totalStakedBalances - eternalStorage.getUint(treasury, keccak256(abi.encodePacked("reserveBalances", address(eternalTreasury))));
+        // Available ETRNL is all the ETRNL which can be spent by the treasury on gages whilst still remaining sustainable
+        uint256 availableETRNL = eternal.balanceOf(address(eternalTreasury)) - eternalTreasury.convertToStaked(userStakedBalances) - _psi; 
+        
+        limitReached = availableETRNL < amountAsset - (2 * amountAsset * risk / (10 ** 4));
+    }
+
+    /**
+     * @notice Update the 24h counters for the Eternal Treasury and Token, depending on the contract calling this function
+     * @param amount The value used to update one of the counters
+     * 
+     * Requirements:
+     *
+     * - Only callable by the Eternal Token or Treasury
+     */
+    function updateCounters(uint256 amount) external override {
+        bool treasury = _msgSender() == address(eternalTreasury);
+        require(_msgSender() == address(eternal) || treasury, "Caller must be from Eternal");
+        // If the 24h period is ongoing, then update one of the two counters depending on the calling address
+        if (block.timestamp < eternalStorage.getUint(entity, oneDayFromNow)) {
+            if (treasury) {
+                eternalStorage.setUint(entity, outflowingETRNL, eternalStorage.getUint(entity, outflowingETRNL) + amount);
+            } else {
+                eternalStorage.setUint(entity, transactionCount, eternalStorage.getUint(entity, transactionCount) + amount);
+            }
+        } else if (block.timestamp >= eternalStorage.getUint(entity, oneDayFromNow)) {
+            // Otherwise, update alpha and beta, reset the counters and the 24h period tracker
+            eternalStorage.setUint(entity, alpha, eternalStorage.getUint(entity, transactionCount));
+            eternalStorage.setUint(entity, beta, eternalStorage.getUint(entity, outflowingETRNL));
+            uint256 otherAmount;
+            if (treasury) {
+                otherAmount = amount;
+                amount = 0;
+            }
+            eternalStorage.setUint(entity, transactionCount, amount);
+            eternalStorage.setUint(entity, outflowingETRNL, otherAmount);
+            eternalStorage.setUint(entity, oneDayFromNow, block.timestamp + 1 days);
+        }
     }
 
 /////–––««« Fund-only functions »»»––––\\\\\
@@ -162,7 +218,7 @@ contract EternalFactory is IEternalFactory, OwnableEnhanced {
      * @notice Updates the address of the Eternal Treasury contract
      * @param newContract The new address for the Eternal Treasury contract
      */
-    function setEternalTreasury(address newContract) external override onlyFund {
+    function setEternalTreasury(address newContract) external onlyFund {
         eternalTreasury = IEternalTreasury(newContract);
     }
 
@@ -170,7 +226,7 @@ contract EternalFactory is IEternalFactory, OwnableEnhanced {
      * @notice Updates the address of the Eternal Token contract
      * @param newContract The new address for the Eternal Token contract
      */
-    function setEternalToken(address newContract) external override onlyFund {
+    function setEternalToken(address newContract) external onlyFund {
         eternal = IERC20(newContract);
     }
 }

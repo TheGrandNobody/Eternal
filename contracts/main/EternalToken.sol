@@ -5,6 +5,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "../interfaces/IEternalFund.sol";
 import "../interfaces/IEternalTreasury.sol";
+import "../interfaces/IEternalFactory.sol";
 import "../interfaces/IEternalStorage.sol";
 import "../inheritances/OwnableEnhanced.sol";
 
@@ -22,6 +23,8 @@ contract EternalToken is IERC20, IERC20Metadata, OwnableEnhanced {
     IEternalStorage public immutable eternalStorage;
     // The Eternal treasury interface
     IEternalTreasury private eternalTreasury;
+    // The Eternal factory interface
+    IEternalFactory private eternalFactory;
 
     // The keccak256 hash of this contract's address
     bytes32 public immutable entity;
@@ -66,15 +69,6 @@ contract EternalToken is IERC20, IERC20Metadata, OwnableEnhanced {
     // The percentage of the fee taken at each transaction, that is used to auto-lock liquidity (x 10 ** 5)
     bytes32 public immutable liquidityProvisionRate;
 
-/////–––««« Variables: Transaction Tracking »»»––––\\\\\
-
-    // The total number of times ETRNL has been transacted with fees in the last full 24h period
-    bytes32 public immutable alpha;
-    // The total number of times ETRNL has been transacted with fees in the current 24h period (ongoing)
-    bytes32 public immutable transactionCount;
-    // Keeps track of the UNIX time to recalculate the average transaction estimate
-    bytes32 public immutable oneDayFromNow;
-
 /////–––««« Constructors & Initializers »»»––––\\\\\
 
     constructor (address _eternalStorage) {
@@ -90,9 +84,6 @@ contract EternalToken is IERC20, IERC20Metadata, OwnableEnhanced {
         burnRate = keccak256(abi.encodePacked("burnRate"));
         redistributionRate = keccak256(abi.encodePacked("redistributionRate"));
         liquidityProvisionRate = keccak256(abi.encodePacked("liquidityProvisionRate"));
-        alpha = keccak256(abi.encodePacked("alpha"));
-        transactionCount = keccak256(abi.encodePacked("transactionCount"));
-        oneDayFromNow = keccak256(abi.encodePacked("oneDayFromNow"));
         excludedAddresses = keccak256(abi.encodePacked("excludedAddresses"));
     } 
 
@@ -100,8 +91,9 @@ contract EternalToken is IERC20, IERC20Metadata, OwnableEnhanced {
      * @notice Initialize supplies and routers and create a pair. Mints total supply to the contract deployer. 
      * Exclude some addresses from fees and/or rewards. Sets initial rate values.
      */
-    function initialize(address _eternalTreasury, address _fund, address _offering, address _seedLock, address _privLock) external onlyAdmin {
+    function initialize(address _eternalTreasury, address _factory, address _fund, address _offering, address _seedLock, address _privLock) external onlyAdmin {
         eternalTreasury = IEternalTreasury(_eternalTreasury);
+        eternalFactory = IEternalFactory(_factory);
         // The largest possible number in a 256-bit integer
         uint256 max = ~uint256(0);
 
@@ -110,8 +102,9 @@ contract EternalToken is IERC20, IERC20Metadata, OwnableEnhanced {
         uint256 rSupply = (max - (max % ((10 ** 10) * (10 ** 18))));
         eternalStorage.setUint(entity, totalReflectedSupply, rSupply);
         eternalStorage.setUint(entity, tokenLiquidityThreshold, (10 ** 10) * (10 ** 18) / 1000);
-        // Distribute supply (10% and 5% to send to FundLock contracts, 42.5% to Treasury and 42.5% to the IGO contract)
-        eternalStorage.setUint(entity, keccak256(abi.encodePacked("reflectedBalances", _seedLock)), (rSupply / 100) * 10 );
+        // Distribute supply (10% to send to FundLock contracts for vesting, 5% to send for pre-seed investors, 42.5% to Treasury and 42.5% to the IGO contract)
+        eternalStorage.setUint(entity, keccak256(abi.encodePacked("reflectedBalances", _msgSender())), (rSupply / 100) * 5);
+        eternalStorage.setUint(entity, keccak256(abi.encodePacked("reflectedBalances", _seedLock)), (rSupply / 100) * 5);
         eternalStorage.setUint(entity, keccak256(abi.encodePacked("reflectedBalances", _privLock)), (rSupply / 100) * 5);
         eternalStorage.setUint(entity, keccak256(abi.encodePacked("reflectedBalances", _offering)), (rSupply / 1000) * 425);
         eternalStorage.setUint(entity, keccak256(abi.encodePacked("reflectedBalances", _eternalTreasury)), (rSupply / 1000) * 425);
@@ -137,9 +130,6 @@ contract EternalToken is IERC20, IERC20Metadata, OwnableEnhanced {
         eternalStorage.setUint(entity, burnRate, 500);
         eternalStorage.setUint(entity, redistributionRate, 2500);
         eternalStorage.setUint(entity, liquidityProvisionRate, 1500);
-
-        // Initialize the transaction count time tracker
-        eternalStorage.setUint(entity, oneDayFromNow, block.timestamp + 1 days);
 
         // Designate the Eternal Fund
         attributeFundRights(_fund);
@@ -329,39 +319,38 @@ contract EternalToken is IERC20, IERC20Metadata, OwnableEnhanced {
         }
         emit Transfer(sender, recipient, netTransferAmount);
 
-        // Update the 24h transaction count if the current 24h period has not elapsed
-        {
-        uint256 currentCount = eternalStorage.getUint(entity, transactionCount);
-        uint256 aDayFromNow = eternalStorage.getUint(entity, oneDayFromNow);
-        if (takeFee && block.timestamp < aDayFromNow) {
-            eternalStorage.setUint(entity, transactionCount, currentCount + 1);
-        } else if (takeFee && block.timestamp >= aDayFromNow) {
-            // Else update alpha, and reset the transaction count and 24h period tracker
-            eternalStorage.setUint(entity, alpha, currentCount);
-            eternalStorage.setUint(entity, transactionCount, amount);
-            eternalStorage.setUint(entity, oneDayFromNow, block.timestamp + 1 days);
-        }
-        }
 
-        // Adjust the total reflected supply for the new fees
+        // Adjust the total reflected supply for the new fees and update the 24h transaction count
         // If the sender or recipient are excluded from fees, we ignore the fee altogether
         if (takeFee) {
-            // Perform a burn based on the burn rate 
-            uint256 deflationRate = eternalStorage.getUint(entity, burnRate);
-            _burn(address(this), amount * deflationRate / 100000, reflectedAmount * deflationRate / 100000);
-            // Redistribute based on the redistribution rate 
-            uint256 reflectedSupply = eternalStorage.getUint(entity, totalReflectedSupply);
-            uint256 rewardRate = eternalStorage.getUint(entity, redistributionRate);
-            eternalStorage.setUint(entity, totalReflectedSupply, reflectedSupply - (reflectedAmount * rewardRate / 100000));
-            // Store ETRNL away in the treasury based on the funding rate
-            bytes32 treasuryBalance = keccak256(abi.encodePacked("reflectedBalances", address(eternalTreasury)));
-            uint256 fundBalance = eternalStorage.getUint(entity, treasuryBalance);
-            uint256 fundRate = eternalStorage.getUint(entity, fundingRate);
-            eternalStorage.setUint(entity, treasuryBalance, fundBalance + (reflectedAmount * fundRate / 100000));
-            // Provide liquidity to the ETRNL/AVAX pair on TraderJoe based on the liquidity provision rate
-            uint256 liquidityRate = eternalStorage.getUint(entity, liquidityProvisionRate);
-            storeLiquidityFunds(sender, amount * liquidityRate / 100000, reflectedAmount * liquidityRate / 100000);
+            _takeFees(amount, reflectedAmount, sender);
         }
+    }
+
+    /**
+     * @notice Apply the effects of all four token fees on a given transaction and update the 24h transaction count
+     * @param amount The amount of ETRNL of the specified transaction
+     * @param reflectedAmount The reflected amount of ETRNL of the specified transaction
+     * @param sender The address of the sender of the specified transaction
+     */
+    function _takeFees(uint256 amount, uint256 reflectedAmount, address sender) private {
+        // Update the 24h transaction count
+        eternalFactory.updateCounters(amount);
+        // Perform a burn based on the burn rate 
+        uint256 deflationRate = eternalStorage.getUint(entity, burnRate);
+        _burn(address(this), amount * deflationRate / 100000, reflectedAmount * deflationRate / 100000);
+        // Redistribute based on the redistribution rate 
+        uint256 reflectedSupply = eternalStorage.getUint(entity, totalReflectedSupply);
+        uint256 rewardRate = eternalStorage.getUint(entity, redistributionRate);
+        eternalStorage.setUint(entity, totalReflectedSupply, reflectedSupply - (reflectedAmount * rewardRate / 100000));
+        // Store ETRNL away in the treasury based on the funding rate
+        bytes32 treasuryBalance = keccak256(abi.encodePacked("reflectedBalances", address(eternalTreasury)));
+        uint256 fundBalance = eternalStorage.getUint(entity, treasuryBalance);
+        uint256 fundRate = eternalStorage.getUint(entity, fundingRate);
+        eternalStorage.setUint(entity, treasuryBalance, fundBalance + (reflectedAmount * fundRate / 100000));
+        // Provide liquidity to the ETRNL/AVAX pair on TraderJoe based on the liquidity provision rate
+        uint256 liquidityRate = eternalStorage.getUint(entity, liquidityProvisionRate);
+        storeLiquidityFunds(sender, amount * liquidityRate / 100000, reflectedAmount * liquidityRate / 100000);
     }
     
     /**
@@ -540,5 +529,13 @@ contract EternalToken is IERC20, IERC20Metadata, OwnableEnhanced {
      */
     function setEternalTreasury(address newContract) external onlyFund {
         eternalTreasury = IEternalTreasury(newContract);
+    }
+
+    /**
+     * @notice Updates the address of the Eternal Factory contract
+     * @param newContract The new address for the Eternal Factory contract
+     */
+    function setEternalFactory (address newContract) external onlyFund {
+        eternalFactory = IEternalFactory(newContract);
     }
 }
