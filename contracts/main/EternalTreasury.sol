@@ -52,8 +52,6 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
 
 /////–––««« Variables: Automatic Liquidity Provision »»»––––\\\\\
 
-    // The total amount of liquidity provided by the treasury to the ETRNL-AVAX pair
-    bytes32 public immutable totalLiquidity;
     // Determines whether the contract is tasked with providing liquidity using part of the transaction fees
     bytes32 public immutable autoLiquidityProvision;
     // Determines whether an auto-liquidity provision process is undergoing
@@ -91,7 +89,6 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
 
         // Initialize keccak256 hashes
         entity = keccak256(abi.encodePacked(address(this)));
-        totalLiquidity = keccak256(abi.encodePacked("totalLiquidity"));
         autoLiquidityProvision = keccak256(abi.encodePacked("autoLiquidityProvision"));
         totalStakedBalances = keccak256(abi.encodePacked("totalStakedBalances"));
         reserveStakedBalances = keccak256(abi.encodePacked("reserveStakedBalances"));
@@ -215,7 +212,7 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
      * @return The amount of ETRNL and Asset obtained from removing liquidity
      */
     function _removeLiquidity(address rAsset, uint256 providedAsset, address receiver) private returns(uint256, uint256) {
-        (uint256 minETRNL, uint256 minAsset,) = computeMinAmounts(rAsset, address(eternal), providedAsset, 200);
+        (uint256 minETRNL, uint256 minAsset,) = computeMinAmounts(rAsset, address(eternal), providedAsset, 100);
         uint256 liquidity = eternalStorage.getUint(entity, keccak256(abi.encodePacked("liquidity", receiver, rAsset)));
         return joeRouter.removeLiquidity(address(eternal), rAsset, liquidity, minETRNL/2, minAsset/2, address(this), block.timestamp);
     }
@@ -280,9 +277,6 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
         // Save the true amount provided as liquidity by the receiver and the actual liquidity amount
         eternalStorage.setUint(entity, keccak256(abi.encodePacked("amountProvided", receiver, asset)), providedAsset);
         eternalStorage.setUint(entity, keccak256(abi.encodePacked("liquidity", receiver, asset)), liquidity);
-
-        // Update the 24h count of ETRNL flowing out of the treasury
-        eternalFactory.updateCounters(2 * providedETRNL * dRisk / (10 ** 4));
         
         // Initialize the liquid gage and transfer the user's instant reward
         ILoyaltyGage(gage).initialize(asset, address(eternal), userAmount, providedETRNL, rRisk, dRisk);
@@ -322,6 +316,7 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
             //solhint-disable-next-line reentrancy
             eternalRewards = eternalRewards == 0 ? 0 : eternalRewards - (eternalRewards * dRisk / (10 ** 4));
         } else {
+            eternalFee += amountAsset * rRisk / (10 ** 4);
             amountAsset -= amountAsset * rRisk / (10 ** 4);
             // Compute the net liquidity rewards + gage deposit left to distribute to staker
             //solhint-disable-next-line reentrancy
@@ -469,8 +464,9 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
         eternal.approve(address(joeRouter), amountETRNL);
         // Update the total liquidity 
         (,,uint256 liquidity) = joeRouter.addLiquidityAVAX{value: amountAVAX}(address(eternal), amountETRNL, minETRNL, minAVAX, address(this), block.timestamp);
-        uint256 entireLiquidity = eternalStorage.getUint(entity, totalLiquidity);
-        eternalStorage.setUint(entity, totalLiquidity, entireLiquidity + liquidity);
+        bytes32 totalLiquidity = keccak256(abi.encodePacked("liquidityProvided", address(this), joeRouter.WAVAX()));
+        uint256 currentLiquidity = eternalStorage.getUint(entity, totalLiquidity);
+        eternalStorage.setUint(entity, totalLiquidity, currentLiquidity + liquidity);
     }
 
 /////–––««« Fund-only functions »»»––––\\\\\
