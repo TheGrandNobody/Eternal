@@ -1,2 +1,0 @@
-# 📖 Eternal Documentation
-

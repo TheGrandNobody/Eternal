@@ -8,7 +8,9 @@ description: A summary of Eternal, what it is and what it does
 
 Eternal is the world's first long-termist decentralized gaging platform, **aiming to popularize a new class of long-term financial instruments, gages, as a solution to a $1.7 trillion problem named short-termism.**
 
-More than that, Eternal is an attempt at demonstrating the significant advantages of neo-long-termist strategies. We begin doing so by **giving you the opportunity to provide liquidity on our platform at a 50% discount as well as being paid for it, simultaneously, whilst remaining economically sustainable**.&#x20;
+However Eternal is **not a company** and **not owned by anyone except for its token holders.** Even the company Eternal Finance B.V and the architect Nobody, hold no initial stake in Eternal.
+
+More than that, Eternal is an attempt at demonstrating the significant advantages of neo-long-termist strategies. We begin doing so by **giving you the opportunity to provide liquidity at a 50% discount and gain instant profits, simultaneously, whilst remaining economically sustainable**.&#x20;
 
 ## What is short-termism?
 
@@ -34,7 +36,7 @@ Firms rely on investors to buy and hold their shares. Investors want to make mon
 
 **The **<mark style="color:red;">**Liquidity-Provider**</mark>** Dilemma:**
 
-Decentralized exchanges (DEX) and blockchain projects rely on liquidity providers in order for tokens to be traded at any given price level on DEXs. Liquidity providers want to earn as much money as possible, and therefore will only provide liquidity in the very short-term (<15 days), whilst the pool rewards are still relatively high, before moving to another project. In turn, projects attempt to appeal to liquidity providers by offering high yields, making all kinds of poor decisions with no regard for their long-term consequences. This leads to more issues such as abnormally high inflation rates, inadequate reflection of value by the token, longer downtrends and periods of recovery and radical short-termist culture.
+Decentralized exchanges (DEX) and Blockchain projects rely on liquidity providers in order for tokens to be traded at any given price level on DEXs. Liquidity providers want to earn as much money as possible, and therefore will only provide liquidity in the very short-term (<15 days), whilst the pool rewards are still relatively high, before moving to another project. In turn, projects attempt to appeal to liquidity providers by offering high yields, making all kinds of poor decisions with no regard for their long-term consequences. This leads to more issues such as abnormally high inflation rates, inadequate reflection of value by the token, longer downtrends and periods of recovery and radical short-termist culture.
 
 {% hint style="info" %}
 **There is a short-termist issue in almost every single industry and it is reflecting in the global issues we are currently witnessing with our economies, health systems, environment...**
@@ -44,7 +46,7 @@ You name it.
 
 ## What is a gage?
 
-A gage is broadly defined as a **contract between two or more stakeholders who promise to pay a given percentage of a deposited asset to the last stakeholder who breaks a predetermined condition.** It is a lot easier to understand a gage through its applications: you may do so by reading [the gage section](products-services/gages/), or the academic whitepaper, _Introduction to gages_.
+A gage is broadly defined as a **contract between two or more stakeholders who promise to pay a given percentage of a deposited asset to the last stakeholder who breaks a predetermined condition.** It is a lot easier to understand a gage through its applications: you may do so by reading the gage section, or the academic gage whitepaper, _Introduction to gages_.
 
 ## Why should I use gages?
 
@@ -58,7 +60,7 @@ The developed gage-related applications, are not only designed and proven to **e
 
 **Short-termism arises as a result of poor dynamics between individuals.** For example, back to our firm-investor dilemma, one of the main reasons firms are short-termist is because of their unhealthy relationships with investors, who are also short-termist. **Gages are particularly useful when it comes to creating win-win relationships between two or more individuals.**
 
-For this specific dilemma we propose a solution with [loyalty gages](products-services/gages/loyalty-gage/).
+For this specific dilemma we propose a solution with loyalty gages.
 
 But that is not the end of it.
 
@@ -80,10 +82,6 @@ No, gages are a different,  much larger class of long-term financial instruments
 2. **Gage-related applications are generally superior in fixing a short-termist issue as compared to traditional financial instruments** as they create symbiotic relationships rather than force either individual into a given traditional role.&#x20;
 3. **The flexibility of gages always allow more options, more actions, and more fluidity in the interaction between any two or more individuals.** This means that constrains, limits and other barriers to access and usage normally imposed by traditional financial instruments are removed with gages.
 
-## What is the governance like in Eternal?
-
-Eternal is a fully decentralized autonomous organization. However, Eternal is **not a company** and **not owned by anyone except for its token holders.** Even the company Eternal Finance B.V and the architect Nobody, hold no initial stake in Eternal.
-
 ## What is the company Eternal Finance B.V for then?
 
 Eternal Finance B.V is necessary for **two reasons:**
@@ -97,6 +95,18 @@ Eternal Finance B.V was necessary to obtain the funds which covered not only mar
 **2. Future Releases**
 
 Unfortunately, we have not reached a point in society where all systems are fully decentralized. Eternal Finance B.V is primarily here to serve as a bridge of trust between the centralized and decentralized. This will be useful for upcoming releases, where some applications are particularly useful to countries where internet access is not as common, or to make necessary agreements with governments.
+
+## What is the governance like in Eternal?
+
+In the **second quarter post-launch**, the Eternal Fund will be released and Eternal will go from having Nobody as the initial admin, to nobody as the admin. Meaning, Eternal will become a fully decentralized autonomous organization. This decision was made for **two reasons:**
+
+**1. Community Input**
+
+The best systems have the input of the users, not just the architect. This means that the Eternal Fund needs to be designed with the community's opinion taken into account.
+
+**2. Treasury**
+
+The Eternal Fund holds a treasury funded by the Eternal token. However, it needs a minimum time period for it to accumulate some value. Do not worry, no one can access it, not even Nobody.
 
 ## Who is Nobody?
 
