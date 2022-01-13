@@ -52,9 +52,9 @@ contract EternalOffering {
     // The average amount of time that users provide liquidity for
     uint256 public constant TIME_CONSTANT = 15;
     // The minimum token value estimate of transactions in 24h, used in case the alpha value is not determined yet
-    uint256 public constant BASELINE = 10 ** 6;
+    uint256 public constant BASELINE = 10 ** 7;
     // The number of ETRNL allocated
-    uint256 public constant LIMIT = 425 * (10 ** 7);
+    uint256 public constant LIMIT = 4207500 * (10 ** 3);
     // The MIM address
     address public constant MIM = 0x130966628846BFd36ff31a822705796e8cb8C18D;
 
@@ -162,19 +162,18 @@ contract EternalOffering {
     function initiateEternalLoyaltyGage(address asset, uint256 amount) external payable returns(uint256) {
         // Checks
         require(block.timestamp < offeringEnds, "Offering is over");
-        require(asset == MIM || msg.value > 0, "Only MIM or AVAX");
-        require(totalETRNLOffered < LIMIT, "ETRNL offering limit is reached");
+        require(asset == MIM || asset == joeRouter.WAVAX(), "Only MIM or AVAX");
         require(!participated[msg.sender], "User gage limit reached");
-        require(liquidityOffered[msg.sender] < (10 ** 7) * (10 ** 18), "Limit for this user reached");
 
         uint256 providedETRNL;
         uint256 providedAsset;
         uint256 liquidity;
         // Compute the minimum amounts needed to provide liquidity and the equivalent of the asset in ETRNL
-        (uint256 minETRNL, uint256 minAsset, uint256 amountETRNL) = computeMinAmounts(asset, address(eternal), amount, 200);
+        (uint256 minETRNL, uint256 minAsset, uint256 amountETRNL) = computeMinAmounts(asset, address(eternal), amount, 100);
         // Calculate risk
         uint256 rRisk = totalETRNLOffered < LIMIT / 4 ? 3100 : (totalETRNLOffered < LIMIT / 2 ? 2600 : (totalETRNLOffered < LIMIT * 3 / 4 ? 2100 : 1600));
-        require(amountETRNL + (amountETRNL * (rRisk - 100) / (10 ** 4)) + liquidityOffered[msg.sender] <= (10 ** 7) * (10 ** 18), "Amount exceeds the user limit");
+        require(amountETRNL + (2 * amountETRNL * (rRisk - 100) / (10 ** 4)) + liquidityOffered[msg.sender] <= (10 ** 7) * (10 ** 18), "Amount exceeds the user limit");
+        require(totalETRNLOffered + (2 * amountETRNL * (rRisk - 100) / (10 ** 4)) < LIMIT, "ETRNL offering limit is reached");
 
         // Compute the percent change condition
         uint256 percent = 500 * BASELINE * (10 ** 18) * TIME_CONSTANT * TIME_FACTOR / eternal.totalSupply();
@@ -191,8 +190,6 @@ contract EternalOffering {
         //Transfer the deposit
         if (msg.value == 0) {
             require(IERC20(asset).transferFrom(msg.sender, address(this), amount), "Failed to deposit asset");
-        } else {
-            asset = joeRouter.WAVAX();
         }
 
         // Add liquidity to the ETRNL/Asset pair
@@ -208,12 +205,12 @@ contract EternalOffering {
         providedETRNL += (amount - providedAsset) * providedETRNL / amount;
 
         // Update the offering variables
-        liquidityOffered[msg.sender] += providedETRNL + (providedETRNL * (rRisk - 100) / (10 ** 4));
+        liquidityOffered[msg.sender] += providedETRNL + (2 * providedETRNL * (rRisk - 100) / (10 ** 4));
         totalETRNLOffered += providedETRNL + (2 * providedETRNL * (rRisk - 100) / (10 ** 4));
         totalETRNLForGages += providedETRNL * (rRisk - 100) / (10 ** 4);
 
         // Initialize the loyalty gage and transfer the user's instant reward
-        newGage.initialize(asset, address(eternal), amount, providedETRNL, rRisk, 1000);
+        newGage.initialize(asset, address(eternal), amount, providedETRNL, rRisk, rRisk - 100);
         require(eternal.transfer(msg.sender, providedETRNL * (rRisk - 100) / (10 ** 4)), "Failed to transfer bonus");
 
         return lastId;
@@ -267,10 +264,7 @@ contract EternalOffering {
     function provideLiquidity(uint256 amount, address asset) external payable {
         // Checks
         require(block.timestamp < offeringEnds, "Offering is over");
-        require(asset == MIM || msg.value > 0, "Only MIM or AVAX");
-        require(liquidityOffered[msg.sender] < (10 ** 7) * (10 ** 18), "Limit for this user reached");
-        require(totalETRNLOffered < LIMIT, "ETRNL offering limit is reached");
-
+        require(asset == MIM || asset == joeRouter.WAVAX(), "Only MIM or AVAX");
 
         uint256 providedETRNL;
         uint256 providedAsset;
@@ -278,12 +272,11 @@ contract EternalOffering {
         // Compute the minimum amounts needed to provide liquidity and the equivalent of the asset in ETRNL
         (uint256 minETRNL, uint256 minAsset, uint256 amountETRNL) = computeMinAmounts(asset, address(eternal), amount, 200);
         require(amountETRNL + liquidityOffered[msg.sender] <= (10 ** 7) * (10 ** 18), "Amount exceeds the user limit");
+        require(totalETRNLOffered + amountETRNL < LIMIT, "ETRNL offering limit is reached");
 
         // Transfer user's funds to this contract if it's not already done
         if (msg.value == 0) {
             require(IERC20(asset).transferFrom(msg.sender, address(this), amount), "Failed to deposit funds");
-        } else {
-            asset = joeRouter.WAVAX();
         }
 
         // Add liquidity to the ETRNL/Asset pair
@@ -319,7 +312,7 @@ contract EternalOffering {
     function sendLPToTreasury() external {
         // Checks
         require(totalETRNLOffered == LIMIT || offeringEnds < block.timestamp, "Offering not over yet");
-
+        bytes32 treasury = keccak256(abi.encodePacked(address(eternalTreasury)));
         uint256 mimBal = IERC20(MIM).balanceOf(address(this));
         uint256 etrnlBal = eternal.balanceOf(address(this));
         uint256 avaxBal = address(this).balance;
@@ -334,7 +327,6 @@ contract EternalOffering {
 
         // Send any leftover ETRNL from this offering to the Eternal Treasury
         if (etrnlBal > totalETRNLForGages) {
-            bytes32 treasury = keccak256(abi.encodePacked(address(eternalTreasury)));
             bytes32 reserveBalance = keccak256(abi.encodePacked("reserveBalances", address(eternalTreasury)));
             bytes32 stakedBalance = keccak256(abi.encodePacked("stakedBalances", address(eternalTreasury)));
             bytes32 reserveStakedBalances = keccak256(abi.encodePacked("reserveStakedBalances", address(eternalTreasury)));
@@ -347,6 +339,10 @@ contract EternalOffering {
         }
 
         // Send the lp tokens earned from this offering to the Eternal Treasury
+        bytes32 mimLiquidity = keccak256(abi.encodePacked("liquidityProvided", address(eternalTreasury), MIM));
+        bytes32 avaxLiquidity = keccak256(abi.encodePacked("liquidityProvided", address(eternalTreasury), joeRouter.WAVAX()));
+        eternalStorage.setUint(treasury, mimLiquidity, totalLpMIM);
+        eternalStorage.setUint(treasury, avaxLiquidity, totalLpAVAX);
         require(IERC20(avaxPair).transfer(address(eternalTreasury), totalLpAVAX), "Failed to transfer AVAX lp");
         require(IERC20(mimPair).transfer(address(eternalTreasury), totalLpMIM), "Failed to transfer MIM lp");
     }
