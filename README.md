@@ -46,7 +46,7 @@ You name it.
 
 ## What is a gage?
 
-A gage is broadly defined as a **contract between two or more stakeholders who promise to pay a given percentage of a deposited asset to the last stakeholder who breaks a predetermined condition.** It is a lot easier to understand a gage through its applications: you may do so by reading [the gage section](products-services/gages/), or the academic whitepaper, _Introduction to gages_.
+A gage is broadly defined as a **contract between two or more stakeholders who promise to pay a given percentage of a deposited asset to the last stakeholder who breaks a predetermined condition.** It is a lot easier to understand a gage through its applications: you may do so by reading the gage section, or the academic whitepaper, _Introduction to gages_.
 
 ## Why should I use gages?
 
@@ -60,7 +60,7 @@ The developed gage-related applications, are not only designed and proven to **e
 
 **Short-termism arises as a result of poor dynamics between individuals.** For example, back to our firm-investor dilemma, one of the main reasons firms are short-termist is because of their unhealthy relationships with investors, who are also short-termist. **Gages are particularly useful when it comes to creating win-win relationships between two or more individuals.**
 
-For this specific dilemma we propose a solution with [loyalty gages](products-services/gages/loyalty-gage.md).
+For this specific dilemma we propose a solution with loyalty gages.
 
 But that is not the end of it.
 
