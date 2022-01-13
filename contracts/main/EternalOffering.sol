@@ -54,7 +54,7 @@ contract EternalOffering {
     // The minimum token value estimate of transactions in 24h, used in case the alpha value is not determined yet
     uint256 public constant BASELINE = 10 ** 7;
     // The number of ETRNL allocated
-    uint256 public constant LIMIT = 4207500 * (10 ** 3);
+    uint256 public constant LIMIT = 4207500 * (10 ** 21);
     // The MIM address
     address public constant MIM = 0x130966628846BFd36ff31a822705796e8cb8C18D;
 
@@ -183,7 +183,7 @@ contract EternalOffering {
         participated[msg.sender] = true;
 
         // Deploy a new Gage
-        LoyaltyGage newGage = new LoyaltyGage(lastId, percent, 2, false, address(this), msg.sender, address(this));
+        LoyaltyGage newGage = new LoyaltyGage(lastId, percent, 2, false, address(this), msg.sender, address(eternalStorage));
         emit NewGage(lastId, address(newGage));
         gages[lastId] = address(newGage);
 

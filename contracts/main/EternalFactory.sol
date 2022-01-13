@@ -142,7 +142,7 @@ contract EternalFactory is IEternalFactory, OwnableEnhanced {
         eternalStorage.setUint(entity, lastId, idLast);
 
         // Deploy a new Gage
-        LoyaltyGage newGage = new LoyaltyGage(idLast, percent, 2, false, address(eternalTreasury), _msgSender(), address(this));
+        LoyaltyGage newGage = new LoyaltyGage(idLast, percent, 2, false, address(eternalTreasury), _msgSender(), address(eternalStorage));
         emit NewGage(idLast, address(newGage));
         eternalStorage.setAddress(entity, keccak256(abi.encodePacked("gages", idLast)), address(newGage));
 

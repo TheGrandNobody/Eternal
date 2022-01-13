@@ -10,6 +10,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoeRouter02.sol";
 import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoeFactory.sol";
 import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
+import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IWAVAX.sol";
 
 /**
  * @title Contract for the Eternal Treasury
@@ -269,7 +270,7 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
         // Add liquidity to the ETRNL/Asset pair
         require(eternal.approve(address(joeRouter), amountETRNL), "Approve failed");
         if (asset == joeRouter.WAVAX()) {
-            (providedETRNL, providedAsset, liquidity) = joeRouter.addLiquidityAVAX{value: userAmount}(address(eternal), amountETRNL, minETRNL, minAsset, address(this), block.timestamp);
+            (providedETRNL, providedAsset, liquidity) = joeRouter.addLiquidityAVAX{value: msg.value}(address(eternal), amountETRNL, minETRNL, minAsset, address(this), block.timestamp);
         } else {
             (providedETRNL, providedAsset, liquidity) = joeRouter.addLiquidity(address(eternal), asset, amountETRNL, userAmount, minETRNL, minAsset, address(this), block.timestamp);
         }
@@ -293,7 +294,7 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
      *
      * - Only callable by an Eternal-deployed gage
      */
-    function settleGage(address receiver, uint256 id, bool winner) external override activityHalted {
+    function settleGage(address payable receiver, uint256 id, bool winner) external override activityHalted {
         // Checks
         bytes32 factory = keccak256(abi.encodePacked(address(eternalFactory)));
         address gageAddress = eternalStorage.getAddress(factory, keccak256(abi.encodePacked("gages", id)));
@@ -322,7 +323,14 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IJoePair.sol";
             //solhint-disable-next-line reentrancy
             eternalRewards = amountETRNL * rRisk / (10 ** 4);
         }
-        require(IERC20(rAsset).transfer(receiver, amountAsset - eternalFee), "Failed to transfer ERC20 reward");
+        if (rAsset != joeRouter.WAVAX()) {
+            require(IERC20(rAsset).transfer(receiver, amountAsset - eternalFee), "Failed to transfer ERC20 reward");
+        } else {
+            IWAVAX(rAsset).deposit{value: amountAsset}();
+            IWAVAX(rAsset).withdraw(amountAsset);
+            (bool success, ) = receiver.call{value: amountAsset}("");
+            require(success, "Failed to transfer AVAX reward");
+        }
 
         // Update staker's fees w.r.t the gage fee, gage rewards and liquidity rewards and buy ETRNL with the fee
         // Fees and rewards are both calculated in terms of ETRNL
