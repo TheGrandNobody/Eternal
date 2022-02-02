@@ -28,7 +28,7 @@ interface IEternalTreasury {
     // Converts a given reserve amount into the regular number space (staked)
     function convertToStaked(uint256 reserveAmount) external view returns(uint256);
     // Allows the withdrawal of AVAX in the contract
-    function withdrawAVAX(address payable recipient, uint256 amount) external;
+    function withdrawAVAX(address recipient, uint256 amount) external;
     // Allows the withdrawal of an asset present in the contract
     function withdrawAsset(address asset, address recipient, uint256 amount) external;
 
