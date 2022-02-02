@@ -294,7 +294,7 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IWAVAX.sol";
      *
      * - Only callable by an Eternal-deployed gage
      */
-    function settleGage(address payable receiver, uint256 id, bool winner) external override activityHalted {
+    function settleGage(address receiver, uint256 id, bool winner) external override activityHalted {
         // Checks
         bytes32 factory = keccak256(abi.encodePacked(address(eternalFactory)));
         address gageAddress = eternalStorage.getAddress(factory, keccak256(abi.encodePacked("gages", id)));
