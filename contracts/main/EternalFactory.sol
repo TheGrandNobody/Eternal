@@ -122,7 +122,7 @@ contract EternalFactory is IEternalFactory, OwnableEnhanced {
         require(userRisk > 0, "This asset is not supported");
         require(asset != address(eternal), "Receiver can't deposit ETRNL");
         uint256 treasuryRisk = userRisk - eternalStorage.getUint(entity, riskConstant);
-        require(!_gageLimitReached(asset, amount, treasuryRisk), "ETRNL treasury reserves are dry");
+        require(!gageLimitReached(asset, amount, treasuryRisk), "ETRNL treasury reserves are dry");
         bool inLiquidGage = eternalStorage.getBool(entity, keccak256(abi.encodePacked("inLiquidGage", _msgSender(), asset)));
         require(!inLiquidGage, "Per-asset gaging limit reached");
         require(!eternalTreasury.viewUndergoingSwap(), "A liquidity swap is in progress");
@@ -142,21 +142,6 @@ contract EternalFactory is IEternalFactory, OwnableEnhanced {
         }
         eternalTreasury.fundEternalLiquidGage{value: msg.value}(address(newGage), _msgSender(), asset, amount, userRisk, treasuryRisk);
         return idLast;
-    }
-
-    function _gageLimitReached(address asset, uint256 amountAsset, uint256 risk) private view returns(bool limitReached) {
-        bytes32 treasury = keccak256(abi.encode(address(eternalTreasury)));
-        // Convert the asset to ETRNL if it isn't already
-        if (asset != address(eternal)) {
-            (, , amountAsset) = eternalTreasury.computeMinAmounts(asset, address(eternal), amountAsset, 0);
-        }
-
-        uint256 reserveStakedBalances = eternalStorage.getUint(treasury, keccak256(abi.encodePacked("reserveStakedBalances")));
-        uint256 userStakedBalances = reserveStakedBalances - eternalStorage.getUint(treasury, keccak256(abi.encodePacked("reserveBalances", address(eternalTreasury))));
-        // Available ETRNL is all the ETRNL which can be spent by the treasury on gages whilst still remaining sustainable
-        uint256 availableETRNL = eternal.balanceOf(address(eternalTreasury)) - eternalTreasury.convertToStaked(userStakedBalances) - eternalStorage.getUint(entity, psi); 
-        
-        limitReached = availableETRNL < amountAsset + (2 * amountAsset * risk / (10 ** 4));
     }
 
 /////–––««« Counter functions »»»––––\\\\\
@@ -185,6 +170,28 @@ contract EternalFactory is IEternalFactory, OwnableEnhanced {
     }
 
 /////–––««« Utility functions »»»––––\\\\\
+
+    /**
+     * @notice Compute whether there is enough ETRNL left in the treasury to allow for a given liquid gage (whilst remaining sustainable)
+     * @param asset The address of the asset to be deposited to the specified liquid gage
+     * @param amountAsset The amount of the asset being deposited to the specified liquid gage
+     * @param risk The current risk percentage for an Eternal liquid gage with this asset as deposit
+     * @return limitReached Whether the gaging limit is reached or not
+     */
+    function gageLimitReached(address asset, uint256 amountAsset, uint256 risk) public view returns(bool limitReached) {
+        bytes32 treasury = keccak256(abi.encode(address(eternalTreasury)));
+        // Convert the asset to ETRNL if it isn't already
+        if (asset != address(eternal)) {
+            (, , amountAsset) = eternalTreasury.computeMinAmounts(asset, address(eternal), amountAsset, 0);
+        }
+
+        uint256 reserveStakedBalances = eternalStorage.getUint(treasury, keccak256(abi.encodePacked("reserveStakedBalances")));
+        uint256 userStakedBalances = reserveStakedBalances - eternalStorage.getUint(treasury, keccak256(abi.encodePacked("reserveBalances", address(eternalTreasury))));
+        // Available ETRNL is all the ETRNL which can be spent by the treasury on gages whilst still remaining sustainable
+        uint256 availableETRNL = eternal.balanceOf(address(eternalTreasury)) - eternalTreasury.convertToStaked(userStakedBalances) - eternalStorage.getUint(entity, psi); 
+        
+        limitReached = availableETRNL < amountAsset + (2 * amountAsset * risk / (10 ** 4));
+    }
 
     /**
      * @notice Computes the percent condition for a given Eternal gage
