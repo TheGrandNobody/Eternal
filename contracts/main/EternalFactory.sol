@@ -31,7 +31,7 @@ contract EternalFactory is IEternalFactory, OwnableEnhanced {
     // Keeps track of the respective gage tied to any given ID
     mapping (uint256 => address) gages
 
-    // Keeps track of the risk percentage for any given asset's liquidity gage
+    // Keeps track of the risk percentage for any given asset's liquidity gage (x 10 ** 4)
     mapping (address => uint256) risk;
 
     // Keeps track of whether a user is in a liquid gage for a given asset
