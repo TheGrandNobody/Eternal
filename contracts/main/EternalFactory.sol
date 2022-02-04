@@ -127,22 +127,12 @@ contract EternalFactory is IEternalFactory, OwnableEnhanced {
         require(!inLiquidGage, "Per-asset gaging limit reached");
         require(!eternalTreasury.viewUndergoingSwap(), "A liquidity swap is in progress");
 
-        // Compute the percent change condition
-        uint256 percent;
-        {
-        uint256 _timeConstant = eternalStorage.getUint(entity, timeConstant);
-        uint256 _timeFactor = eternalStorage.getUint(entity, timeFactor);
-        uint256 burnRate = eternalStorage.getUint(keccak256(abi.encodePacked(address(eternal))), keccak256(abi.encodePacked("burnRate")));
-        uint256 _alpha = eternalStorage.getUint(entity, alpha) == 0 ? eternalStorage.getUint(entity, baseline) : eternalStorage.getUint(entity, alpha);
-        percent = burnRate * _alpha * _timeConstant * _timeFactor / eternal.totalSupply();
-        }
-
         // Incremement the lastId tracker
         uint256 idLast = eternalStorage.getUint(entity, lastId) + 1;
         eternalStorage.setUint(entity, lastId, idLast);
 
         // Deploy a new Gage
-        LoyaltyGage newGage = new LoyaltyGage(idLast, percent, 2, false, address(eternalTreasury), _msgSender(), address(eternalStorage));
+        LoyaltyGage newGage = new LoyaltyGage(idLast, percentCondition(), 2, false, address(eternalTreasury), _msgSender(), address(eternalStorage));
         emit NewGage(idLast, address(newGage));
         eternalStorage.setAddress(entity, keccak256(abi.encodePacked("gages", idLast)), address(newGage));
 
@@ -169,7 +159,7 @@ contract EternalFactory is IEternalFactory, OwnableEnhanced {
         limitReached = availableETRNL < amountAsset + (2 * amountAsset * risk / (10 ** 4));
     }
 
-/////–––««« Counter/Minimax functions »»»––––\\\\\
+/////–––««« Counter functions »»»––––\\\\\
 
     /**
      * @notice Update the 24h counters for the Eternal Token
@@ -192,6 +182,21 @@ contract EternalFactory is IEternalFactory, OwnableEnhanced {
             // Reset the 24h period tracker
             eternalStorage.setUint(entity, oneDayFromNow, block.timestamp + 1 days);
         }
+    }
+
+/////–––««« Utility functions »»»––––\\\\\
+
+    /**
+     * @notice Computes the percent condition for a given Eternal gage
+     * @return The percent by which the ETRNL supply must decrease in order for a gage to close in favor of the receiver
+     */
+    function percentCondition() public view returns (uint256) {
+        uint256 _timeConstant = eternalStorage.getUint(entity, timeConstant);
+        uint256 _timeFactor = eternalStorage.getUint(entity, timeFactor);
+        uint256 burnRate = eternalStorage.getUint(keccak256(abi.encodePacked(address(eternal))), keccak256(abi.encodePacked("burnRate")));
+        uint256 _alpha = eternalStorage.getUint(entity, alpha) == 0 ? eternalStorage.getUint(entity, baseline) : eternalStorage.getUint(entity, alpha);
+
+        return burnRate * _alpha * _timeConstant * _timeFactor / eternal.totalSupply();
     }
 
 /////–––««« Fund-only functions »»»––––\\\\\
