@@ -31,7 +31,7 @@ contract EternalFactory is IEternalFactory, OwnableEnhanced {
     // Keeps track of the respective gage tied to any given ID
     mapping (uint256 => address) gages
 
-    // Keeps track of the risk percentage for any given asset's liquidity gage
+    // Keeps track of the risk percentage for any given asset's liquidity gage (x 10 ** 4)
     mapping (address => uint256) risk;
 
     // Keeps track of whether a user is in a liquid gage for a given asset
@@ -122,27 +122,17 @@ contract EternalFactory is IEternalFactory, OwnableEnhanced {
         require(userRisk > 0, "This asset is not supported");
         require(asset != address(eternal), "Receiver can't deposit ETRNL");
         uint256 treasuryRisk = userRisk - eternalStorage.getUint(entity, riskConstant);
-        require(!_gageLimitReached(asset, amount, treasuryRisk), "ETRNL treasury reserves are dry");
+        require(!gageLimitReached(asset, amount, treasuryRisk), "ETRNL treasury reserves are dry");
         bool inLiquidGage = eternalStorage.getBool(entity, keccak256(abi.encodePacked("inLiquidGage", _msgSender(), asset)));
         require(!inLiquidGage, "Per-asset gaging limit reached");
         require(!eternalTreasury.viewUndergoingSwap(), "A liquidity swap is in progress");
-
-        // Compute the percent change condition
-        uint256 percent;
-        {
-        uint256 _timeConstant = eternalStorage.getUint(entity, timeConstant);
-        uint256 _timeFactor = eternalStorage.getUint(entity, timeFactor);
-        uint256 burnRate = eternalStorage.getUint(keccak256(abi.encodePacked(address(eternal))), keccak256(abi.encodePacked("burnRate")));
-        uint256 _alpha = eternalStorage.getUint(entity, alpha) == 0 ? eternalStorage.getUint(entity, baseline) : eternalStorage.getUint(entity, alpha);
-        percent = burnRate * _alpha * _timeConstant * _timeFactor / eternal.totalSupply();
-        }
 
         // Incremement the lastId tracker
         uint256 idLast = eternalStorage.getUint(entity, lastId) + 1;
         eternalStorage.setUint(entity, lastId, idLast);
 
         // Deploy a new Gage
-        LoyaltyGage newGage = new LoyaltyGage(idLast, percent, 2, false, address(eternalTreasury), _msgSender(), address(eternalStorage));
+        LoyaltyGage newGage = new LoyaltyGage(idLast, percentCondition(), 2, false, address(eternalTreasury), _msgSender(), address(eternalStorage));
         emit NewGage(idLast, address(newGage));
         eternalStorage.setAddress(entity, keccak256(abi.encodePacked("gages", idLast)), address(newGage));
 
@@ -154,23 +144,7 @@ contract EternalFactory is IEternalFactory, OwnableEnhanced {
         return idLast;
     }
 
-    function _gageLimitReached(address asset, uint256 amountAsset, uint256 risk) private view returns(bool limitReached) {
-        bytes32 treasury = keccak256(abi.encode(address(eternalTreasury)));
-        // Convert the asset to ETRNL if it isn't already
-        if (asset != address(eternal)) {
-            (, , amountAsset) = eternalTreasury.computeMinAmounts(asset, address(eternal), amountAsset, 0);
-        }
-
-        uint256 _psi = eternalStorage.getUint(entity, psi);
-        uint256 reserveStakedBalances = eternalStorage.getUint(treasury, keccak256(abi.encodePacked("reserveStakedBalances")));
-        uint256 userStakedBalances = reserveStakedBalances - eternalStorage.getUint(treasury, keccak256(abi.encodePacked("reserveBalances", address(eternalTreasury))));
-        // Available ETRNL is all the ETRNL which can be spent by the treasury on gages whilst still remaining sustainable
-        uint256 availableETRNL = eternal.balanceOf(address(eternalTreasury)) - eternalTreasury.convertToStaked(userStakedBalances) - _psi; 
-        
-        limitReached = availableETRNL < amountAsset + (2 * amountAsset * risk / (10 ** 4));
-    }
-
-/////–––««« Counter/Minimax functions »»»––––\\\\\
+/////–––««« Counter functions »»»––––\\\\\
 
     /**
      * @notice Update the 24h counters for the Eternal Token
@@ -193,6 +167,43 @@ contract EternalFactory is IEternalFactory, OwnableEnhanced {
             // Reset the 24h period tracker
             eternalStorage.setUint(entity, oneDayFromNow, block.timestamp + 1 days);
         }
+    }
+
+/////–––««« Utility functions »»»––––\\\\\
+
+    /**
+     * @notice Compute whether there is enough ETRNL left in the treasury to allow for a given liquid gage (whilst remaining sustainable)
+     * @param asset The address of the asset to be deposited to the specified liquid gage
+     * @param amountAsset The amount of the asset being deposited to the specified liquid gage
+     * @param risk The current risk percentage for an Eternal liquid gage with this asset as deposit
+     * @return limitReached Whether the gaging limit is reached or not
+     */
+    function gageLimitReached(address asset, uint256 amountAsset, uint256 risk) public view returns(bool limitReached) {
+        bytes32 treasury = keccak256(abi.encode(address(eternalTreasury)));
+        // Convert the asset to ETRNL if it isn't already
+        if (asset != address(eternal)) {
+            (, , amountAsset) = eternalTreasury.computeMinAmounts(asset, address(eternal), amountAsset, 0);
+        }
+
+        uint256 reserveStakedBalances = eternalStorage.getUint(treasury, keccak256(abi.encodePacked("reserveStakedBalances")));
+        uint256 userStakedBalances = reserveStakedBalances - eternalStorage.getUint(treasury, keccak256(abi.encodePacked("reserveBalances", address(eternalTreasury))));
+        // Available ETRNL is all the ETRNL which can be spent by the treasury on gages whilst still remaining sustainable
+        uint256 availableETRNL = eternal.balanceOf(address(eternalTreasury)) - eternalTreasury.convertToStaked(userStakedBalances) - eternalStorage.getUint(entity, psi); 
+        
+        limitReached = availableETRNL < amountAsset + (2 * amountAsset * risk / (10 ** 4));
+    }
+
+    /**
+     * @notice Computes the percent condition for a given Eternal gage
+     * @return The percent by which the ETRNL supply must decrease in order for a gage to close in favor of the receiver
+     */
+    function percentCondition() public view returns (uint256) {
+        uint256 _timeConstant = eternalStorage.getUint(entity, timeConstant);
+        uint256 _timeFactor = eternalStorage.getUint(entity, timeFactor);
+        uint256 burnRate = eternalStorage.getUint(keccak256(abi.encodePacked(address(eternal))), keccak256(abi.encodePacked("burnRate")));
+        uint256 _alpha = eternalStorage.getUint(entity, alpha) == 0 ? eternalStorage.getUint(entity, baseline) : eternalStorage.getUint(entity, alpha);
+
+        return burnRate * _alpha * _timeConstant * _timeFactor / eternal.totalSupply();
     }
 
 /////–––««« Fund-only functions »»»––––\\\\\

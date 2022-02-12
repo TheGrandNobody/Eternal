@@ -294,7 +294,7 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IWAVAX.sol";
      *
      * - Only callable by an Eternal-deployed gage
      */
-    function settleGage(address payable receiver, uint256 id, bool winner) external override activityHalted {
+    function settleGage(address receiver, uint256 id, bool winner) external override activityHalted {
         // Checks
         bytes32 factory = keccak256(abi.encodePacked(address(eternalFactory)));
         address gageAddress = eternalStorage.getAddress(factory, keccak256(abi.encodePacked("gages", id)));
@@ -328,7 +328,7 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IWAVAX.sol";
         } else {
             IWAVAX(rAsset).deposit{value: amountAsset}();
             IWAVAX(rAsset).withdraw(amountAsset);
-            (bool success, ) = receiver.call{value: amountAsset}("");
+            (bool success, ) = payable(receiver).call{value: amountAsset}("");
             require(success, "Failed to transfer AVAX reward");
         }
 
@@ -490,11 +490,11 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IWAVAX.sol";
      * - A liquidity swap should not be in progress
      * - The contract's balance must have enough funds to accomodate the withdrawal
      */
-    function withdrawAVAX(address payable recipient, uint256 amount) external override onlyFund activityHalted {
+    function withdrawAVAX(address recipient, uint256 amount) external override onlyFund activityHalted {
         require(amount < address(this).balance, "Insufficient balance");
 
         emit AVAXTransferred(amount, recipient);
-        (bool success, ) = recipient.call{value: amount}("");
+        (bool success, ) = payable(recipient).call{value: amount}("");
         require(success, "Failed to transfer AVAX");
     }
 

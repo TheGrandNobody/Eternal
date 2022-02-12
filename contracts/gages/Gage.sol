@@ -60,7 +60,7 @@ abstract contract Gage is Context, IGage {
      * @notice View the total user capacity of the gage
      * @return The total user capacity
      */
-    function viewCapacity() external view override returns(uint256) {
+    function viewCapacity() external view override returns (uint256) {
         return capacity;
     }
 

@@ -10,7 +10,7 @@ interface IEternalTreasury {
     // Provides liquidity for a given liquid gage and transfers instantaneous rewards to the receiver
     function fundEternalLiquidGage(address _gage, address user, address asset, uint256 amount, uint256 risk, uint256 bonus) external payable;
     // Used by gages to compute and distribute ETRNL liquid gage rewards appropriately
-    function settleGage(address payable receiver, uint256 id, bool winner) external;
+    function settleGage(address receiver, uint256 id, bool winner) external;
     // Stake a given amount of ETRNL
     function stake(uint256 amount) external;
     // Unstake a given amount of ETRNL and withdraw staking rewards proportional to the amount (in ETRNL)
@@ -28,7 +28,7 @@ interface IEternalTreasury {
     // Converts a given reserve amount into the regular number space (staked)
     function convertToStaked(uint256 reserveAmount) external view returns(uint256);
     // Allows the withdrawal of AVAX in the contract
-    function withdrawAVAX(address payable recipient, uint256 amount) external;
+    function withdrawAVAX(address recipient, uint256 amount) external;
     // Allows the withdrawal of an asset present in the contract
     function withdrawAsset(address asset, address recipient, uint256 amount) external;
 

@@ -321,7 +321,7 @@ contract EternalOffering {
             require(IERC20(MIM).transfer(address(eternalTreasury), mimBal), "MIM Transfer failed");
         }
         if (avaxBal > 0) {
-            (bool success,) = address(eternalTreasury).call{value: avaxBal}("");
+            (bool success,) = payable(address(eternalTreasury)).call{value: avaxBal}("");
             require(success, "AVAX transfer failed");
         }
 
