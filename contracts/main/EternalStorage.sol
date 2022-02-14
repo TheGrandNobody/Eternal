@@ -28,11 +28,7 @@ contract EternalStorage is IEternalStorage, Context {
     mapping(bytes32 => bytes32[]) private manyBytes;
 
 /////–––««« Constructors & Initializers »»»––––\\\\\
-
-//solhint-disable-next-line no-empty-blocks
-constructor () {}
-
-function initialize(address _treasury, address _token, address _factory, address _fund, address _offering) external {
+constructor (address _treasury, address _token, address _factory, address _fund, address _offering) {    
     bytes32 treasury = keccak256(abi.encodePacked(_treasury));
     bytes32 token = keccak256(abi.encodePacked(_token));
     bytes32 factory = keccak256(abi.encodePacked(_factory));
@@ -46,6 +42,7 @@ function initialize(address _treasury, address _token, address _factory, address
     addresses[eternalStorage][factory] = _factory;
     addresses[eternalStorage][fund] = _fund;
     addresses[eternalStorage][offering] = _offering;
+    
 }
 
 /////–––««« Modifiers »»»––––\\\\\
