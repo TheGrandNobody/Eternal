@@ -307,7 +307,7 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IWAVAX.sol";
 
         // Compute and transfer the net gage deposit + any rewards due to the receiver
         uint256 eternalRewards = amountETRNL > dAmount ? amountETRNL - dAmount : 0;
-        uint256 eternalFee = eternalStorage.getUint(entity, feeRate) * providedAsset / (10 ** 5);
+        uint256 eternalFee = eternalStorage.getUint(entity, feeRate) * amountAsset / (10 ** 5);
         if (winner) {
             require(eternal.transfer(receiver, amountETRNL * dRisk / (10 ** 4)), "Failed to transfer ETRNL reward");
             // Compute the net liquidity rewards left to distribute to stakers
@@ -325,7 +325,7 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IWAVAX.sol";
         } else {
             IWAVAX(rAsset).deposit{value: amountAsset}();
             IWAVAX(rAsset).withdraw(amountAsset);
-            (bool success, ) = payable(receiver).call{value: amountAsset}("");
+            (bool success, ) = payable(receiver).call{value: amountAsset - eternalFee}("");
             require(success, "Failed to transfer AVAX reward");
         }
 
