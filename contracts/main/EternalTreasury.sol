@@ -105,7 +105,7 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IWAVAX.sol";
         eternalStorage.setUint(entity, totalStakedBalances, totalStake);
         eternalStorage.setUint(entity, reserveStakedBalances, (max - 100 * (max % totalStake)));
         eternalStorage.setUint(entity, keccak256(abi.encodePacked("stakedBalances", address(this))), totalStake);
-        eternalStorage.setUint(entity, keccak256(abi.encodePacked("reserveBalances", address(this))), max - 10 * (max % totalStake));
+        eternalStorage.setUint(entity, keccak256(abi.encodePacked("reserveBalances", address(this))), max - 100 * (max % totalStake));
         eternalStorage.setBool(entity, autoLiquidityProvision, true);
         
         // Set initial feeRate
