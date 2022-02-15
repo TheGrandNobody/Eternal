@@ -97,15 +97,12 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IWAVAX.sol";
     }
 
     function initialize(address _fund) external onlyAdmin {
-        // The largest possible number in a 256-bit integer 
-        uint256 max = ~uint256(0);
-
         // Set initial staking balances
         uint256 totalStake = eternal.balanceOf(address(this));
         eternalStorage.setUint(entity, totalStakedBalances, totalStake);
-        eternalStorage.setUint(entity, reserveStakedBalances, (max - 100 * (max % totalStake)));
+        eternalStorage.setUint(entity, reserveStakedBalances, (totalStake * (10 ** 48)));
         eternalStorage.setUint(entity, keccak256(abi.encodePacked("stakedBalances", address(this))), totalStake);
-        eternalStorage.setUint(entity, keccak256(abi.encodePacked("reserveBalances", address(this))), max - 10 * (max % totalStake));
+        eternalStorage.setUint(entity, keccak256(abi.encodePacked("reserveBalances", address(this))), totalStake * (10 ** 48));
         eternalStorage.setBool(entity, autoLiquidityProvision, true);
         
         // Set initial feeRate
@@ -215,6 +212,7 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IWAVAX.sol";
     function _removeLiquidity(address rAsset, uint256 providedAsset, address receiver) private returns(uint256, uint256) {
         (uint256 minETRNL, uint256 minAsset,) = computeMinAmounts(rAsset, address(eternal), providedAsset, 100);
         uint256 liquidity = eternalStorage.getUint(entity, keccak256(abi.encodePacked("liquidity", receiver, rAsset)));
+        require(IERC20(joeFactory.getPair(rAsset, address(eternal))).approve(address(joeRouter), liquidity), "Approve failed");
         return joeRouter.removeLiquidity(address(eternal), rAsset, liquidity, minETRNL/2, minAsset/2, address(this), block.timestamp);
     }
 
@@ -268,10 +266,11 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IWAVAX.sol";
         (uint256 minETRNL, uint256 minAsset, uint256 amountETRNL) = computeMinAmounts(asset, address(eternal), userAmount, 100);
         
         // Add liquidity to the ETRNL/Asset pair
-        require(eternal.approve(address(joeRouter), amountETRNL), "Approve failed");
-        if (asset == joeRouter.WAVAX()) {
+        require(eternal.approve(address(joeRouter), amountETRNL), "Approve ETRNL failed");
+        if (asset == joeRouter.WAVAX() && msg.value > 0) {
             (providedETRNL, providedAsset, liquidity) = joeRouter.addLiquidityAVAX{value: msg.value}(address(eternal), amountETRNL, minETRNL, minAsset, address(this), block.timestamp);
         } else {
+            require(IERC20(asset).approve(address(joeRouter), userAmount), "Approve asset failed");
             (providedETRNL, providedAsset, liquidity) = joeRouter.addLiquidity(address(eternal), asset, amountETRNL, userAmount, minETRNL, minAsset, address(this), block.timestamp);
         }
         
@@ -310,12 +309,12 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IWAVAX.sol";
 
         // Compute and transfer the net gage deposit + any rewards due to the receiver
         uint256 eternalRewards = amountETRNL > dAmount ? amountETRNL - dAmount : 0;
-        uint256 eternalFee = eternalStorage.getUint(entity, feeRate) * providedAsset / (10 ** 5);
+        uint256 eternalFee = eternalStorage.getUint(entity, feeRate) * amountAsset / (10 ** 5);
         if (winner) {
             require(eternal.transfer(receiver, amountETRNL * dRisk / (10 ** 4)), "Failed to transfer ETRNL reward");
             // Compute the net liquidity rewards left to distribute to stakers
             //solhint-disable-next-line reentrancy
-            eternalRewards = eternalRewards == 0 ? 0 : eternalRewards - (eternalRewards * dRisk / (10 ** 4));
+            eternalRewards -= eternalRewards * dRisk / (10 ** 4);
         } else {
             eternalFee += amountAsset * rRisk / (10 ** 4);
             amountAsset -= amountAsset * rRisk / (10 ** 4);
@@ -328,7 +327,7 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IWAVAX.sol";
         } else {
             IWAVAX(rAsset).deposit{value: amountAsset}();
             IWAVAX(rAsset).withdraw(amountAsset);
-            (bool success, ) = payable(receiver).call{value: amountAsset}("");
+            (bool success, ) = payable(receiver).call{value: amountAsset - eternalFee}("");
             require(success, "Failed to transfer AVAX reward");
         }
 
