@@ -123,8 +123,10 @@ contract EternalFactory is IEternalFactory, OwnableEnhanced {
         require(asset != address(eternal), "Receiver can't deposit ETRNL");
         uint256 treasuryRisk = userRisk - eternalStorage.getUint(entity, riskConstant);
         require(!gageLimitReached(asset, amount, treasuryRisk), "ETRNL treasury reserves are dry");
-        bool inLiquidGage = eternalStorage.getBool(entity, keccak256(abi.encodePacked("inLiquidGage", _msgSender(), asset)));
+        bytes32 inGage = keccak256(abi.encodePacked("inLiquidGage", _msgSender(), asset));
+        bool inLiquidGage = eternalStorage.getBool(entity, inGage);
         require(!inLiquidGage, "Per-asset gaging limit reached");
+        eternalStorage.setBool(entity, inGage, true);
         require(!eternalTreasury.viewUndergoingSwap(), "A liquidity swap is in progress");
 
         // Incremement the lastId tracker
