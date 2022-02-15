@@ -97,15 +97,12 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IWAVAX.sol";
     }
 
     function initialize(address _fund) external onlyAdmin {
-        // The largest possible number in a 256-bit integer 
-        uint256 max = ~uint256(0);
-
         // Set initial staking balances
         uint256 totalStake = eternal.balanceOf(address(this));
         eternalStorage.setUint(entity, totalStakedBalances, totalStake);
-        eternalStorage.setUint(entity, reserveStakedBalances, (max - 100 * (max % totalStake)));
+        eternalStorage.setUint(entity, reserveStakedBalances, (totalStake * (10 ** 48)));
         eternalStorage.setUint(entity, keccak256(abi.encodePacked("stakedBalances", address(this))), totalStake);
-        eternalStorage.setUint(entity, keccak256(abi.encodePacked("reserveBalances", address(this))), max - 100 * (max % totalStake));
+        eternalStorage.setUint(entity, keccak256(abi.encodePacked("reserveBalances", address(this))), totalStake * (10 ** 48));
         eternalStorage.setBool(entity, autoLiquidityProvision, true);
         
         // Set initial feeRate
