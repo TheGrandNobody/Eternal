@@ -312,7 +312,7 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IWAVAX.sol";
             require(eternal.transfer(receiver, amountETRNL * dRisk / (10 ** 4)), "Failed to transfer ETRNL reward");
             // Compute the net liquidity rewards left to distribute to stakers
             //solhint-disable-next-line reentrancy
-            eternalRewards = eternalRewards == 0 ? 0 : eternalRewards - (eternalRewards * dRisk / (10 ** 4));
+            eternalRewards -= eternalRewards * dRisk / (10 ** 4);
         } else {
             eternalFee += amountAsset * rRisk / (10 ** 4);
             amountAsset -= amountAsset * rRisk / (10 ** 4);
