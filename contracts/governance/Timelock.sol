@@ -50,7 +50,7 @@ import "../interfaces/ITimelock.sol";
 /////–––««« Variable state-inspection functions »»»––––\\\\\
 
     /**
-     * @notice View the period of time any proposal action is given to be executed once the queuing period is over
+     * @notice View the period of time any proposal action is given to be executed once the queuing period is over.
      * @return The grace period constant
      */
     function viewGracePeriod() external pure override returns (uint256){
@@ -58,7 +58,7 @@ import "../interfaces/ITimelock.sol";
     }
 
     /**
-     * @notice View the minimum amount of time the contract must wait before queuing a proposal
+     * @notice View the minimum amount of time the contract must wait before queuing a proposal.
      * @return The delay variable
      */
     function viewDelay() external view override returns(uint256) {
@@ -66,7 +66,7 @@ import "../interfaces/ITimelock.sol";
     }
 
     /**
-     * @notice View the current fund 
+     * @notice View the current fund. 
      * @return The current fund address
      */
     function viewFund() external view override returns (address) {
@@ -74,15 +74,15 @@ import "../interfaces/ITimelock.sol";
     }
 
     /**
-     * @notice View the current pending fund
+     * @notice View the current pending fund.
      * @return The current pending fund address
      */
-    function viewPendingFund() external view override returns(address) {
+    function viewPendingFund() external view override returns (address) {
         return pendingFund;
     }
 
     /**
-     * @notice View whether a given transaction hash is queued or not
+     * @notice View whether a given transaction hash is queued or not.
      * @return True if the transaction is queued, otherwise false
      */
     function queuedTransaction(bytes32 hash) external view override returns (bool) {
@@ -92,7 +92,7 @@ import "../interfaces/ITimelock.sol";
 /////–––««« Timelock logic functions »»»––––\\\\\
 
     /**
-     * @notice Updates the amount of time the contract must wait before queuing a proposal
+     * @notice Updates the amount of time the contract must wait before queuing a proposal.
      * @param _delay The new value of the delay
      * 
      * Requirements:
@@ -111,7 +111,7 @@ import "../interfaces/ITimelock.sol";
     }
 
     /**
-     * @notice Accepts the offer of having the admin role
+     * @notice Accepts the offer of having the admin role.
      * 
      * Requirements:
      *
@@ -126,7 +126,7 @@ import "../interfaces/ITimelock.sol";
     }
 
     /**
-     * @notice Offers the role of admin to a given user
+     * @notice Offers the role of admin to a given user.
      * @param _pendingFund The address of the specified user
      * 
      * Requirements:
@@ -141,7 +141,7 @@ import "../interfaces/ITimelock.sol";
     }
 
     /**
-     * @notice Queues a given proposal's action
+     * @notice Queues a given proposal's action.
      * @param target The address of the contract whose function is being called
      * @param value The amount of AVAX being transferred in this transaction
      * @param signature The function signature of this proposal's action
@@ -166,7 +166,7 @@ import "../interfaces/ITimelock.sol";
     }
 
     /**
-     * @notice Dequeues a given proposal's action
+     * @notice Dequeues a given proposal's action.
      * @param target The address of the contract whose function is being called
      * @param value The amount of AVAX being transferred in this transaction
      * @param signature The function signature of this proposal's action
@@ -187,7 +187,7 @@ import "../interfaces/ITimelock.sol";
     }
 
     /**
-     * @notice Executes a given proposal's action
+     * @notice Executes a given proposal's action.
      * @param target The address of the contract whose function is being called
      * @param value The amount of AVAX being transferred in this transaction
      * @param signature The function signature of this proposal's action

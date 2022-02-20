@@ -8,7 +8,7 @@ pragma solidity 0.8.0;
  */
 interface IEternalFactory {
     // Initiates a liquid gage involving an ETRNL liquidity pair
-    function initiateEternalLiquidGage(address asset, uint256 amount) external payable returns(uint256);
+    function initiateEternalLiquidGage(address asset, uint256 amount) external payable;
     // Updates the 24h counters for the treasury and token
     function updateCounters(uint256 amount) external;
     

@@ -12,7 +12,7 @@ interface IEternalFund {
     // Determine the number of votes of a given account prior to a given block
     function getPriorVotes(address account, uint256 blockNumber) external view returns (uint256);
     // Gets the current votes balance for a given account
-    function getCurrentVotes(address account) external view returns(uint256);
+    function getCurrentVotes(address account) external view returns (uint256);
     // Transfer part of a given delegates' voting balance to another new delegate
     function moveDelegates(address srcRep, address dstRep, uint256 amount) external;
 

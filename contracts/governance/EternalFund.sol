@@ -101,26 +101,26 @@ contract EternalFund is IEternalFund, Context {
 
 /////–––««« Constructor »»»––––\\\\\
 
-    constructor (address _timelock, address _eternal, address _eternalStorage, address _guardian) {
-        timelock = ITimelock(_timelock);
-        eternal = IERC20(_eternal);
-        eternalStorage = IEternalStorage(_eternalStorage);
+    constructor (address _guardian, address _eternalStorage, address _eternal, address _timelock) {
         guardian = _guardian;
+        eternalStorage = IEternalStorage(_eternalStorage);
+        eternal = IERC20(_eternal);
+        timelock = ITimelock(_timelock);
 
         entity = keccak256(abi.encodePacked(_eternal));
     }
 
 /////–––««« Variable state-inspection functions »»»––––\\\\\
     /** 
-     * @notice The number of votes required in order for a voter to become a proposer
+     * @notice The number of votes required in order for a voter to become a proposer.
      * @return 0.5 percent of the initial supply 
      */
     function proposalThreshold() public pure returns (uint256) { 
-        return 5 * (10 ** 7) * (10 ** 18); // 50 000 000ETRNL = initially 0.5% (increases over time)
+        return 5 * (10 ** 7) * (10 ** 18); // 50 000 000ETRNL = initially 0.5% (increases over time due to deflation)
     } 
 
     /**
-     * @notice View the maximum number of operations that can be included in a proposal
+     * @notice View the maximum number of operations that can be included in a proposal.
      * @return The maximum number of actions per proposal
      */
     function proposalMaxOperations() public pure returns (uint256) { 
@@ -128,7 +128,7 @@ contract EternalFund is IEternalFund, Context {
     }
 
     /**
-     * @notice View the delay before voting on a proposal may take place, once proposed
+     * @notice View the delay before voting on a proposal may take place, once proposed.
      * @return 1 day (in seconds)
      */
     function votingDelay() public pure returns (uint256) { 
@@ -136,7 +136,7 @@ contract EternalFund is IEternalFund, Context {
     }
 
     /**
-     * @notice The duration of voting on a proposal, in blocks
+     * @notice The duration of voting on a proposal, in blocks.
      * @return 3 days (in seconds)
      */
     function votingPeriod() public pure returns (uint256) { 
@@ -146,7 +146,7 @@ contract EternalFund is IEternalFund, Context {
 /////–––««« Governance logic functions »»»––––\\\\\
 
     /**
-     * @notice Initiates a proposal
+     * @notice Initiates a proposal.
      * @param targets An ordered list of contract addresses used to make the calls
      * @param values A list of values passed in each call
      * @param signatures A list of function signatures used to make the calls
@@ -199,7 +199,7 @@ contract EternalFund is IEternalFund, Context {
     }
 
     /**
-     * @notice Queues all of a given proposal's actions into the timelock contract
+     * @notice Queues all of a given proposal's actions into the timelock contract.
      * @param proposalId The id of the specified proposal
      *
      * Requirements:
@@ -218,7 +218,7 @@ contract EternalFund is IEternalFund, Context {
     }
 
     /**
-     * @notice Queues an individual proposal action into the timelock contract
+     * @notice Queues an individual proposal action into the timelock contract.
      * @param target The address of the contract whose function is being called
      * @param value The amount of AVAX being transferred in this transaction
      * @param signature The function signature of this proposal's action
@@ -235,7 +235,7 @@ contract EternalFund is IEternalFund, Context {
     }
 
     /**
-     * @notice Executes all of a given's proposal's actions
+     * @notice Executes all of a given's proposal's actions.
      * @param proposalId The id of the specified proposal
      * 
      * Requirements:
@@ -253,7 +253,7 @@ contract EternalFund is IEternalFund, Context {
     }
 
     /**
-     * @notice Cancels all of a given proposal's actions
+     * @notice Cancels all of a given proposal's actions.
      * @param proposalId The id of the specified proposal
      * 
      * Requirements:
@@ -276,7 +276,7 @@ contract EternalFund is IEternalFund, Context {
     }
 
     /**
-     * @notice View a given proposal's lists of actions
+     * @notice View a given proposal's lists of actions.
      * @param proposalId The id of the specified proposal
      * @return targets The proposal's targets
      * @return values The proposal's values
@@ -289,7 +289,7 @@ contract EternalFund is IEternalFund, Context {
     }
 
     /**
-     * @notice View a given proposal's ballot receipt for a given voter
+     * @notice View a given proposal's ballot receipt for a given voter.
      * @param proposalId The id of the specified proposal
      * @param voter The address of the specified voter
      * @return The ballot receipt of that voter for the proposal
@@ -299,7 +299,7 @@ contract EternalFund is IEternalFund, Context {
     }
 
     /**
-     * @notice View the state of a given proposal
+     * @notice View the state of a given proposal.
      * @param proposalId The id of the specified proposal
      * @return The state of the proposal
      *
@@ -330,7 +330,7 @@ contract EternalFund is IEternalFund, Context {
     }
 
     /**
-     * @notice Casts a vote for a given proposal
+     * @notice Casts a vote for a given proposal.
      * @param proposalId The id of the specified proposal
      * @param support Whether the user is in support of the proposal or not
      */
@@ -339,7 +339,7 @@ contract EternalFund is IEternalFund, Context {
     }
 
     /**
-     * @notice Casts a vote through signature
+     * @notice Casts a vote through signature.
      * @param proposalId The id of teh specified proposal
      * @param support Whether the user is in support of the proposal or not
      * @param v The recovery byte of the signature
@@ -364,7 +364,7 @@ contract EternalFund is IEternalFund, Context {
     }
 
     /**
-     * @notice Casts a vote for a given voter and proposal 
+     * @notice Casts a vote for a given voter and proposal.
      * @param voter The address of the specified voter
      * @param proposalId The id of the specified proposal
      * @param support Whether the voter is in support of the proposal or not
@@ -399,7 +399,7 @@ contract EternalFund is IEternalFund, Context {
     }
 
     /**
-     * @notice Allow the Eternal Fund to take over control of the timelock contract
+     * @notice Allow the Eternal Fund to take over control of the timelock contract.
      *
      * Requirements:
      *
@@ -411,7 +411,7 @@ contract EternalFund is IEternalFund, Context {
     }
 
     /**
-     * @notice Renounce the role of guardianship
+     * @notice Renounce the role of guardianship.
      *
      * Requirements:
      *
@@ -423,7 +423,7 @@ contract EternalFund is IEternalFund, Context {
     }
 
     /**
-     * @notice Queues the transaction which will give governing power to the Eternal Fund 
+     * @notice Queues the transaction which will give governing power to the Eternal Fund.
      *
      * Requirements:
      *
@@ -435,7 +435,7 @@ contract EternalFund is IEternalFund, Context {
     }
 
     /**
-     * @notice Executes the transaction which will give governing power to the Eternal Fund 
+     * @notice Executes the transaction which will give governing power to the Eternal Fund. 
      *
      * Requirements:
      *
@@ -449,7 +449,7 @@ contract EternalFund is IEternalFund, Context {
 /////–––««« Governance-related functions »»»––––\\\\\
 
     /**
-     * @notice Gets the current votes balance for a given account
+     * @notice Gets the current votes balance for a given account.
      * @param account The address of the specified account
      * @return The current number of votes of the account
      */
@@ -459,7 +459,7 @@ contract EternalFund is IEternalFund, Context {
     }
 
     /**
-     * @notice Determine the number of votes of a given account prior to a given block
+     * @notice Determine the number of votes of a given account prior to a given block.
      * @param account The address of specified account
      * @param blockNumber The number of the specified block
      * @return The number of votes of the account before/by this block
@@ -500,7 +500,7 @@ contract EternalFund is IEternalFund, Context {
     }
 
     /**
-     * @notice Delegates the message sender's vote balance to a given user
+     * @notice Delegates the message sender's vote balance to a given user.
      * @param delegatee The address of the user to whom the vote balance is being added to
      */
     function delegate(address delegatee) external override {
@@ -516,7 +516,7 @@ contract EternalFund is IEternalFund, Context {
     }
 
     /**
-     * @notice Transfer part of a given delegates' voting balance to another new delegate
+     * @notice Transfer part of a given delegates' voting balance to another new delegate.
      * @param srcRep The delegate from whom we are deducting votes
      * @param dstRep The delegate to whom we are transferring votes
      * @param amount The specified amount of votes
@@ -541,7 +541,7 @@ contract EternalFund is IEternalFund, Context {
     }
 
     /**
-     * @notice Update a given user's voting balance for the current block
+     * @notice Update a given user's voting balance for the current block.
      * @param delegatee The address of the specified user
      * @param nCheckpoints The number of times the voting balance of the user has been updated
      * @param oldVotes The old voting balance of the user

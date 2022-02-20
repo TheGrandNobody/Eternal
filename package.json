@@ -29,6 +29,7 @@
   "dependencies": {
     "@openzeppelin/contracts": "^4.2.0",
     "@traderjoe-xyz/core": "^1.1.0",
-    "mocha": "^7.2.0"
+    "mocha": "^7.2.0",
+    "remixd": "^0.2.4"
   }
 }

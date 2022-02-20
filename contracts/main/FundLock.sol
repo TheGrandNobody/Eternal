@@ -34,7 +34,7 @@ contract FundLock {
     /**
      * @notice View the amount of tokens available based on the amount the supply has decreased by
      */
-    function viewAmountAvailable() public view returns(uint256) {
+    function viewAmountAvailable() public view returns (uint256) {
         uint256 deltaSupply = maxSupply - eternal.totalSupply();
         uint256 amountAvailable = totalAmount * deltaSupply * gamma / maxSupply;
         return amountAvailable > totalAmount ? totalAmount : amountAvailable;
