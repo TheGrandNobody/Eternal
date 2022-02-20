@@ -13,6 +13,8 @@ contract EternalStorage is IEternalStorage, Context {
 
 /////–––««« Variables: Storage »»»––––\\\\\
 
+    bytes32 public immutable eternalStorage;
+
     // Scalars
     mapping (bytes32 => mapping (bytes32 => uint256)) private uints;
     mapping (bytes32 => mapping (bytes32 => int256)) private ints;
@@ -30,32 +32,34 @@ contract EternalStorage is IEternalStorage, Context {
 /////–––««« Constructors & Initializers »»»––––\\\\\
 
 //solhint-disable-next-line no-empty-blocks
-constructor () {}
+constructor () {
+    eternalStorage = keccak256(abi.encodePacked(address(this)));
+}
 
-function initialize(address _treasury, address _token, address _factory, address _fund, address _offering) external {
-    bytes32 treasury = keccak256(abi.encodePacked(_treasury));
+function initialize(address _token, address _factory, address _treasury, address _offering, address _timelock, address _fund) external {
     bytes32 token = keccak256(abi.encodePacked(_token));
     bytes32 factory = keccak256(abi.encodePacked(_factory));
-    bytes32 fund = keccak256(abi.encodePacked(_fund));
+    bytes32 treasury = keccak256(abi.encodePacked(_treasury));
     bytes32 offering = keccak256(abi.encodePacked(_offering));
-    bytes32 eternalStorage = keccak256(abi.encodePacked(address(this)));
+    bytes32 timelock = keccak256(abi.encodePacked(_timelock));
+    bytes32 fund = keccak256(abi.encodePacked(_fund));
 
     require(addresses[eternalStorage][eternalStorage] == address(0), "Initial contracts already set");
     addresses[eternalStorage][eternalStorage] = address(this);
-    addresses[eternalStorage][treasury] = _treasury;
     addresses[eternalStorage][token] = _token;
     addresses[eternalStorage][factory] = _factory;
-    addresses[eternalStorage][fund] = _fund;
+    addresses[eternalStorage][treasury] = _treasury;
     addresses[eternalStorage][offering] = _offering;
+    addresses[eternalStorage][timelock] = _timelock;
+    addresses[eternalStorage][fund] = _fund;
 }
 
 /////–––««« Modifiers »»»––––\\\\\
 
     /**
-     * @notice Ensures that only the latest contracts can modify variables' states
+     * @notice Ensures that only the latest contracts can modify variables' states.
      */
     modifier onlyLatestVersion() {
-        bytes32 eternalStorage = keccak256(abi.encodePacked(address(this)));
         bytes32 entity = keccak256(abi.encodePacked(_msgSender()));
         require(_msgSender() == addresses[eternalStorage][entity], "Old contract can't edit storage");
         _;
@@ -64,7 +68,7 @@ function initialize(address _treasury, address _token, address _factory, address
 /////–––««« Setters »»»––––\\\\\
 
     /**
-     * @notice Sets a uint256 value for a given contract and key
+     * @notice Sets a uint256 value for a given contract and key.
      * @param entity The keccak256 hash of the contract's address
      * @param key The specified mapping key
      * @param value The specified uint256 value
@@ -78,7 +82,7 @@ function initialize(address _treasury, address _token, address _factory, address
     }
 
     /**
-     * @notice Sets an int256 value for a given contract and key
+     * @notice Sets an int256 value for a given contract and key.
      * @param entity The keccak256 hash of the contract's address
      * @param key The specified mapping key
      * @param value The specified int256 value
@@ -92,7 +96,7 @@ function initialize(address _treasury, address _token, address _factory, address
     }
 
     /**
-     * @notice Sets an address value for a given contract and key
+     * @notice Sets an address value for a given contract and key.
      * @param entity The keccak256 hash of the contract's address
      * @param key The specified mapping key
      * @param value The specified address value
@@ -106,7 +110,7 @@ function initialize(address _treasury, address _token, address _factory, address
     }
 
     /**
-     * @notice Sets a boolean value for a given contract and key
+     * @notice Sets a boolean value for a given contract and key.
      * @param entity The keccak256 hash of the contract's address
      * @param key The specified mapping key
      * @param value The specified boolean value
@@ -120,7 +124,7 @@ function initialize(address _treasury, address _token, address _factory, address
     }    
 
     /**
-     * @notice Sets a bytes32 value for a given contract and key
+     * @notice Sets a bytes32 value for a given contract and key.
      * @param entity The keccak256 hash of the contract's address
      * @param key The specified mapping key
      * @param value The specified bytes32 value
@@ -134,7 +138,7 @@ function initialize(address _treasury, address _token, address _factory, address
     }    
 
     /**
-     * @notice Sets or pushes a uint256 array's element's value for a given key and index
+     * @notice Sets or pushes a uint256 array's element's value for a given key and index.
      * @param key The specified mapping key
      * @param index The specified index of the array's element being modified
      * @param value The specified uint256 value
@@ -152,7 +156,7 @@ function initialize(address _treasury, address _token, address _factory, address
     }
 
     /**
-     * @notice Sets or pushes an int256 array's element's value for a given key and index
+     * @notice Sets or pushes an int256 array's element's value for a given key and index.
      * @param key The specified mapping key
      * @param index The specified index of the array's element being modified
      * @param value The specified int256 value
@@ -170,7 +174,7 @@ function initialize(address _treasury, address _token, address _factory, address
     }
 
     /**
-     * @notice Sets or pushes an address array's element's value for a given key and index
+     * @notice Sets or pushes an address array's element's value for a given key and index.
      * @param key The specified mapping key
      * @param index The specified index of the array's element being modified
      * @param value The specified address value
@@ -188,7 +192,7 @@ function initialize(address _treasury, address _token, address _factory, address
     }   
 
     /**
-     * @notice Sets or pushes a boolean array's element's value for a given key and index
+     * @notice Sets or pushes a boolean array's element's value for a given key and index.
      * @param key The specified mapping key
      * @param index The specified index of the array's element being modified
      * @param value The specified boolean value
@@ -206,7 +210,7 @@ function initialize(address _treasury, address _token, address _factory, address
     }    
 
     /**
-     * @notice Sets or pushes a bytes32 array's element's value for a given key and index
+     * @notice Sets or pushes a bytes32 array's element's value for a given key and index.
      * @param key The specified mapping key
      * @param index The specified index of the array's element being modified
      * @param value The specified bytes32value
@@ -225,7 +229,7 @@ function initialize(address _treasury, address _token, address _factory, address
 
 /////–––««« Getters »»»––––\\\\\
     /**
-     * @notice Returns a uint256 value for a given contract and key
+     * @notice Returns a uint256 value for a given contract and key.
      * @param entity The keccak256 hash of the specified contract
      * @param key The specified mapping key
      * @return The uint256 value mapped to the key
@@ -235,7 +239,7 @@ function initialize(address _treasury, address _token, address _factory, address
     }
 
     /**
-     * @notice Returns an int256 value for a given contract and key
+     * @notice Returns an int256 value for a given contract and key.
      * @param entity The keccak256 hash of the specified contract
      * @param key The specified mapping key
      * @return The int256 value mapped to the key
@@ -245,7 +249,7 @@ function initialize(address _treasury, address _token, address _factory, address
     }
 
     /**
-     * @notice Returns an address value for a given contract and key
+     * @notice Returns an address value for a given contract and key.
      * @param entity The keccak256 hash of the specified contract
      * @param key The specified mapping key
      * @return The address value mapped to the key
@@ -255,7 +259,7 @@ function initialize(address _treasury, address _token, address _factory, address
     }
 
     /**
-     * @notice Returns a boolean value for a given contract and key
+     * @notice Returns a boolean value for a given contract and key.
      * @param entity The keccak256 hash of the specified contract
      * @param key The specified mapping key
      * @return The boolean value mapped to the key
@@ -265,7 +269,7 @@ function initialize(address _treasury, address _token, address _factory, address
     }
 
     /**
-     * @notice Returns a bytes32 value for a given contract and key
+     * @notice Returns a bytes32 value for a given contract and key.
      * @param entity The keccak256 hash of the specified contract
      * @param key The specified mapping key
      * @return The bytes32 value mapped to the key
@@ -275,7 +279,7 @@ function initialize(address _treasury, address _token, address _factory, address
     }  
 
     /**
-     * @notice Returns a uint256 array's element's value for a given key and index
+     * @notice Returns a uint256 array's element's value for a given key and index.
      * @param key The specified mapping key
      * @param index The specified index of the desired element
      * @return The uint256 value at the specified index for the specified array
@@ -285,7 +289,7 @@ function initialize(address _treasury, address _token, address _factory, address
     }
 
     /**
-     * @notice Returns an int256 array's element's value for a given key and index
+     * @notice Returns an int256 array's element's value for a given key and index.
      * @param key The specified mapping key
      * @param index The specified index of the desired element
      * @return The int256 value at the specified index for the specified array
@@ -295,7 +299,7 @@ function initialize(address _treasury, address _token, address _factory, address
     }
 
     /**
-     * @notice Returns an address array's element's value for a given key and index
+     * @notice Returns an address array's element's value for a given key and index.
      * @param key The specified mapping key
      * @param index The specified index of the desired element
      * @return The address value at the specified index for the specified array
@@ -305,7 +309,7 @@ function initialize(address _treasury, address _token, address _factory, address
     }
 
     /**
-     * @notice Returns a boolean array's element's value for a given key and index
+     * @notice Returns a boolean array's element's value for a given key and index.
      * @param key The specified mapping key
      * @param index The specified index of the desired element
      * @return The boolean value at the specified index for the specified array
@@ -315,7 +319,7 @@ function initialize(address _treasury, address _token, address _factory, address
     }
 
     /**
-     * @notice Returns a bytes32 array's element's value for a given key and index
+     * @notice Returns a bytes32 array's element's value for a given key and index.
      * @param key The specified mapping key
      * @param index The specified index of the desired element
      * @return The bytes32 value at the specified index for the specified array
@@ -327,7 +331,7 @@ function initialize(address _treasury, address _token, address _factory, address
 /////–––««« Array Deleters »»»––––\\\\\
 
     /** 
-     * @notice Deletes a uint256 array's element for a given key and index
+     * @notice Deletes a uint256 array's element for a given key and index.
      * @param key The specified mapping key
      * @param index The specified index of the desired element
      * 
@@ -342,7 +346,7 @@ function initialize(address _treasury, address _token, address _factory, address
     }
 
     /** 
-     * @notice Deletes an int256 array's element for a given key and index
+     * @notice Deletes an int256 array's element for a given key and index.
      * @param key The specified mapping key
      * @param index The specified index of the desired element
      * 
@@ -357,7 +361,7 @@ function initialize(address _treasury, address _token, address _factory, address
     }
 
     /** 
-     * @notice Deletes an address array's element for a given key and index
+     * @notice Deletes an address array's element for a given key and index.
      * @param key The specified mapping key
      * @param index The specified index of the desired element
      * 
@@ -372,7 +376,7 @@ function initialize(address _treasury, address _token, address _factory, address
     }
 
     /** 
-     * @notice Deletes a boolean array's element for a given key and index
+     * @notice Deletes a boolean array's element for a given key and index.
      * @param key The specified mapping key
      * @param index The specified index of the desired element
      * 
@@ -387,7 +391,7 @@ function initialize(address _treasury, address _token, address _factory, address
     }
 
     /** 
-     * @notice Deletes a bytes32 array's element for a given key and index
+     * @notice Deletes a bytes32 array's element for a given key and index.
      * @param key The specified mapping key
      * @param index The specified index of the desired element
      * 
@@ -404,7 +408,7 @@ function initialize(address _treasury, address _token, address _factory, address
 /////–––««« Array Length »»»––––\\\\\
 
     /**
-     * @notice Returns the length of a uint256 array for a given key
+     * @notice Returns the length of a uint256 array for a given key.
      * @param key The specified mapping key
      * @return The length of the array mapped to the key
      */
@@ -413,7 +417,7 @@ function initialize(address _treasury, address _token, address _factory, address
     }
 
     /**
-     * @notice Returns the length of an int256 array for a given key
+     * @notice Returns the length of an int256 array for a given key.
      * @param key The specified mapping key
      * @return The length of the array mapped to the key
      */
@@ -422,7 +426,7 @@ function initialize(address _treasury, address _token, address _factory, address
     }
 
     /**
-     * @notice Returns the length of an address array for a given key
+     * @notice Returns the length of an address array for a given key.
      * @param key The specified mapping key
      * @return The length of the array mapped to the key
      */
@@ -431,7 +435,7 @@ function initialize(address _treasury, address _token, address _factory, address
     }
 
     /**
-     * @notice Returns the length of a boolean array for a given key
+     * @notice Returns the length of a boolean array for a given key.
      * @param key The specified mapping key
      * @return The length of the array mapped to the key
      */
@@ -440,7 +444,7 @@ function initialize(address _treasury, address _token, address _factory, address
     }
 
     /**
-     * @notice Returns the length of a bytes32 array for a given key
+     * @notice Returns the length of a bytes32 array for a given key.
      * @param key The specified mapping key
      * @return The length of the array mapped to the key
      */

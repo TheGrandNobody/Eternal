@@ -15,11 +15,11 @@ interface IEternalStorage {
     function setBytes(bytes32 entity, bytes32 key, bytes32 value) external;
 
     // Scalar getters
-    function getUint(bytes32 entity, bytes32 key) external view returns(uint256);
-    function getInt(bytes32 entity, bytes32 key) external view returns(int256);
-    function getAddress(bytes32 entity, bytes32 key) external view returns(address);
-    function getBool(bytes32 entity, bytes32 key) external view returns(bool);
-    function getBytes(bytes32 entity, bytes32 key) external view returns(bytes32);
+    function getUint(bytes32 entity, bytes32 key) external view returns (uint256);
+    function getInt(bytes32 entity, bytes32 key) external view returns (int256);
+    function getAddress(bytes32 entity, bytes32 key) external view returns (address);
+    function getBool(bytes32 entity, bytes32 key) external view returns (bool);
+    function getBytes(bytes32 entity, bytes32 key) external view returns (bytes32);
 
     // Array setters
     function setUintArrayValue(bytes32 key, uint256 index, uint256 value) external;

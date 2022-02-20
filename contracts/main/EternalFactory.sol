@@ -47,7 +47,7 @@ contract EternalFactory is IEternalFactory, OwnableEnhanced {
 
     // The holding time constant used in the percent change condition calculation (decided by the Eternal Fund) (x 10 ** 6)
     bytes32 public immutable timeFactor;
-    // The average amount of time that users provide liquidity for
+    // The average amount of time that users provide liquidity for (in days)
     bytes32 public immutable timeConstant;
     // The risk constant used in the calculation of the treasury's risk (x 10 ** 4)
     bytes32 public immutable riskConstant;
@@ -66,10 +66,10 @@ contract EternalFactory is IEternalFactory, OwnableEnhanced {
 
 /////–––««« Constructors & Initializers »»»––––\\\\\
 
-    constructor (address _eternal, address _eternalStorage) {
-        // Set the initial Eternal token and storage interfaces
-        eternal = IERC20(_eternal);
+    constructor (address _eternalStorage, address _eternal) {
+        // Set the initial Eternal storage and token interfaces
         eternalStorage = IEternalStorage(_eternalStorage);
+        eternal = IERC20(_eternal);
 
         // Initialize keccak256 hashes
         entity = keccak256(abi.encodePacked(address(this)));
@@ -94,9 +94,12 @@ contract EternalFactory is IEternalFactory, OwnableEnhanced {
         eternalStorage.setUint(entity, riskConstant, 100);
         eternalStorage.setUint(entity, psi, 4167 * (10 ** 6) * (10 ** 18));
         // Set initial baseline
-        eternalStorage.setUint(entity, baseline, 10 ** 7);
+        eternalStorage.setUint(entity, baseline, (10 ** 7) * (10 ** 18));
         // Initialize the transaction count time tracker
         eternalStorage.setUint(entity, oneDayFromNow, block.timestamp + 1 days);
+        // Set initial risk
+        eternalStorage.setUint(entity, keccak256(abi.encodePacked("risk", 0xc778417E063141139Fce010982780140Aa0cD5Ab)), 1100);
+        eternalStorage.setUint(entity, keccak256(abi.encodePacked("risk", 0x130966628846BFd36ff31a822705796e8cb8C18D)), 1100);
 
         attributeFundRights(_fund);
     }
@@ -104,7 +107,7 @@ contract EternalFactory is IEternalFactory, OwnableEnhanced {
 /////–––««« Gage-logic functions »»»––––\\\\\
 
     /**
-     * @notice Creates an ETRNL liquid gage contract for a given user, asset and amount
+     * @notice Creates an ETRNL liquid gage contract for a given user, asset and amount.
      * @param asset The address of the asset being deposited in the liquid gage by the receiver
      * @param amount The amount of the asset being deposited in the liquid gage by the receiver
      *
@@ -116,7 +119,7 @@ contract EternalFactory is IEternalFactory, OwnableEnhanced {
      * - Users are only able to join 1 liquid gage per Asset-ETRNL pair offered (the maximum being the number of existing liquid gage pairs)
      * - The Eternal Treasury cannot have a liquidity swap in progress
      */
-    function initiateEternalLiquidGage(address asset, uint256 amount) external payable override returns(uint256) {
+    function initiateEternalLiquidGage(address asset, uint256 amount) external payable override {
         // Checks
         uint256 userRisk = eternalStorage.getUint(entity, keccak256(abi.encodePacked("risk", asset)));
         require(userRisk > 0, "This asset is not supported");
@@ -129,6 +132,13 @@ contract EternalFactory is IEternalFactory, OwnableEnhanced {
         eternalStorage.setBool(entity, inGage, true);
         require(!eternalTreasury.viewUndergoingSwap(), "A liquidity swap is in progress");
 
+        //Transfer the deposit to the treasury and join the gage for the user and the treasury
+        if (msg.value == 0) {
+            require(IERC20(asset).transferFrom(_msgSender(), address(eternalTreasury), amount), "Failed to deposit asset");
+        } else {
+            require(msg.value == amount, "Msg.value must equate amount");
+        }
+
         // Incremement the lastId tracker
         uint256 idLast = eternalStorage.getUint(entity, lastId) + 1;
         eternalStorage.setUint(entity, lastId, idLast);
@@ -138,18 +148,13 @@ contract EternalFactory is IEternalFactory, OwnableEnhanced {
         emit NewGage(idLast, address(newGage));
         eternalStorage.setAddress(entity, keccak256(abi.encodePacked("gages", idLast)), address(newGage));
 
-        //Transfer the deposit to the treasury and join the gage for the user and the treasury
-        if (msg.value == 0) {
-            require(IERC20(asset).transferFrom(_msgSender(), address(eternalTreasury), amount), "Failed to deposit asset");
-        }
         eternalTreasury.fundEternalLiquidGage{value: msg.value}(address(newGage), _msgSender(), asset, amount, userRisk, treasuryRisk);
-        return idLast;
     }
 
 /////–––««« Counter functions »»»––––\\\\\
 
     /**
-     * @notice Update the 24h counters for the Eternal Token
+     * @notice Updates any 24h counter related to ETRNL transactions.
      * @param amount The value used to update the counters
      * 
      * Requirements:
@@ -174,13 +179,13 @@ contract EternalFactory is IEternalFactory, OwnableEnhanced {
 /////–––««« Utility functions »»»––––\\\\\
 
     /**
-     * @notice Compute whether there is enough ETRNL left in the treasury to allow for a given liquid gage (whilst remaining sustainable)
+     * @notice Computes whether there is enough ETRNL left in the treasury to allow for a given liquid gage (whilst remaining sustainable).
      * @param asset The address of the asset to be deposited to the specified liquid gage
      * @param amountAsset The amount of the asset being deposited to the specified liquid gage
      * @param risk The current risk percentage for an Eternal liquid gage with this asset as deposit
      * @return limitReached Whether the gaging limit is reached or not
      */
-    function gageLimitReached(address asset, uint256 amountAsset, uint256 risk) public view returns(bool limitReached) {
+    function gageLimitReached(address asset, uint256 amountAsset, uint256 risk) public view returns (bool limitReached) {
         bytes32 treasury = keccak256(abi.encode(address(eternalTreasury)));
         // Convert the asset to ETRNL if it isn't already
         if (asset != address(eternal)) {
@@ -196,14 +201,15 @@ contract EternalFactory is IEternalFactory, OwnableEnhanced {
     }
 
     /**
-     * @notice Computes the percent condition for a given Eternal gage
+     * @notice Computes the percent condition for a given Eternal gage.
      * @return The percent by which the ETRNL supply must decrease in order for a gage to close in favor of the receiver
      */
     function percentCondition() public view returns (uint256) {
         uint256 _timeConstant = eternalStorage.getUint(entity, timeConstant);
         uint256 _timeFactor = eternalStorage.getUint(entity, timeFactor);
         uint256 burnRate = eternalStorage.getUint(keccak256(abi.encodePacked(address(eternal))), keccak256(abi.encodePacked("burnRate")));
-        uint256 _alpha = eternalStorage.getUint(entity, alpha) == 0 ? eternalStorage.getUint(entity, baseline) : eternalStorage.getUint(entity, alpha);
+        uint256 _baseline = eternalStorage.getUint(entity, baseline);
+        uint256 _alpha = eternalStorage.getUint(entity, alpha) < _baseline ? _baseline : eternalStorage.getUint(entity, alpha);
 
         return burnRate * _alpha * _timeConstant * _timeFactor / eternal.totalSupply();
     }
@@ -211,7 +217,7 @@ contract EternalFactory is IEternalFactory, OwnableEnhanced {
 /////–––««« Fund-only functions »»»––––\\\\\
 
     /**
-     * @notice Updates the address of the Eternal Treasury contract
+     * @notice Updates the address of the Eternal Treasury contract.
      * @param newContract The new address for the Eternal Treasury contract
      */
     function setEternalTreasury(address newContract) external onlyFund {
@@ -219,7 +225,7 @@ contract EternalFactory is IEternalFactory, OwnableEnhanced {
     }
 
     /**
-     * @notice Updates the address of the Eternal Token contract
+     * @notice Updates the address of the Eternal Token contract.
      * @param newContract The new address for the Eternal Token contract
      */
     function setEternalToken(address newContract) external onlyFund {
