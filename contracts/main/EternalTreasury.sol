@@ -214,27 +214,33 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IWAVAX.sol";
     }
 
     /**
-     * @notice Swaps a given amount of tokens for ETRNL.
-     * @param amount The specified amount of tokens
+     * @notice Swaps a given amount of tokens for another
+     * @param amountAsset The specified amount of tokens
      * @param asset The address of the asset being swapped
-     * @return minAsset The minimum amount of tokens received from the swap with a 1% uncertainty
+     * @param otherAsset The address of the asset being received
+     * @return minOtherAsset The minimum amount of tokens received from the swap with a 1% uncertainty
      */
-    function _swapTokensForETRNL(uint256 amount, address asset) private returns (uint256 minAsset) {
+    function _swapTokens(uint256 amountAsset, address asset, address otherAsset) private returns (uint256 minOtherAsset) {
         address[] memory path = new address[](2);
         path[0] = asset;
-        path[1] = address(eternal);
+        path[1] = otherAsset;
 
-        // Calculate the minimum amount of ETRNL to swap the asset for (with a tolerance of 1%)
-        (uint256 reserveETRNL, uint256 reserveAsset) = _fetchPairReserves(address(eternal), asset);
-        minAsset = _computeMinSwapAmount(amount, reserveAsset, reserveETRNL, 100);
+        // Calculate the minimum amount of the other asset to receive (with a tolerance of 1%)
+        (uint256 reserveOtherAsset, uint256 reserveAsset) = _fetchPairReserves(otherAsset, asset);
+        minOtherAsset = joeRouter.getAmountOut(amountAsset, reserveAsset, reserveOtherAsset);
+        minOtherAsset -= minOtherAsset / 100;
 
-        // Swap the asset for ETRNL
-        require(IERC20(asset).approve(address(joeRouter), amount), "Approve failed");
+        // Swap the asset for the other asset
+        require(IERC20(asset).approve(address(joeRouter), amountAsset), "Approve failed");
         if (asset == joeRouter.WAVAX()) {
-            joeRouter.swapExactAVAXForTokensSupportingFeeOnTransferTokens{value : amount}(minAsset, path, address(this), block.timestamp);
+            joeRouter.swapExactAVAXForTokensSupportingFeeOnTransferTokens{value : amountAsset}(minOtherAsset, path, address(this), block.timestamp);
         } else {
-            require(IERC20(asset).approve(address(joeRouter), amount), "Approve failed");
-            joeRouter.swapExactTokensForTokens(amount, minAsset, path, address(this), block.timestamp);
+            require(IERC20(asset).approve(address(joeRouter), amountAsset), "Approve failed");
+            if (otherAsset == joeRouter.WAVAX()) {
+                joeRouter.swapExactTokensForAVAXSupportingFeeOnTransferTokens(amountAsset, minOtherAsset, path, address(this), block.timestamp);
+            } else {
+                joeRouter.swapExactTokensForTokensSupportingFeeOnTransferTokens(amountAsset, minOtherAsset, path, address(this), block.timestamp);
+            }
         }
     }
 
@@ -247,7 +253,7 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IWAVAX.sol";
     function _distributeFees(uint256 eternalRewards, uint256 eternalFee, address rAsset) private {
         uint256 totalTreasuryBalance = eternalStorage.getUint(entity, totalStakedBalances);
         // Compute the total returns earned through this gage
-        uint256 totalEarnings = eternalRewards + _swapTokensForETRNL(eternalFee, rAsset);
+        uint256 totalEarnings = eternalRewards + _swapTokens(eternalFee, rAsset, address(eternal));
         // Compute the divisor by which we must divide the staked balances
         uint256 divisor = (totalEarnings + totalTreasuryBalance) * (10 ** 18) / totalTreasuryBalance;
         // Dividing the reserve staked balances by (100% + x%) is the equivalent of increasing the true balances by x%
@@ -463,35 +469,6 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IWAVAX.sol";
 /////–––««« Automatic liquidity provision functions »»»––––\\\\\
 
     /**
-     * @notice Computes the minimum amount to swap a given asset for another asset, with a given percentage uncertainty.
-     * @param amountAsset The specified asset being swapped
-     * @param reserveAsset The reserve of the asset being swapped
-     * @param reserveOtherAsset The reserve of the asset being swapped for
-     * @param uncertainty The denominator of the percentage uncertainty if it were viewed as (1  / uncertainty)
-     */
-    function _computeMinSwapAmount(uint256 amountAsset, uint256 reserveAsset, uint256 reserveOtherAsset, uint256 uncertainty) private view returns(uint256 minOtherAsset) {
-        uint256 amountOtherAsset = joeRouter.getAmountOut(amountAsset, reserveAsset, reserveOtherAsset);
-        minOtherAsset = amountOtherAsset - (amountOtherAsset / uncertainty);
-    }
-
-    /**
-     * @notice Swaps a given amount of ETRNL for AVAX using Trader Joe. (Used for auto-liquidity swaps).
-     * @param amount The amount of ETRNL to be swapped for AVAX
-     */
-    function _swapETRNLForAVAX(uint256 amount, uint256 reserveETRNL, uint256 reserveAVAX) private {
-        address[] memory path = new address[](2);
-        path[0] = address(eternal);
-        path[1] = joeRouter.WAVAX();
-
-        // Calculate the minimum amount of AVAX to swap the ETRNL for (with a tolerance of 1%)
-        uint256 minAVAX = _computeMinSwapAmount(amount, reserveETRNL, reserveAVAX, 100);
-
-        // Swap the ETRNL for AVAX
-        require(eternal.approve(address(joeRouter), amount), "Approve failed");
-        joeRouter.swapExactTokensForAVAXSupportingFeeOnTransferTokens(amount, minAVAX, path, address(this), block.timestamp);
-    }
-
-    /**
      * @notice Provides liquidity to the ETRNL/AVAX pair on Trader Joe for the EternalToken contract.
      * @param contractBalance The contract's ETRNL balance
      *
@@ -514,28 +491,19 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IWAVAX.sol";
      */
     function _provideLiquidity(uint256 contractBalance) private haltsActivity {
         // Split the contract's balance into two halves
-        uint256 half = contractBalance / 2;
-        uint256 amountETRNL = contractBalance - half;
-
-        // Get the reserve ratios for the ETRNL-AVAX pair
-        (uint256 reserveETRNL, uint256 reserveAVAX) = _fetchPairReserves(address(eternal), joeRouter.WAVAX());
+        uint256 amountETRNL = contractBalance - (contractBalance / 2);
         // Capture the initial balance to later compute the difference
         uint256 initialBalance = address(this).balance;
         // Swap half the contract's ETRNL balance to AVAX
-        _swapETRNLForAVAX(half, reserveETRNL, reserveAVAX);
+        _swapTokens(amountETRNL, address(eternal), joeRouter.WAVAX());
         // Compute the amount of AVAX received from the swap
         uint256 amountAVAX = address(this).balance - initialBalance;
-        
-        // Determine a reasonable minimum amount of ETRNL and AVAX based on current reserves (with a tolerance of 1%)
-        uint256 minAVAX = joeRouter.quote(amountETRNL, reserveETRNL, reserveAVAX);
-        minAVAX -= minAVAX / 100;
-        uint256 minETRNL = joeRouter.quote(amountAVAX, reserveAVAX, reserveETRNL);
-        minETRNL -= minETRNL / 100;
-
-        // Add liquidity to the ETRNL/AVAX pair
-        emit AutomaticLiquidityProvision(amountETRNL, contractBalance, amountAVAX);
+        uint256 minAVAX;
+        uint256 minETRNL;
+        // Determine a reasonable minimum amount of ETRNL and AVAX
+        (minAVAX, minETRNL, amountAVAX) = computeMinAmounts(address(eternal), joeRouter.WAVAX(), amountETRNL, 100);
         eternal.approve(address(joeRouter), amountETRNL);
-        // Update the total liquidity 
+        // Add the liquidity and update the total liquidity tracker
         (,,uint256 liquidity) = joeRouter.addLiquidityAVAX{value: amountAVAX}(address(eternal), amountETRNL, minETRNL, minAVAX, address(this), block.timestamp);
         bytes32 totalLiquidity = keccak256(abi.encodePacked("liquidityProvided", address(this), joeRouter.WAVAX()));
         uint256 currentLiquidity = eternalStorage.getUint(entity, totalLiquidity);

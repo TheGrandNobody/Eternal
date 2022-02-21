@@ -36,8 +36,6 @@ interface IEternalTreasury {
 
     // Signals a disabling/enabling of the automatic liquidity provision
     event AutomaticLiquidityProvisionUpdated(bool value);
-    // Signals that liquidity has been added to the ETRNL/WAVAX pair 
-    event AutomaticLiquidityProvision(uint256 amountETRNL, uint256 totalSwappedETRNL, uint256 amountAVAX);
     // Signals that part of the locked AVAX balance has been cleared to a given address by decision of the DAO
     event AVAXTransferred(uint256 amount, address recipient);
     // Signals that some of an asset balance has been sent to a given address by decision of the DAO
