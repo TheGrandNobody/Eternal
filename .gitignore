@@ -1,4 +1,5 @@
 node_modules
 artifacts
 cache
-.DS_STORE
+.DS_STORE.vscode
+.deps
