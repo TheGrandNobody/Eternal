@@ -28,19 +28,15 @@ Short termism is everywhere. We breathe short-termism, we make and use short-ter
 
 Firms rely on investors to buy and hold their shares. Investors want to make money as fast as possible, and will consequently tend to choose firms which make the most short-term profits. In turn, firms do everything in their power to increase short-term revenue and end up making all kinds of poor decisions with no regard for their long-term consequences. This leads to more issues like unemployment, pollution, less R\&D and ironically, less revenue and growth for the firm.
 
-{% hint style="info" %}
 **And it's costing firms $79.1 billion every year for the past 22 years.**
-{% endhint %}
 
 **The **<mark style="color:red;">**Liquidity-Provider**</mark>** Dilemma:**
 
 Decentralized exchanges (DEX) and blockchain projects rely on liquidity providers in order for tokens to be traded at any given price level on DEXs. Liquidity providers want to earn as much money as possible, and therefore will only provide liquidity in the very short-term (<15 days), whilst the pool rewards are still relatively high, before moving to another project. In turn, projects attempt to appeal to liquidity providers by offering high yields, making all kinds of poor decisions with no regard for their long-term consequences. This leads to more issues such as abnormally high inflation rates, inadequate reflection of value by the token, longer downtrends and periods of recovery and radical short-termist culture.
 
-{% hint style="info" %}
 **There is a short-termist issue in almost every single industry and it is reflecting in the global issues we are currently witnessing with our economies, health systems, environment...**
 
 You name it.
-{% endhint %}
 
 ## What is a gage?
 
@@ -50,9 +46,7 @@ A gage is broadly defined as a **contract between two or more stakeholders who p
 
 The developed gage-related applications, are not only designed and proven to **earn you more money with less risk than any other instrument**, they are also **completely free**, **accessible to all** and **can significantly help change our short-termist behaviour**. The catch? You will need to fight your short-termist instincts, and approach everything with a long-term mentality. This simply means that **the most patient investors will win the most money**.
 
-{% hint style="info" %}
 **Are you more patient than everyone else?**
-{% endhint %}
 
 ## How do gages solve short-termism?
 
