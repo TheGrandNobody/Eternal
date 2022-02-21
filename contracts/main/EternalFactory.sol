@@ -92,7 +92,7 @@ contract EternalFactory is IEternalFactory, OwnableEnhanced {
         eternalStorage.setUint(entity, timeFactor, 6 * (10 ** 6));
         eternalStorage.setUint(entity, timeConstant, 15);
         eternalStorage.setUint(entity, riskConstant, 100);
-        eternalStorage.setUint(entity, psi, 4167 * (10 ** 6) * (10 ** 18));
+        eternalStorage.setUint(entity, psi, 4164 * (10 ** 6) * (10 ** 18));
         // Set initial baseline
         eternalStorage.setUint(entity, baseline, (10 ** 7) * (10 ** 18));
         // Initialize the transaction count time tracker
