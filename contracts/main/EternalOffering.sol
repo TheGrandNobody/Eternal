@@ -44,6 +44,8 @@ contract EternalOffering {
     mapping (address => mapping (address => bool)) private participated;
     // Keeps track of the amount of ETRNL the user has used in liquidity provision
     mapping (address => uint256) private liquidityOffered;
+    // Keeps track of the amount of ETRNL the user has deposited
+    mapping (address => uint256) private liquidityDeposited;
 
 /////–––««« Variables: Constants, immutables and factors »»»––––\\\\\
 
@@ -146,6 +148,15 @@ contract EternalOffering {
      */
     function viewLiquidityOffered(address user) external view returns (uint256) {
         return liquidityOffered[user];
+    }
+
+    /**
+     * @notice View the amount of ETRNL a given user has deposited (through provideLiquidity)
+     * @param user The specified user
+     * @return The total amount of ETRNL that has been deposited (but not gaged)
+     */
+    function viewLiquidityDeposited(address user) external view returns (uint256) {
+        return liquidityDeposited[user];
     }
 
     /**
@@ -331,6 +342,7 @@ contract EternalOffering {
         providedETRNL += (amount - providedAsset) * providedETRNL / amount;
         // Update the offering variables
         liquidityOffered[msg.sender] += providedETRNL;
+        liquidityDeposited[msg.sender] += providedETRNL;
         totalETRNLOffered += providedETRNL;
 
         // Transfer ETRNL to the user
