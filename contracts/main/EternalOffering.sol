@@ -41,7 +41,7 @@ contract EternalOffering {
     // Keeps track of the respective gage tied to any given ID
     mapping (uint256 => address) private gages;
     // Keeps track of whether a user is in a loyalty gage or has provided liquidity for this offering
-    mapping (address => bool) private participated;
+    mapping (address => mapping (address => bool)) private participated;
     // Keeps track of the amount of ETRNL the user has used in liquidity provision
     mapping (address => uint256) private liquidityOffered;
 
@@ -156,6 +156,30 @@ contract EternalOffering {
     function viewGage(uint256 id) external view returns (address) {
         return gages[id];
     }
+
+    /**
+     * @notice View the current risk percentage for loyalty gages.
+     * @return risk The percentage which the treasury takes if the loyalty gage closes in its favor
+     */
+    function viewRisk() public view returns (uint256 risk) {
+        risk = totalETRNLOffered < LIMIT / 4 ? 3100 : (totalETRNLOffered < LIMIT / 2 ? 2600 : (totalETRNLOffered < LIMIT * 3 / 4 ? 2100 : 1600));
+    }
+
+    /**
+     * @notice Evaluate the effect on the individual limit for a given user and amount of ETRNL.
+     * @return Whether transacting this amount of ETRNL respects the IGO limit for this user
+     */
+    function checkIndividualLimit(uint256 amountETRNL, address user) public view returns (bool) {
+        return amountETRNL + liquidityOffered[user] <= (10 ** 7) * (10 ** 18);
+    }
+
+    /**
+     * @notice Evaluate the effect on the global IGO limit for a given amount of ETRNL
+     * @return Whether there is enough ETRNL left to allow this IGO transaction
+     */
+    function checkGlobalLimit(uint256 amountETRNL) public view returns (bool) {
+        return totalETRNLOffered + 2 * amountETRNL <= LIMIT;
+    }
     
 /////–––««« Gage-logic functions »»»––––\\\\\
 
@@ -169,7 +193,7 @@ contract EternalOffering {
      * - The offering must be ongoing
      * - Only MIM or AVAX loyalty gages are offered
      * - There can not have been more than 4 250 000 000 ETRNL offered in total
-     * - A user can only participate in a maximum of one loyalty gage
+     * - A user can only participate in a maximum of one loyalty gage per asset
      * - A user can not send money to gages/provide liquidity for more than 10 000 000 ETRNL 
      * - The sum of the new amount provided and the previous amounts provided by a user can not exceed the equivalent of 10 000 000 ETRNL
      */
@@ -177,7 +201,7 @@ contract EternalOffering {
         // Checks
         require(block.timestamp < offeringEnds, "Offering is over");
         require(asset == MIM || (asset == joeRouter.WAVAX() && msg.value == amount), "Only MIM or AVAX");
-        require(!participated[msg.sender], "User gage limit reached");
+        require(!participated[msg.sender][asset], "User gage limit reached");
 
         uint256 providedETRNL;
         uint256 providedAsset;
@@ -185,16 +209,16 @@ contract EternalOffering {
         // Compute the minimum amounts needed to provide liquidity and the equivalent of the asset in ETRNL
         (uint256 minETRNL, uint256 minAsset, uint256 amountETRNL) = _computeMinAmounts(asset, address(eternal), amount, 100);
         // Calculate risk
-        uint256 rRisk = totalETRNLOffered < LIMIT / 4 ? 3100 : (totalETRNLOffered < LIMIT / 2 ? 2600 : (totalETRNLOffered < LIMIT * 3 / 4 ? 2100 : 1600));
-        require(amountETRNL + (2 * amountETRNL * (rRisk - 100) / (10 ** 4)) + liquidityOffered[msg.sender] <= (10 ** 7) * (10 ** 18), "Amount exceeds the user limit");
-        require(totalETRNLOffered + (2 * (amountETRNL + (amountETRNL * (rRisk - 100) / (10 ** 4)))) <= LIMIT, "ETRNL offering limit is reached");
+        uint256 rRisk = viewRisk();
+        require(checkIndividualLimit(amountETRNL + (2 * amountETRNL * (rRisk - 100) / (10 ** 4)), msg.sender), "Amount exceeds the user limit");
+        require(checkGlobalLimit(amountETRNL + (amountETRNL * (rRisk - 100) / (10 ** 4))), "ETRNL offering limit is reached");
 
         // Compute the percent change condition
         uint256 percent = 500 * ALPHA * TIME_CONSTANT * TIME_FACTOR / eternal.totalSupply();
 
         // Incremement the lastId tracker and increase the total ETRNL count
         lastId += 1;
-        participated[msg.sender] = true;
+        participated[msg.sender][asset] = true;
 
         // Deploy a new Gage
         LoyaltyGage newGage = new LoyaltyGage(lastId, percent, 2, false, address(this), msg.sender, address(eternalStorage));
@@ -283,8 +307,8 @@ contract EternalOffering {
         uint256 liquidity;
         // Compute the minimum amounts needed to provide liquidity and the equivalent of the asset in ETRNL
         (uint256 minETRNL, uint256 minAsset, uint256 amountETRNL) = _computeMinAmounts(asset, address(eternal), amount, 200);
-        require(amountETRNL + liquidityOffered[msg.sender] <= (10 ** 7) * (10 ** 18), "Amount exceeds the user limit");
-        require(totalETRNLOffered + 2 * amountETRNL <= LIMIT, "ETRNL offering limit is reached");
+        require(checkIndividualLimit(amountETRNL, msg.sender), "Amount exceeds the user limit");
+        require(checkGlobalLimit(amountETRNL), "ETRNL offering limit is reached");
 
         // Transfer user's funds to this contract if it's not already done
         if (msg.value == 0) {
