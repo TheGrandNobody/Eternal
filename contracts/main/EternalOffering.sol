@@ -247,6 +247,7 @@ contract EternalOffering {
             (providedETRNL, providedAsset, liquidity) = joeRouter.addLiquidityAVAX{value: msg.value}(address(eternal), amountETRNL, minETRNL, minAsset, address(this), block.timestamp);
             totalLpAVAX += liquidity;
         } else {
+            require(IERC20(asset).approve(address(joeRouter), amountETRNL), "Approve failed");
             (providedETRNL, providedAsset, liquidity) = joeRouter.addLiquidity(address(eternal), asset, amountETRNL, amount, minETRNL, minAsset, address(this), block.timestamp);
             totalLpMIM += liquidity;
         }
