@@ -83,7 +83,8 @@ contract EternalOffering {
 
     constructor (address _storage, address _eternal, address _treasury) {
         // Set the initial Eternal storage and token interfaces
-        eternalStorage = IEternalStorage(_storage);
+        IEternalStorage _eternalStorage = IEternalStorage(_storage);
+        eternalStorage = _eternalStorage;
         eternal = IERC20(_eternal);
 
         // Initialize the Trader Joe router and factory
@@ -93,8 +94,21 @@ contract EternalOffering {
         joeFactory = _joeFactory;
 
         // Create the pairs
-        avaxPair = _joeFactory.createPair(_eternal, _joeRouter.WAVAX());
-        mimPair = _joeFactory.createPair(_eternal, MIM);
+        address _avaxPair = _joeFactory.createPair(_eternal, _joeRouter.WAVAX());
+        address _mimPair = _joeFactory.createPair(_eternal, MIM);
+        avaxPair = _avaxPair;
+        mimPair = _mimPair;
+        // Exclude the pairs from rewards
+        bytes32 avaxExcluded = keccak256(abi.encodePacked("isExcludedFromRewards", _avaxPair));
+        bytes32 mimExcluded = keccak256(abi.encodePacked("isExcludedFromRewards", _mimPair));
+        bytes32 token = keccak256((abi.encodePacked(_eternal)));
+        bytes32 excludedAddresses = keccak256(abi.encodePacked("excludedAddresses"));
+        _eternalStorage.setBool(token, avaxExcluded, true);
+        _eternalStorage.setBool(token, mimExcluded, true);
+        _eternalStorage.setAddressArrayValue(excludedAddresses, 0, _avaxPair);
+        _eternalStorage.setAddressArrayValue(excludedAddresses, 0, _mimPair);
+
+
         eternalTreasury = IEternalTreasury(_treasury);
         offeringEnds = block.timestamp + 1 days;
     }
