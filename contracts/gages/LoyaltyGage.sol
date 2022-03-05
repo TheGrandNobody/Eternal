@@ -56,11 +56,12 @@ contract LoyaltyGage is Gage, ILoyaltyGage {
     }
 
     /**
-     * @notice View the percent change condition for the total token supply of the deposit.
-     * @return The percent change condition for the total token supply
+     * @notice View the target supply plus/minus the percent change condition for the total token supply of the deposit.
+     * @return The minimum target supply which meets the percent change condition
      */
-    function viewPercent() external view override returns (uint256) {
-        return percent;
+    function viewTarget() public view override returns (uint256) {
+        uint256 delta = (totalSupply * percent / (10 ** 11));
+        return inflationary ? totalSupply + delta : totalSupply - delta;
     }
 
     /**
@@ -128,11 +129,10 @@ contract LoyaltyGage is Gage, ILoyaltyGage {
         // Remove user from the gage first (prevent re-entrancy)
         userData[receiver].inGage = false;
         userData[distributor].inGage = false;
-        // Calculate the change in total supply of the asset of reference
-        uint256 deltaSupply = inflationary ? (assetOfReference.totalSupply() - totalSupply) : (totalSupply - assetOfReference.totalSupply());
-        uint256 percentChange = deltaSupply * (10 ** 11) / totalSupply;
+        // Calculate the target supply after the change in total supply of the asset of reference
+        uint256 targetSupply = viewTarget();
         // Determine whether the user is the winner
-        bool winner = percentChange >= percent;
+        bool winner = inflationary ? assetOfReference.totalSupply() >= targetSupply : assetOfReference.totalSupply() <= targetSupply;
         emit GageClosed(id, winner);
         status = Status.Closed;
         // Communicate with an external treasury which offers gages

@@ -15,8 +15,8 @@ interface ILoyaltyGage is IGage {
     function viewDistributor() external view returns (address);
     // View the receiver in the loyalty gage (usually the user)
     function viewReceiver() external view returns (address);
-    // View the gage's percent change in supply condition
-    function viewPercent() external view returns (uint256);
+    // View the gage's minimum target supply meeting the percent change condition
+    function viewTarget() external view returns (uint256);
     // View the whether the gage's deposit is inflationary or deflationary
     function viewInflationary() external view returns (bool);
 }
