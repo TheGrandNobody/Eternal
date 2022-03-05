@@ -98,19 +98,23 @@ contract EternalOffering {
         address _mimPair = _joeFactory.createPair(_eternal, MIM);
         avaxPair = _avaxPair;
         mimPair = _mimPair;
-        // Exclude the pairs from rewards
-        bytes32 avaxExcluded = keccak256(abi.encodePacked("isExcludedFromRewards", _avaxPair));
-        bytes32 mimExcluded = keccak256(abi.encodePacked("isExcludedFromRewards", _mimPair));
-        bytes32 token = keccak256((abi.encodePacked(_eternal)));
-        bytes32 excludedAddresses = keccak256(abi.encodePacked("excludedAddresses"));
-        _eternalStorage.setBool(token, avaxExcluded, true);
-        _eternalStorage.setBool(token, mimExcluded, true);
-        _eternalStorage.setAddressArrayValue(excludedAddresses, 0, _avaxPair);
-        _eternalStorage.setAddressArrayValue(excludedAddresses, 0, _mimPair);
-
-
+        
         eternalTreasury = IEternalTreasury(_treasury);
         offeringEnds = block.timestamp + 1 days;
+    }
+
+    function initialize() external {
+        // Exclude the pairs from rewards
+        bytes32 avaxExcluded = keccak256(abi.encodePacked("isExcludedFromRewards", avaxPair));
+        bytes32 mimExcluded = keccak256(abi.encodePacked("isExcludedFromRewards", mimPair));
+        bytes32 token = keccak256((abi.encodePacked(address(eternal))));
+        bytes32 excludedAddresses = keccak256(abi.encodePacked("excludedAddresses"));
+        if (!eternalStorage.getBool(token, avaxExcluded)) {
+            eternalStorage.setBool(token, avaxExcluded, true);
+            eternalStorage.setBool(token, mimExcluded, true);
+            eternalStorage.setAddressArrayValue(excludedAddresses, 0, avaxPair);
+            eternalStorage.setAddressArrayValue(excludedAddresses, 0, mimPair);
+        }
     }
 
 /////–––««« Variable state-inspection functions »»»––––\\\\\
