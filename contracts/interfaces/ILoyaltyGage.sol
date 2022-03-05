@@ -11,12 +11,6 @@ import "./IGage.sol";
 interface ILoyaltyGage is IGage {
     // Initializes the loyalty gage
     function initialize(address rAsset, address dAsset, uint256 rAmount, uint256 dAmount, uint256 rRisk, uint256 dRisk) external;
-    // View the distributor of the loyalty gage (usually token distributor)
-    function viewDistributor() external view returns (address);
-    // View the receiver in the loyalty gage (usually the user)
-    function viewReceiver() external view returns (address);
     // View the gage's minimum target supply meeting the percent change condition
     function viewTarget() external view returns (uint256);
-    // View the whether the gage's deposit is inflationary or deflationary
-    function viewInflationary() external view returns (bool);
 }

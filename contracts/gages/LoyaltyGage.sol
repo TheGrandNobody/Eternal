@@ -14,20 +14,20 @@ contract LoyaltyGage is Gage, ILoyaltyGage {
 /////–––««« Variables: Addresses and Interfaces »»»––––\\\\\
 
     // Address of the stakeholder which pays the discount in a loyalty gage
-    address private immutable distributor;
+    address public immutable distributor;
     // Address of the stakeholder which benefits from the discount in a loyalty gage
-    address private immutable receiver;
+    address public immutable receiver;
     // The asset used in the condition
     IERC20 private assetOfReference;
 
 /////–––««« Variables: Condition computation »»»––––\\\\\
 
     // The percentage change condition for the total token supply (x 10 ** 11)
-    uint256 private immutable percent;
+    uint256 public immutable percent;
     // The total supply at the time of the deposit
     uint256 private totalSupply;
     // Whether the token's supply is inflationary or deflationary
-    bool private immutable inflationary;
+    bool public immutable inflationary;
 
 /////–––««« Constructors & Initializers »»»––––\\\\\
 
@@ -40,36 +40,12 @@ contract LoyaltyGage is Gage, ILoyaltyGage {
 /////–––««« Variable state-inspection functions »»»––––\\\\\
 
     /**
-     * @notice View the address of the creator.
-     * @return The address of the creator
-     */
-    function viewDistributor() external view override returns (address){
-        return distributor;
-    }
-
-    /**
-     * @notice View the address of the buyer.
-     * @return The address of the buyer
-     */
-    function viewReceiver() external view override returns (address) {
-        return receiver;
-    }
-
-    /**
      * @notice View the target supply plus/minus the percent change condition for the total token supply of the deposit.
      * @return The minimum target supply which meets the percent change condition
      */
     function viewTarget() public view override returns (uint256) {
         uint256 delta = (totalSupply * percent / (10 ** 11));
         return inflationary ? totalSupply + delta : totalSupply - delta;
-    }
-
-    /**
-     * @notice View whether the deposited token suppply is inflationary or deflationary.
-     * @return True if the token is inflationary, False if it is deflationary
-     */
-    function viewInflationary() external view override returns (bool) {
-        return inflationary;
     }
     
 /////–––««« Gage-logic functions »»»––––\\\\\
