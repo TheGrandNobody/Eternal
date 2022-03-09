@@ -294,8 +294,6 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IWAVAX.sol";
             eternalStorage.setUint(entity, reserveStakedBalances, eternalStorage.getUint(entity, reserveStakedBalances) + reserveAmount);
             eternalStorage.setUint(entity, totalStakedBalances, eternalStorage.getUint(entity, totalStakedBalances) + amount);
         } else {
-            // Reward user with percentage of fees proportional to the amount he is withdrawing
-            reserveAmount = amount * eternalStorage.getUint(entity, reserveBalances) / eternalStorage.getUint(entity, stakedBalances);
             eternalStorage.setUint(entity, reserveBalances, eternalStorage.getUint(entity, reserveBalances) - reserveAmount);
             eternalStorage.setUint(entity, stakedBalances, eternalStorage.getUint(entity, stakedBalances) - amount);
             eternalStorage.setUint(entity, reserveStakedBalances, eternalStorage.getUint(entity, reserveStakedBalances) - reserveAmount);

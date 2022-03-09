@@ -191,11 +191,10 @@ contract EternalFactory is IEternalFactory, OwnableEnhanced {
         if (asset != address(eternal)) {
             (, , amountAsset) = eternalTreasury.computeMinAmounts(asset, address(eternal), amountAsset, 0);
         }
-
-        uint256 reserveStakedBalances = eternalStorage.getUint(treasury, keccak256(abi.encodePacked("reserveStakedBalances")));
-        uint256 userStakedBalances = reserveStakedBalances - eternalStorage.getUint(treasury, keccak256(abi.encodePacked("reserveBalances", address(eternalTreasury))));
+        // Calculate the treasury's currently available ETRNL
+        uint256 treasuryReserve = eternalStorage.getUint(treasury, keccak256(abi.encodePacked("reserveBalances", address(eternalTreasury))));
         // Available ETRNL is all the ETRNL which can be spent by the treasury on gages whilst still remaining sustainable
-        uint256 availableETRNL = eternal.balanceOf(address(eternalTreasury)) - eternalTreasury.convertToStaked(userStakedBalances) - eternalStorage.getUint(entity, psi); 
+        uint256 availableETRNL = eternalTreasury.convertToStaked(treasuryReserve) - eternalStorage.getUint(entity, psi); 
         
         limitReached = availableETRNL < amountAsset + (2 * amountAsset * risk / (10 ** 4));
     }
