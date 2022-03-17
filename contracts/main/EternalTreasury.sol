@@ -252,8 +252,8 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IWAVAX.sol";
      */
     function _distributeFees(uint256 eternalRewards, uint256 eternalFee, address rAsset) private {
         uint256 totalTreasuryBalance = eternalStorage.getUint(entity, totalStakedBalances);
-        // Compute the total returns earned through this gage
-        uint256 totalEarnings = eternalRewards + _swapTokens(eternalFee, rAsset, address(eternal));
+        // Compute the total returns earned through this gage (keep one half of the fee for the treasury)
+        uint256 totalEarnings = eternalRewards + _swapTokens(eternalFee / 2, rAsset, address(eternal));
         // Compute the divisor by which we must divide the staked balances
         uint256 divisor = (totalEarnings + totalTreasuryBalance) * (10 ** 18) / totalTreasuryBalance;
         // Dividing the reserve staked balances by (100% + x%) is the equivalent of increasing the true balances by x%
@@ -375,14 +375,13 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IWAVAX.sol";
             // Transfer the user's second bonus
             require(eternal.transfer(receiver, amountETRNL * dRisk / (10 ** 4)), "Failed to transfer ETRNL reward");
             // Compute the net liquidity rewards left to distribute to stakers
-            //solhint-disable-next-line reentrancy
+            //solhint-disable reentrancy
             eternalRewards -= eternalRewards * dRisk / (10 ** 4);
         } else {
             // Update the treasury's reserves
             uint256 amountReceived = eternalRewards == 0 ? amountETRNL : dAmount;
              _updateReserves(address(this), amountReceived, convertToReserve(amountReceived), true);
             // Compute the net liquidity rewards + gage deposit left to distribute to staker
-            //solhint-disable-next-line reentrancy
             eternalFee += amountAsset * rRisk / (10 ** 4);
         }
         if (rAsset != joeRouter.WAVAX()) {
