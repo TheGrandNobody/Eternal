@@ -186,7 +186,7 @@ contract EternalFactory is IEternalFactory, OwnableEnhanced {
      * @return limitReached Whether the gaging limit is reached or not
      */
     function gageLimitReached(address asset, uint256 amountAsset, uint256 risk) public view returns (bool limitReached) {
-        bytes32 treasury = keccak256(abi.encode(address(eternalTreasury)));
+        bytes32 treasury = keccak256(abi.encodePacked(address(eternalTreasury)));
         // Convert the asset to ETRNL if it isn't already
         if (asset != address(eternal)) {
             (, , amountAsset) = eternalTreasury.computeMinAmounts(asset, address(eternal), amountAsset, 0);

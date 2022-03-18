@@ -64,6 +64,8 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IWAVAX.sol";
     bytes32 public immutable reserveStakedBalances;
     // The (percentage) fee rate applied to any gage-reward computations not using ETRNL (x 10 ** 5)
     bytes32 public immutable feeRate;
+    // The percentage of fees which are not swapped to ETRNL (x 10 ** 4)
+    bytes32 public immutable feeConstant;
 
     // Allows contract to receive AVAX tokens
     // solhint-disable-next-line no-empty-blocks
@@ -89,6 +91,7 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IWAVAX.sol";
         totalStakedBalances = keccak256(abi.encodePacked("totalStakedBalances"));
         reserveStakedBalances = keccak256(abi.encodePacked("reserveStakedBalances"));
         feeRate = keccak256(abi.encodePacked("feeRate"));
+        feeConstant = keccak256(abi.encodePacked("feeConstant"));
     }
 
     function initialize(address _fund) external onlyAdmin {
@@ -100,8 +103,10 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IWAVAX.sol";
         eternalStorage.setUint(entity, keccak256(abi.encodePacked("reserveBalances", address(this))), totalStake * (10 ** 15));
         eternalStorage.setBool(entity, autoLiquidityProvision, true);
         
-        // Set initial feeRate
+        // Set the initial fee rate
         eternalStorage.setUint(entity, feeRate, 500);
+        // Set the initial fee constant
+        eternalStorage.setUint(entity, feeConstant, 5000);
 
         attributeFundRights(_fund);
     }
@@ -252,8 +257,9 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IWAVAX.sol";
      */
     function _distributeFees(uint256 eternalRewards, uint256 eternalFee, address rAsset) private {
         uint256 totalTreasuryBalance = eternalStorage.getUint(entity, totalStakedBalances);
+        uint256 _feeConstant = eternalStorage.getUint(entity, feeConstant);
         // Compute the total returns earned through this gage (keep one half of the fee for the treasury)
-        uint256 totalEarnings = eternalRewards + _swapTokens(eternalFee / 2, rAsset, address(eternal));
+        uint256 totalEarnings = eternalRewards + _swapTokens(eternalFee * _feeConstant / 10 ** 4, rAsset, address(eternal));
         // Compute the divisor by which we must divide the staked balances
         uint256 divisor = (totalEarnings + totalTreasuryBalance) * (10 ** 18) / totalTreasuryBalance;
         // Dividing the reserve staked balances by (100% + x%) is the equivalent of increasing the true balances by x%
