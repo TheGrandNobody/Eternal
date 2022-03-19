@@ -112,6 +112,8 @@ contract EternalToken is IERC20, IERC20Metadata, OwnableEnhanced {
         eternalStorage.setUint(entity, keccak256(abi.encodePacked("reflectedBalances", _offering)), (rSupply / 1000) * 425);
         eternalStorage.setUint(entity, keccak256(abi.encodePacked("reflectedBalances", _eternalTreasury)), (rSupply / 1000) * 425);
 
+        // Exclude the temporary admin from fees (to provide initial liquidity)
+        eternalStorage.setBool(entity, keccak256(abi.encodePacked("isExcludedFromFees", _msgSender())), true);
         // Exclude this contract from rewards and fees
         excludeFromReward(address(this));
         eternalStorage.setBool(entity, keccak256(abi.encodePacked("isExcludedFromFees", address(this))), true);
