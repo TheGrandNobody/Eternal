@@ -140,7 +140,7 @@ function initialize(address _token, address _factory, address _treasury, address
     /**
      * @notice Sets or pushes a uint256 array's element's value for a given key and index.
      * @param key The specified mapping key
-     * @param index The specified index of the array's element being modified
+     * @param index The specified index of the array's element being modified (0 if pushing)
      * @param value The specified uint256 value
      * 
      * Requirements:
@@ -158,7 +158,7 @@ function initialize(address _token, address _factory, address _treasury, address
     /**
      * @notice Sets or pushes an int256 array's element's value for a given key and index.
      * @param key The specified mapping key
-     * @param index The specified index of the array's element being modified
+     * @param index The specified index of the array's element being modified (0 if pushing)
      * @param value The specified int256 value
      * 
      * Requirements:
@@ -176,7 +176,7 @@ function initialize(address _token, address _factory, address _treasury, address
     /**
      * @notice Sets or pushes an address array's element's value for a given key and index.
      * @param key The specified mapping key
-     * @param index The specified index of the array's element being modified
+     * @param index The specified index of the array's element being modified (0 if pushing)
      * @param value The specified address value
      * 
      * Requirements:
@@ -194,7 +194,7 @@ function initialize(address _token, address _factory, address _treasury, address
     /**
      * @notice Sets or pushes a boolean array's element's value for a given key and index.
      * @param key The specified mapping key
-     * @param index The specified index of the array's element being modified
+     * @param index The specified index of the array's element being modified (0 if pushing)
      * @param value The specified boolean value
      * 
      * Requirements:
@@ -212,7 +212,7 @@ function initialize(address _token, address _factory, address _treasury, address
     /**
      * @notice Sets or pushes a bytes32 array's element's value for a given key and index.
      * @param key The specified mapping key
-     * @param index The specified index of the array's element being modified
+     * @param index The specified index of the array's element being modified (0 if pushing)
      * @param value The specified bytes32value
      * 
      * Requirements:
@@ -230,9 +230,9 @@ function initialize(address _token, address _factory, address _treasury, address
 /////–––««« Getters »»»––––\\\\\
     /**
      * @notice Returns a uint256 value for a given contract and key.
-     * @param entity The keccak256 hash of the specified contract
+     * @param entity The keccak256 hash of the specified contract's address
      * @param key The specified mapping key
-     * @return The uint256 value mapped to the key
+     * @return uint256 The uint256 value mapped to the key for this entity
      */
     function getUint(bytes32 entity, bytes32 key) external view override returns (uint256) {
         return uints[entity][key];
@@ -240,9 +240,9 @@ function initialize(address _token, address _factory, address _treasury, address
 
     /**
      * @notice Returns an int256 value for a given contract and key.
-     * @param entity The keccak256 hash of the specified contract
+     * @param entity The keccak256 hash of the specified contract's address
      * @param key The specified mapping key
-     * @return The int256 value mapped to the key
+     * @return int256 The int256 value mapped to the key for this entity
      */
     function getInt(bytes32 entity, bytes32 key) external view override returns (int256) {
         return ints[entity][key];
@@ -250,9 +250,9 @@ function initialize(address _token, address _factory, address _treasury, address
 
     /**
      * @notice Returns an address value for a given contract and key.
-     * @param entity The keccak256 hash of the specified contract
+     * @param entity The keccak256 hash of the specified contract's address
      * @param key The specified mapping key
-     * @return The address value mapped to the key
+     * @return address The address value mapped to the key for this entity
      */
     function getAddress(bytes32 entity, bytes32 key) external view override returns (address) {
         return addresses[entity][key];
@@ -260,9 +260,9 @@ function initialize(address _token, address _factory, address _treasury, address
 
     /**
      * @notice Returns a boolean value for a given contract and key.
-     * @param entity The keccak256 hash of the specified contract
+     * @param entity The keccak256 hash of the specified contract's address
      * @param key The specified mapping key
-     * @return The boolean value mapped to the key
+     * @return bool The boolean value mapped to the key for this entity
      */    
     function getBool(bytes32 entity, bytes32 key) external view override returns (bool) {
         return bools[entity][key];
@@ -270,9 +270,9 @@ function initialize(address _token, address _factory, address _treasury, address
 
     /**
      * @notice Returns a bytes32 value for a given contract and key.
-     * @param entity The keccak256 hash of the specified contract
+     * @param entity The keccak256 hash of the specified contract's address
      * @param key The specified mapping key
-     * @return The bytes32 value mapped to the key
+     * @return bytes32 The bytes32 value mapped to the key for this entity
      */
     function getBytes(bytes32 entity, bytes32 key) external view override returns (bytes32) {
         return bytes32s[entity][key];
@@ -282,7 +282,7 @@ function initialize(address _token, address _factory, address _treasury, address
      * @notice Returns a uint256 array's element's value for a given key and index.
      * @param key The specified mapping key
      * @param index The specified index of the desired element
-     * @return The uint256 value at the specified index for the specified array
+     * @return uint256 The uint256 value at the specified index for the specified array
      */
     function getUintArrayValue(bytes32 key, uint256 index) external view override returns (uint256) {
         return manyUints[key][index];
@@ -292,7 +292,7 @@ function initialize(address _token, address _factory, address _treasury, address
      * @notice Returns an int256 array's element's value for a given key and index.
      * @param key The specified mapping key
      * @param index The specified index of the desired element
-     * @return The int256 value at the specified index for the specified array
+     * @return int256 The int256 value at the specified index for the specified array
      */
     function getIntArrayValue(bytes32 key, uint256 index) external view override returns (int256) {
         return manyInts[key][index];
@@ -302,7 +302,7 @@ function initialize(address _token, address _factory, address _treasury, address
      * @notice Returns an address array's element's value for a given key and index.
      * @param key The specified mapping key
      * @param index The specified index of the desired element
-     * @return The address value at the specified index for the specified array
+     * @return address The address value at the specified index for the specified array
      */
     function getAddressArrayValue(bytes32 key, uint256 index) external view override returns (address) {
         return manyAddresses[key][index];
@@ -312,7 +312,7 @@ function initialize(address _token, address _factory, address _treasury, address
      * @notice Returns a boolean array's element's value for a given key and index.
      * @param key The specified mapping key
      * @param index The specified index of the desired element
-     * @return The boolean value at the specified index for the specified array
+     * @return bool The boolean value at the specified index for the specified array
      */
     function getBoolArrayValue(bytes32 key, uint256 index) external view override returns (bool) {
         return manyBools[key][index];
@@ -322,7 +322,7 @@ function initialize(address _token, address _factory, address _treasury, address
      * @notice Returns a bytes32 array's element's value for a given key and index.
      * @param key The specified mapping key
      * @param index The specified index of the desired element
-     * @return The bytes32 value at the specified index for the specified array
+     * @return bytes32 The bytes32 value at the specified index for the specified array
      */
     function getBytesArrayValue(bytes32 key, uint256 index) external view override returns (bytes32) {
         return manyBytes[key][index];
@@ -410,7 +410,7 @@ function initialize(address _token, address _factory, address _treasury, address
     /**
      * @notice Returns the length of a uint256 array for a given key.
      * @param key The specified mapping key
-     * @return The length of the array mapped to the key
+     * @return uint256 The length of the array mapped to the key
      */
     function lengthUint(bytes32 key) external view override returns (uint256) {
         return manyUints[key].length;
@@ -419,7 +419,7 @@ function initialize(address _token, address _factory, address _treasury, address
     /**
      * @notice Returns the length of an int256 array for a given key.
      * @param key The specified mapping key
-     * @return The length of the array mapped to the key
+     * @return uint256 The length of the array mapped to the key
      */
     function lengthInt(bytes32 key) external view override returns (uint256) {
         return manyInts[key].length;
@@ -428,7 +428,7 @@ function initialize(address _token, address _factory, address _treasury, address
     /**
      * @notice Returns the length of an address array for a given key.
      * @param key The specified mapping key
-     * @return The length of the array mapped to the key
+     * @return uint256 The length of the array mapped to the key
      */
     function lengthAddress(bytes32 key) external view override returns (uint256) {
         return manyAddresses[key].length;
@@ -437,7 +437,7 @@ function initialize(address _token, address _factory, address _treasury, address
     /**
      * @notice Returns the length of a boolean array for a given key.
      * @param key The specified mapping key
-     * @return The length of the array mapped to the key
+     * @return uint256 The length of the array mapped to the key
      */
     function lengthBool(bytes32 key) external view override returns (uint256) {
         return manyBools[key].length;
@@ -446,7 +446,7 @@ function initialize(address _token, address _factory, address _treasury, address
     /**
      * @notice Returns the length of a bytes32 array for a given key.
      * @param key The specified mapping key
-     * @return The length of the array mapped to the key
+     * @return uint256 The length of the array mapped to the key
      */
     function lengthBytes(bytes32 key) external view override returns (uint256) {
         return manyBytes[key].length;
