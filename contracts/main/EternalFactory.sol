@@ -10,7 +10,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 /**
  * @title Contract for the Eternal gaging platform
  * @author Nobody (me)
- * @notice The Eternal contract holds all user-data and gage logic.
+ * @notice The Eternal Factory contract creates all gages and maintains sustainability of the system by enforcing limits.
  */
 contract EternalFactory is IEternalFactory, OwnableEnhanced {
 
@@ -107,7 +107,7 @@ contract EternalFactory is IEternalFactory, OwnableEnhanced {
 /////–––««« Gage-logic functions »»»––––\\\\\
 
     /**
-     * @notice Creates an ETRNL liquid gage contract for a given user, asset and amount.
+     * @notice Creates an ETRNL liquid gage contract for using a given asset and amount.
      * @param asset The address of the asset being deposited in the liquid gage by the receiver
      * @param amount The amount of the asset being deposited in the liquid gage by the receiver
      *
@@ -154,7 +154,7 @@ contract EternalFactory is IEternalFactory, OwnableEnhanced {
 /////–––««« Counter functions »»»––––\\\\\
 
     /**
-     * @notice Updates any 24h counter related to ETRNL transactions.
+     * @notice Updates any 24h counter related to ETRNL in/outflow.
      * @param amount The value used to update the counters
      * 
      * Requirements:
@@ -201,7 +201,7 @@ contract EternalFactory is IEternalFactory, OwnableEnhanced {
 
     /**
      * @notice Computes the percent condition for a given Eternal gage.
-     * @return The percent by which the ETRNL supply must decrease in order for a gage to close in favor of the receiver
+     * @return uint256 The percent by which the ETRNL supply must decrease in order for a gage to close in favor of the receiver
      */
     function percentCondition() public view returns (uint256) {
         uint256 _timeConstant = eternalStorage.getUint(entity, timeConstant);

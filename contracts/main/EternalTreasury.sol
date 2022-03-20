@@ -134,7 +134,7 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IWAVAX.sol";
 
     /**
      * @notice View the address of the ETRNL/AVAX pair on Trader Joe.
-     * @return The address of the ETRNL/AVAX pair
+     * @return address The address of the ETRNL/AVAX pair
      */
     function viewPair() external view override returns (address) {
         return joeFactory.getPair(joeRouter.WAVAX(), address(eternal));
@@ -142,7 +142,7 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IWAVAX.sol";
 
     /**
      * @notice View whether a liquidity swap is currently in progress.
-     * @return True if a liquidity swap is in progress, else false
+     * @return bool vTrue if a liquidity swap is in progress, else false
      */
     function viewUndergoingSwap() external view override returns (bool) {
         return undergoingSwap;
@@ -153,7 +153,7 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IWAVAX.sol";
     /**
      * @notice Converts a given staked amount to the "reserve" number space.
      * @param amount The specified staked amount
-     * @return The reserve number space of the staked amount
+     * @return uint256 The staked amount in terms of its reserve number space
      */
     function convertToReserve(uint256 amount) public view override returns (uint256) {
         uint256 currentRate = eternalStorage.getUint(entity, reserveStakedBalances) / eternalStorage.getUint(entity, totalStakedBalances);
@@ -161,9 +161,9 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IWAVAX.sol";
     }
 
     /**
-     * @notice Converts a given reserve amount to the regular number space (staked).
+     * @notice Converts a given reserve amount to the regular (staked) number space.
      * @param reserveAmount The specified reserve amount
-     * @return The regular number space value of the reserve amount
+     * @return uint256 The reserve amount in terms of its staked number space
      */
     function convertToStaked(uint256 reserveAmount) public view override returns (uint256) {
         uint256 currentRate = eternalStorage.getUint(entity, reserveStakedBalances) / eternalStorage.getUint(entity, totalStakedBalances);
@@ -172,10 +172,10 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IWAVAX.sol";
 
     /**
      * @notice Computes the equivalent of an asset to an other asset and the minimum amount of the two needed to provide liquidity.
-     * @param asset The first specified asset, which we want to convert 
+     * @param asset The first specified asset, whose amount is to be converted to the other asset
      * @param otherAsset The other specified asset
      * @param amountAsset The amount of the first specified asset
-     * @param uncertainty The minimum loss to deduct from each minimum in case of price changes
+     * @param uncertainty The minimum loss to deduct from each minimum in case of price fluctuations
      * @return minOtherAsset The minimum amount of otherAsset needed to provide liquidity (not given if uncertainty = 0)
      * @return minAsset The minimum amount of Asset needed to provide liquidity (not given if uncertainty = 0)
      * @return amountOtherAsset The equivalent in otherAsset of the given amount of asset
@@ -209,7 +209,8 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IWAVAX.sol";
      * @param rAsset The address of the specified asset
      * @param providedAsset The amount of the asset which was provided as liquidity
      * @param receiver The address of the liquid gage's receiver
-     * @return The amount of ETRNL and Asset obtained from removing liquidity
+     * @return uint256 The amount of ETRNL obtained from removing liquidity
+     * @return uint256  The amount of Asset obtained from removing liquidity
      */
     function _removeLiquidity(address rAsset, uint256 providedAsset, address receiver) private returns (uint256, uint256) {
         (uint256 minETRNL, uint256 minAsset,) = computeMinAmounts(rAsset, address(eternal), providedAsset, 100);
@@ -219,7 +220,7 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IWAVAX.sol";
     }
 
     /**
-     * @notice Swaps a given amount of tokens for another
+     * @notice Swaps a given amount of tokens for another.
      * @param amountAsset The specified amount of tokens
      * @param asset The address of the asset being swapped
      * @param otherAsset The address of the asset being received
@@ -269,8 +270,8 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IWAVAX.sol";
     /**
      * @notice Adds or subtracts a given amount from the treasury's reserves for a given user.
      * @param user The address of the specified user
-     * @param amount The actual amount of ETRNL being subtracted/added to the reserves
-     * @param reserveAmount The reserve amount of ETRNL being subtracted/added to the reserves
+     * @param amount The actual amount of ETRNL being subtracted/added from/to the reserves
+     * @param reserveAmount The reserve amount of ETRNL being subtracted/added from/to the reserves
      * @param add Whether the amount is to be added or subtracted to the reserves
      * 
      * Requirements:
@@ -310,21 +311,21 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IWAVAX.sol";
 /////–––««« Gage-logic functions »»»––––\\\\\
 
     /**
-     * @notice Funds a given liquidity gage with ETRNL, provides liquidity using ETRNL and the receiver's asset and transfers a bonus to the receiver.
-     * @param gage The address of the specified liquidity gage
+     * @notice Funds a given liquid gage with ETRNL, provides liquidity using ETRNL and the receiver's asset and transfers a bonus to the receiver.
+     * @param gage The address of the specified liquid gage
      * @param receiver The address of the receiver
-     * @param asset The address of the asset provided by the receiver
-     * @param userAmount The amount of the asset provided by the receiver
-     * @param rRisk The treasury's (distributor) risk percentage 
-     * @param dRisk The receiver's bonus percentage
+     * @param asset The address of the asset deposited by the receiver
+     * @param userAmount The amount of the asset deposited by the receiver
+     * @param rRisk The receiver's risk percentage
+     * @param dRisk The treasury's (distributor) risk percentage
      * 
      * Requirements:
      *
-     * - Only callable by the Eternal Platform
+     * - Only callable by the Eternal Factory
      */
     function fundEternalLiquidGage(address gage, address receiver, address asset, uint256 userAmount, uint256 rRisk, uint256 dRisk) external payable override {
         // Checks
-        require(_msgSender() == address(eternalFactory), "msg.sender must be the platform");
+        require(_msgSender() == address(eternalFactory), "msg.sender must be the factory");
 
         // Compute minimum amounts and the amount of ETRNL needed to provide liquidity
         uint256 providedETRNL;
@@ -405,22 +406,22 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IWAVAX.sol";
 
     /**
      * @notice Settles a given ETRNL gage.
-     * @param receiver The address of the receiver
-     * @param id The id of the specified gage
-     * @param winner Whether the gage closed in favor of the receiver or not
+     * @param user The address of the user exiting the gage
+     * @param id The unique id of the specified gage
+     * @param winner Whether the gage closed in favor of the user or not
      *
      * Requirements:
      *
      * - Only callable by an Eternal-deployed gage
      */
-    function settleGage(address receiver, uint256 id, bool winner) external override activityHalted {
+    function settleGage(address user, uint256 id, bool winner) external override activityHalted {
         // Checks
         bytes32 factory = keccak256(abi.encodePacked(address(eternalFactory)));
         address gageAddress = eternalStorage.getAddress(factory, keccak256(abi.encodePacked("gages", id)));
         require(_msgSender() == gageAddress, "msg.sender must be the gage");
 
         // Compute/Distribute rewards and take fees for the gage
-        (uint256 eternalRewards, uint256 eternalFee, address rAsset) = _settleLiquidGage(winner, gageAddress, receiver);
+        (uint256 eternalRewards, uint256 eternalFee, address rAsset) = _settleLiquidGage(winner, gageAddress, user);
 
         // Update staker's fees w.r.t the gage fee, gage rewards and liquidity rewards and buy ETRNL with the fee
         // Fees and rewards are both calculated in terms of ETRNL
@@ -472,8 +473,8 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IWAVAX.sol";
 /////–––««« Automatic liquidity provision functions »»»––––\\\\\
 
     /**
-     * @notice Provides liquidity to the ETRNL/AVAX pair on Trader Joe for the EternalToken contract.
-     * @param contractBalance The contract's ETRNL balance
+     * @notice Provides liquidity to the ETRNL/AVAX pair on Trader Joe for the Eternal Token contract.
+     * @param contractBalance The contract's ETRNL balance that was transferred to the treasury
      *
      * Requirements:
      * 
@@ -537,8 +538,8 @@ import "@traderjoe-xyz/core/contracts/traderjoe/interfaces/IWAVAX.sol";
     /**
      * @notice Transfers a given amount of a token from the contract to an address. (Fund only)
      * @param asset The address of the asset being withdrawn
-     * @param recipient The address to which the ETRNL is to be sent
-     * @param amount The specified amount of ETRNL to transfer
+     * @param recipient The address to which the asset is to be sent
+     * @param amount The specified amount of asset to transfer
      *
      * Requirements:
      *

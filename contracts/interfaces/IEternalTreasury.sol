@@ -34,10 +34,8 @@ interface IEternalTreasury {
     // Adds or subtracts a given amount of ETRNL from the treasury's reserves
     function updateReserves(address user, uint256 amount, uint256 reserveAmount, bool add) external;
 
-    // Signals a disabling/enabling of the automatic liquidity provision
-    event AutomaticLiquidityProvisionUpdated(bool value);
-    // Signals that part of the locked AVAX balance has been cleared to a given address by decision of the DAO
+    // Signals that part of the locked AVAX balance has been cleared to a given address by decision of governance
     event AVAXTransferred(uint256 amount, address recipient);
-    // Signals that some of an asset balance has been sent to a given address by decision of the DAO
+    // Signals that some of an asset balance has been sent to a given address by decision of governance
     event AssetTransferred(address asset, uint256 amount, address recipient);
 }

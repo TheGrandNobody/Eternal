@@ -89,10 +89,6 @@ contract EternalToken is IERC20, IERC20Metadata, OwnableEnhanced {
         excludedAddresses = keccak256(abi.encodePacked("excludedAddresses"));
     } 
 
-    /**
-     * @notice Initialize supplies and routers and create a pair. Mints total supply to the contract deployer. 
-     * Exclude some addresses from fees and/or rewards. Sets initial rate values.
-     */
     function initialize(address _factory, address _eternalTreasury, address _offering, address _timelock, address _fund, address _seedLock, address _privLock) external onlyAdmin {
         eternalTreasury = IEternalTreasury(_eternalTreasury);
         eternalFactory = IEternalFactory(_factory);
@@ -144,7 +140,7 @@ contract EternalToken is IERC20, IERC20Metadata, OwnableEnhanced {
 
     /**
      * @notice View the name of the token. 
-     * @return The token name
+     * @return string The token name
      */
     function name() external pure override returns (string memory) {
         return "Eternal Token";
@@ -152,7 +148,7 @@ contract EternalToken is IERC20, IERC20Metadata, OwnableEnhanced {
 
     /**
      * @notice View the token ticker.
-     * @return The token ticker
+     * @return string The token ticker
      */
     function symbol() external pure override returns (string memory) {
         return "ETRNL";
@@ -160,7 +156,7 @@ contract EternalToken is IERC20, IERC20Metadata, OwnableEnhanced {
 
     /**
      * @notice View the maximum number of decimals for the Eternal token.
-     * @return The number of decimals
+     * @return uint8 The number of decimals
      */
     function decimals() external pure override returns (uint8) {
         return 18;
@@ -168,18 +164,18 @@ contract EternalToken is IERC20, IERC20Metadata, OwnableEnhanced {
     
     /**
      * @notice View the total supply of the Eternal token.
-     * @return Returns the total ETRNL supply.
+     * @return uint256 Returns the total ETRNL supply.
      */
-    function totalSupply() external view override returns (uint256){
+    function totalSupply() external view override returns (uint256) {
         return eternalStorage.getUint(entity, totalTokenSupply);
     }
 
     /**
      * @notice View the balance of a given user's address.
      * @param account The address of the user
-     * @return The balance of the account
+     * @return uint256 The balance of the account
      */
-    function balanceOf(address account) public view override returns (uint256){
+    function balanceOf(address account) public view override returns (uint256) {
         if (eternalStorage.getBool(entity, keccak256(abi.encodePacked("isExcludedFromRewards", account)))) {
             return eternalStorage.getUint(entity, keccak256(abi.encodePacked("trueBalances", account)));
         }
@@ -187,10 +183,10 @@ contract EternalToken is IERC20, IERC20Metadata, OwnableEnhanced {
     }
 
     /**
-     * @notice View the allowance of a given owner address for a given spender address.
+     * @notice View the allowance of a given spender address for a given owner address.
      * @param owner The address of whom we are checking the allowance of
      * @param spender The address of whom we are checking the allowance for
-     * @return The allowance of the owner for the spender
+     * @return uint256 The allowance of the spender for the owner
      */
     function allowance(address owner, address spender) external view override returns (uint256){
         return eternalStorage.getUint(entity, keccak256(abi.encodePacked("allowances", owner, spender)));
@@ -198,7 +194,7 @@ contract EternalToken is IERC20, IERC20Metadata, OwnableEnhanced {
 
     /**
      * @notice Computes the current rate used to inter-convert from the mathematically reflected space to the "true" or total space.
-     * @return The ratio of net reflected ETRNL to net total ETRNL
+     * @return uint256 The ratio of net reflected ETRNL to net total ETRNL
      */
     function getReflectionRate() public view returns (uint256) {
         (uint256 netReflectedSupply, uint256 netTokenSupply) = _getNetSupplies();
@@ -211,9 +207,9 @@ contract EternalToken is IERC20, IERC20Metadata, OwnableEnhanced {
      * @notice Tranfers a given amount of ETRNL to a given receiver address.
      * @param recipient The destination to which the ETRNL are to be transferred
      * @param amount The amount of ETRNL to be transferred
-     * @return True if the transfer is successful.
+     * @return bool True if the transfer is successful.
      */
-    function transfer(address recipient, uint256 amount) external override returns (bool){
+    function transfer(address recipient, uint256 amount) external override returns (bool) {
         _transfer(_msgSender(), recipient, amount);
 
         return true;
@@ -223,9 +219,9 @@ contract EternalToken is IERC20, IERC20Metadata, OwnableEnhanced {
      * @notice Sets the allowance for a given address to a given amount.
      * @param spender The address of whom we are changing the allowance for
      * @param amount The amount we are changing the allowance to
-     * @return True if the approval is successful.
+     * @return bool True if the approval is successful.
      */
-    function approve(address spender, uint256 amount) external override returns (bool){
+    function approve(address spender, uint256 amount) external override returns (bool) {
         _approve(_msgSender(), spender, amount);
 
         return true;
@@ -236,7 +232,7 @@ contract EternalToken is IERC20, IERC20Metadata, OwnableEnhanced {
      * @param sender The address whom we withdraw the ETRNL from
      * @param recipient The address which shall receive the ETRNL
      * @param amount The amount of ETRNL which is being transferred
-     * @return True if the transfer and approval are both successful.
+     * @return bool True if the transfer and approval are both successful.
      *
      * Requirements:
      * 
@@ -389,7 +385,7 @@ contract EternalToken is IERC20, IERC20Metadata, OwnableEnhanced {
     /**
      * @notice Translates a given reflected sum of ETRNL into the true amount of ETRNL it represents based on the current reserve rate.
      * @param reflectedAmount The specified reflected sum of ETRNL
-     * @return The true amount of ETRNL representing by its reflected amount
+     * @return uint256 The true amount of ETRNL representing by its reflected amount
      */
     function _convertFromReflectedToTrueAmount(uint256 reflectedAmount) private view returns (uint256) {
         uint256 currentRate =  getReflectionRate();
@@ -400,7 +396,9 @@ contract EternalToken is IERC20, IERC20Metadata, OwnableEnhanced {
     /**
      * @notice Compute the reflected and net reflected transferred amounts and the net transferred amount from a given amount of ETRNL.
      * @param trueAmount The specified amount of ETRNL
-     * @return The reflected amount, the net reflected transfer amount, the actual net transfer amount, and the total reflected fees
+     * @return uint256 The reflected amount
+     * @return uint256 The net reflected transfer amount
+     * @return uint256 The actual net transfer amount
      */
     function _getValues(uint256 trueAmount, bool takeFee) private view returns (uint256, uint256, uint256) {
         
@@ -426,7 +424,8 @@ contract EternalToken is IERC20, IERC20Metadata, OwnableEnhanced {
 
     /**
      * @notice Computes the net reflected and total token supplies (adjusted for non-reward-accruing accounts).
-     * @return The adjusted reflected supply and adjusted total token supply
+     * @return uint256 The adjusted reflected supply 
+     * @return uint256 The adjusted total token supply
      */
     function _getNetSupplies() private view returns (uint256, uint256) {
         uint256 brutoReflectedSupply = eternalStorage.getUint(entity, totalReflectedSupply);
@@ -479,7 +478,7 @@ contract EternalToken is IERC20, IERC20Metadata, OwnableEnhanced {
     }
 
     /**
-     * @notice Hook called by the _transfer function in order to update vote balances after a given transaction
+     * @notice Hook called by the _transfer function in order to update vote balances after a given transaction.
      * @param sender The initiator of the specified transaction
      * @param recipient The destination address of the specified transaction
      * @param amount The amount sent from the sender to the recipient in the transaction
@@ -493,7 +492,7 @@ contract EternalToken is IERC20, IERC20Metadata, OwnableEnhanced {
 /////–––««« Owner/Fund-only functions »»»––––\\\\\
 
     /**
-     * @notice Excludes a given wallet or contract's address from accruing rewards. (Admin and Fund only)
+     * @notice Excludes a given wallet or contract's address from accruing rewards. (Fund only)
      * @param account The wallet or contract's address
      *
      * Requirements:
@@ -514,7 +513,7 @@ contract EternalToken is IERC20, IERC20Metadata, OwnableEnhanced {
     }
 
     /**
-     * @notice Allows a given wallet or contract's address to accrue rewards. (Admin and Fund only)
+     * @notice Allows a given wallet or contract's address to accrue rewards. (Fund only)
      * @param account The wallet or contract's address
      *
      * Requirements:
@@ -535,7 +534,7 @@ contract EternalToken is IERC20, IERC20Metadata, OwnableEnhanced {
     }
 
     /**
-     * @notice Updates the address of the Eternal Treasury contract
+     * @notice Updates the address of the Eternal Treasury contract. (Fund only)
      * @param newContract The new address for the Eternal Treasury contract
      */
     function setEternalTreasury(address newContract) external onlyFund {
@@ -543,7 +542,7 @@ contract EternalToken is IERC20, IERC20Metadata, OwnableEnhanced {
     }
 
     /**
-     * @notice Updates the address of the Eternal Factory contract
+     * @notice Updates the address of the Eternal Factory contract. (Fund only)
      * @param newContract The new address for the Eternal Factory contract
      */
     function setEternalFactory (address newContract) external onlyFund {
