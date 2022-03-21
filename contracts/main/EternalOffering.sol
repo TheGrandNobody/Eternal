@@ -145,7 +145,7 @@ contract EternalOffering {
 
     /**
      * @notice View the total ETRNL offered in this IGO.
-     * @return The total ETRNL distributed in this offering
+     * @return uint256 The total ETRNL distributed in this offering
      */
     function viewTotalETRNLOffered() external view returns (uint256) {
         return totalETRNLOffered;
@@ -153,7 +153,8 @@ contract EternalOffering {
 
     /**
      * @notice View the total number of MIM-ETRNL and AVAX-ETRNL lp tokens earned in this IGO.
-     * @return The total number of lp tokens for the MIM-ETRNl and AVAX-ETRNL pair in this contract
+     * @return uint256 The total number of lp tokens for the MIM-ETRNl pair in this contract
+     * @return uint256 The total number of lp tokens for the AVAX-ETRNL pair in this contract
      */
     function viewTotalLp() external view returns (uint256, uint256) {
         return (totalLpMIM, totalLpAVAX);
@@ -162,7 +163,7 @@ contract EternalOffering {
     /**
      * @notice View the amount of ETRNL a given user has been offered in total.
      * @param user The specified user
-     * @return The total amount of ETRNL offered for the user
+     * @return uint256 The total amount of ETRNL offered for the user
      */
     function viewLiquidityOffered(address user) external view returns (uint256) {
         return liquidityOffered[user];
@@ -171,7 +172,7 @@ contract EternalOffering {
     /**
      * @notice View the amount of ETRNL a given user has deposited (through provideLiquidity)
      * @param user The specified user
-     * @return The total amount of ETRNL that has been deposited (but not gaged)
+     * @return uint256 The total amount of ETRNL that has been deposited (but not gaged)
      */
     function viewLiquidityDeposited(address user) external view returns (uint256) {
         return liquidityDeposited[user];
@@ -180,7 +181,7 @@ contract EternalOffering {
     /**
      * @notice View the address of a given loyalty gage.
      * @param id The id of the specified gage
-     * @return The address of the loyalty gage for this id
+     * @return address The address of the loyalty gage for this id
      */
     function viewGage(uint256 id) external view returns (address) {
         return gages[id];
@@ -195,16 +196,16 @@ contract EternalOffering {
     }
 
     /**
-     * @notice Evaluate the effect on the individual limit for a given user and amount of ETRNL.
-     * @return Whether transacting this amount of ETRNL respects the IGO limit for this user
+     * @notice Evaluate whether the individual limit is reached for a given user and amount of ETRNL.
+     * @return bool Whether transacting this amount of ETRNL respects the IGO limit for this user
      */
     function checkIndividualLimit(uint256 amountETRNL, address user) public view returns (bool) {
         return amountETRNL + liquidityOffered[user] <= (10 ** 7) * (10 ** 18);
     }
 
     /**
-     * @notice Evaluate the effect on the global IGO limit for a given amount of ETRNL
-     * @return Whether there is enough ETRNL left to allow this IGO transaction
+     * @notice Evaluate whether the global IGO limit is reached for a given amount of ETRNL
+     * @return bool Whether there is enough ETRNL left to allow this IGO transaction
      */
     function checkGlobalLimit(uint256 amountETRNL) public view returns (bool) {
         return totalETRNLOffered + 2 * amountETRNL <= LIMIT;

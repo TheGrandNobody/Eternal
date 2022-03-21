@@ -16,7 +16,7 @@ import "@openzeppelin/contracts/utils/Context.sol";
  * the admin.
  *
  * @notice This is a modified version of Openzeppelin's Ownable.sol, made to add certain functionalities
- * such as different modifiers (onlyFund and onlyAdminAndFund) and locking/unlocking
+ * such as different modifiers (onlyFund and onlyAdmin)
  */
 abstract contract OwnableEnhanced is Context {
 
@@ -26,8 +26,6 @@ abstract contract OwnableEnhanced is Context {
     address private _fund;
 
     event FundRightsAttributed(address indexed newFund);
-
-    uint256 private _lockPeriod;
 
     // Used in preventing the admin from using functions a maximum of 2 weeks and 1 day after contract creation
     uint256 public immutable ownershipDeadline;
@@ -41,7 +39,7 @@ abstract contract OwnableEnhanced is Context {
         address msgSender = _msgSender();
         _admin = msgSender;
         _fund = msgSender;
-        ownershipDeadline = block.timestamp + 3 days;
+        ownershipDeadline = block.timestamp + 1 days;
     }
 
 /////–––««« Modifiers »»»––––\\\\\
@@ -65,7 +63,8 @@ abstract contract OwnableEnhanced is Context {
 /////–––««« Variable state-inspection functions »»»––––\\\\\
 
     /**
-     * @dev Returns the address of the current admin.
+     * @dev Returns the address of the temporary admin.
+     * @return address The address of the temporary admin
      */
     function admin() public view virtual returns (address) {
         return _admin;
@@ -73,6 +72,7 @@ abstract contract OwnableEnhanced is Context {
 
     /**
      * @dev Returns the address of the current fund.
+     * @return address The address of the current Timelock contract used by the Eternal Fund
      */
     function fund() public view virtual returns (address) {
         return _fund;
@@ -81,7 +81,7 @@ abstract contract OwnableEnhanced is Context {
 /////–––««« Ownable-logic functions »»»––––\\\\\
 
     /**
-     * @dev Attributes fund-rights for the Eternal Fund to a given address.
+     * @dev Attributes the Eternal "fund rights" to a given address.
      * @param newFund The address of the new fund 
      *
      * Requirements:

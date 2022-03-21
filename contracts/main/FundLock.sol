@@ -32,7 +32,8 @@ contract FundLock {
     }
 
     /**
-     * @notice View the amount of tokens available based on the amount the supply has decreased by
+     * @notice View the amount of tokens available for withdrawal based on the amount the supply has decreased by
+     * @return uint256 The maximum amount of tokens available to be withdrawn by investors from this contract at this time
      */
     function viewAmountAvailable() public view returns (uint256) {
         uint256 deltaSupply = maxSupply - eternal.totalSupply();

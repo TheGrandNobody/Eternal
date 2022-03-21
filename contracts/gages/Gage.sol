@@ -49,8 +49,8 @@ abstract contract Gage is Context, IGage {
 /////–––««« Variable state-inspection functions »»»––––\\\\\
 
     /**
-     * @notice View the number of stakeholders in the gage (if it isn't yet active).
-     * @return The number of stakeholders in the selected gage
+     * @notice View the number of stakeholders in the gage.
+     * @return uint256 The number of stakeholders in the selected gage
      */
     function viewGageUserCount() external view override returns (uint256) {
         return users;
@@ -58,7 +58,7 @@ abstract contract Gage is Context, IGage {
 
     /**
      * @notice View the total user capacity of the gage.
-     * @return The total user capacity
+     * @return uint256 The total user capacity
      */
     function viewCapacity() external view override returns (uint256) {
         return capacity;
@@ -66,7 +66,7 @@ abstract contract Gage is Context, IGage {
 
     /**
      * @notice View the status of the gage.
-     * @return An integer indicating the status of the gage
+     * @return uint256 An integer indicating the status of the gage
      */
     function viewStatus() external view override returns (uint256) {
         return uint256(status);
@@ -74,7 +74,7 @@ abstract contract Gage is Context, IGage {
 
     /**
      * @notice View whether the gage is a loyalty gage or not.
-     * @return True if the gage is a loyalty gage, else false
+     * @return bool True if the gage is a loyalty gage, else false
      */
     function viewLoyalty() external view override returns (bool) {
         return loyalty;
@@ -83,9 +83,11 @@ abstract contract Gage is Context, IGage {
     /**
      * @notice View a given user's gage data. 
      * @param user The address of the specified user
-     * @return The asset, amount and risk for this user 
+     * @return address The address of this user's deposited asset
+     * @return uint256 The amount of this user's deposited asset
+     * @return uint256 The risk percentage for this user
      */
-    function viewUserData(address user) external view override returns (address, uint256, uint256){
+    function viewUserData(address user) external view override returns (address, uint256, uint256) {
         UserData storage data = userData[user];
         return (data.asset, data.amount, data.risk);
     }

@@ -9,7 +9,7 @@ pragma solidity 0.8.0;
 interface IGage {
     // Holds all possible statuses for a gage
     enum Status {
-        Open,
+        Pending,
         Active,
         Closed
     }
@@ -35,8 +35,8 @@ interface IGage {
     // View a given user's gage data
     function viewUserData(address user) external view returns (address, uint256, uint256);
 
-    // Signals the transition from 'Open' to 'Active for a given gage
+    // Signals the transition from 'Pending' to 'Active for a given gage
     event GageInitiated(uint256 id);
     // Signals the transition from 'Active' to 'Closed' for a given gage
-    event GageClosed(uint256 id, bool winner); 
+    event GageClosed(uint256 id, address indexed winner); 
 }

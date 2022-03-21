@@ -40,8 +40,8 @@ contract LoyaltyGage is Gage, ILoyaltyGage {
 /////–––««« Variable state-inspection functions »»»––––\\\\\
 
     /**
-     * @notice View the target supply plus/minus the percent change condition for the total token supply of the deposit.
-     * @return The minimum target supply which meets the percent change condition
+     * @notice View the target supply plus/minus the percent change condition for the total token supply of the asset of reference.
+     * @return uint256 The minimum target supply which meets the percent change condition
      */
     function viewTarget() public view override returns (uint256) {
         uint256 delta = (totalSupply * percent / (10 ** 11));
@@ -109,7 +109,7 @@ contract LoyaltyGage is Gage, ILoyaltyGage {
         uint256 targetSupply = viewTarget();
         // Determine whether the user is the winner
         bool winner = inflationary ? assetOfReference.totalSupply() >= targetSupply : assetOfReference.totalSupply() <= targetSupply;
-        emit GageClosed(id, winner);
+        emit GageClosed(id, winner ? receiver : distributor);
         status = Status.Closed;
         // Communicate with an external treasury which offers gages
         treasury.settleGage(receiver, id, winner);
