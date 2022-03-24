@@ -98,8 +98,8 @@ contract EternalFactory is IEternalFactory, OwnableEnhanced {
         // Initialize the transaction count time tracker
         eternalStorage.setUint(entity, oneDayFromNow, block.timestamp + 1 days);
         // Set initial risk
-        eternalStorage.setUint(entity, keccak256(abi.encodePacked("risk", 0xc778417E063141139Fce010982780140Aa0cD5Ab)), 1100);
-        eternalStorage.setUint(entity, keccak256(abi.encodePacked("risk", 0x130966628846BFd36ff31a822705796e8cb8C18D)), 1100);
+        eternalStorage.setUint(entity, keccak256(abi.encodePacked("risk", 0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7)), 1100);
+        eternalStorage.setUint(entity, keccak256(abi.encodePacked("risk", 0xA7D7079b0FEaD91F3e65f86E8915Cb59c1a4C664)), 1100);
 
         attributeFundRights(_fund);
     }

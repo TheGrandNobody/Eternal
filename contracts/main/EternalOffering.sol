@@ -31,8 +31,8 @@ contract EternalOffering {
     // The Eternal treasury interface
     IEternalTreasury public immutable eternalTreasury;
 
-    // The address of the ETRNL-MIM pair
-    address public immutable mimPair;
+    // The address of the ETRNL-USDCe pair
+    address public immutable usdcePair;
     // The address of the ETRNL-AVAX pair
     address public immutable avaxPair;
 
@@ -59,8 +59,8 @@ contract EternalOffering {
     uint256 public constant ALPHA = 10 ** 7 * (10 ** 18);
     // The number of ETRNL allocated
     uint256 public constant LIMIT = 4207500 * (10 ** 21);
-    // The MIM address
-    address public constant MIM = 0x130966628846BFd36ff31a822705796e8cb8C18D;
+    // The USDCe address
+    address public constant USDCe = 0xA7D7079b0FEaD91F3e65f86E8915Cb59c1a4C664;
 
 /////–––««« Variables: Gage/Liquidity bookkeeping »»»––––\\\\\
 
@@ -70,8 +70,8 @@ contract EternalOffering {
     uint256 private totalETRNLForGages;
     // The total number of ETRNL dispensed in this offering thus far
     uint256 private totalETRNLOffered;
-    // The total number of MIM-ETRNL lp tokens acquired
-    uint256 private totalLpMIM;
+    // The total number of USDCe-ETRNL lp tokens acquired
+    uint256 private totalLpUSDCe;
     // The total number of AVAX-ETRNL lp tokens acquired
     uint256 private totalLpAVAX;
 
@@ -95,9 +95,9 @@ contract EternalOffering {
 
         // Create the pairs
         address _avaxPair = _joeFactory.createPair(_eternal, _joeRouter.WAVAX());
-        address _mimPair = _joeFactory.createPair(_eternal, MIM);
+        address _usdcePair = _joeFactory.createPair(_eternal, USDCe);
         avaxPair = _avaxPair;
-        mimPair = _mimPair;
+        usdcePair = _usdcePair;
         
         eternalTreasury = IEternalTreasury(_treasury);
         offeringEnds = block.timestamp + 1 days;
@@ -106,14 +106,14 @@ contract EternalOffering {
     function initialize() external {
         // Exclude the pairs from rewards
         bytes32 avaxExcluded = keccak256(abi.encodePacked("isExcludedFromRewards", avaxPair));
-        bytes32 mimExcluded = keccak256(abi.encodePacked("isExcludedFromRewards", mimPair));
+        bytes32 usdceExcluded = keccak256(abi.encodePacked("isExcludedFromRewards", usdcePair));
         bytes32 token = keccak256((abi.encodePacked(address(eternal))));
         bytes32 excludedAddresses = keccak256(abi.encodePacked("excludedAddresses"));
         if (!eternalStorage.getBool(token, avaxExcluded)) {
             eternalStorage.setBool(token, avaxExcluded, true);
-            eternalStorage.setBool(token, mimExcluded, true);
+            eternalStorage.setBool(token, usdceExcluded, true);
             eternalStorage.setAddressArrayValue(excludedAddresses, 0, avaxPair);
-            eternalStorage.setAddressArrayValue(excludedAddresses, 0, mimPair);
+            eternalStorage.setAddressArrayValue(excludedAddresses, 0, usdcePair);
         }
     }
 
@@ -152,12 +152,12 @@ contract EternalOffering {
     }
 
     /**
-     * @notice View the total number of MIM-ETRNL and AVAX-ETRNL lp tokens earned in this IGO.
-     * @return uint256 The total number of lp tokens for the MIM-ETRNl pair in this contract
+     * @notice View the total number of USDCe-ETRNL and AVAX-ETRNL lp tokens earned in this IGO.
+     * @return uint256 The total number of lp tokens for the USDCe-ETRNl pair in this contract
      * @return uint256 The total number of lp tokens for the AVAX-ETRNL pair in this contract
      */
     function viewTotalLp() external view returns (uint256, uint256) {
-        return (totalLpMIM, totalLpAVAX);
+        return (totalLpUSDCe, totalLpAVAX);
     }
 
     /**
@@ -221,7 +221,7 @@ contract EternalOffering {
      * Requirements:
      * 
      * - The offering must be ongoing
-     * - Only MIM or AVAX loyalty gages are offered
+     * - Only USDCe or AVAX loyalty gages are offered
      * - There can not have been more than 4 250 000 000 ETRNL offered in total
      * - A user can only participate in a maximum of one loyalty gage per asset
      * - A user can not send money to gages/provide liquidity for more than 10 000 000 ETRNL 
@@ -230,7 +230,7 @@ contract EternalOffering {
     function initiateEternalLoyaltyGage(uint256 amount, address asset) external payable {
         // Checks
         require(block.timestamp < offeringEnds, "Offering is over");
-        require(asset == MIM || (asset == joeRouter.WAVAX() && msg.value == amount), "Only MIM or AVAX");
+        require(asset == USDCe || (asset == joeRouter.WAVAX() && msg.value == amount), "Only USDCe or AVAX");
         require(!participated[msg.sender][asset], "User gage limit reached");
 
         uint256 providedETRNL;
@@ -268,7 +268,7 @@ contract EternalOffering {
         } else {
             require(IERC20(asset).approve(address(joeRouter), amountETRNL), "Approve failed");
             (providedETRNL, providedAsset, liquidity) = joeRouter.addLiquidity(address(eternal), asset, amountETRNL, amount, minETRNL, minAsset, address(this), block.timestamp);
-            totalLpMIM += liquidity;
+            totalLpUSDCe += liquidity;
         }
         // Calculate the difference in asset given vs asset provided
         providedETRNL += (amount - providedAsset) * providedETRNL / amount;
@@ -316,14 +316,14 @@ contract EternalOffering {
 /////–––««« Liquidity Provision functions »»»––––\\\\\
 
     /**
-     * @notice Provides liquidity to either the MIM-ETRNL or AVAX-ETRNL pairs and sends ETRNL the msg.sender.
+     * @notice Provides liquidity to either the USDCe-ETRNL or AVAX-ETRNL pairs and sends ETRNL the msg.sender.
      * @param amount The amount of the asset being provided
      * @param asset The address of the asset being provided
      *
      * Requirements:
      * 
      * - The offering must be ongoing
-     * - Only MIM or AVAX can be used in providing liquidity
+     * - Only USDCe or AVAX can be used in providing liquidity
      * - There can not have been more than 4 250 000 000 ETRNL offered in total
      * - A user can not send money to gages/provide liquidity for more than 10 000 000 ETRNL 
      * - The sum of the new amount provided and the previous amounts provided by a user can not exceed the equivalent of 10 000 000 ETRNL
@@ -331,7 +331,7 @@ contract EternalOffering {
     function provideLiquidity(uint256 amount, address asset) external payable {
         // Checks
         require(block.timestamp < offeringEnds, "Offering is over");
-        require(asset == MIM || asset == joeRouter.WAVAX(), "Only MIM or AVAX");
+        require(asset == USDCe || asset == joeRouter.WAVAX(), "Only USDCe or AVAX");
 
         uint256 providedETRNL;
         uint256 providedAsset;
@@ -353,7 +353,7 @@ contract EternalOffering {
             totalLpAVAX += liquidity;
         } else {
             (providedETRNL, providedAsset, liquidity) = joeRouter.addLiquidity(address(eternal), asset, amountETRNL, amount, minETRNL, minAsset, address(this), block.timestamp);
-            totalLpMIM += liquidity;
+            totalLpUSDCe += liquidity;
         }
 
         // Update the offering variables
@@ -382,12 +382,12 @@ contract EternalOffering {
         // Checks
         require(totalETRNLOffered == LIMIT || offeringEnds < block.timestamp, "Offering not over yet");
         bytes32 treasury = keccak256(abi.encodePacked(address(eternalTreasury)));
-        uint256 mimBal = IERC20(MIM).balanceOf(address(this));
+        uint256 usdceBal = IERC20(USDCe).balanceOf(address(this));
         uint256 etrnlBal = eternal.balanceOf(address(this));
         uint256 avaxBal = address(this).balance;
-        // Send the MIM and AVAX balance of this contract to the Eternal Treasury if there is any dust leftover
-        if (mimBal > 0) {
-            require(IERC20(MIM).transfer(address(eternalTreasury), mimBal), "MIM Transfer failed");
+        // Send the USDCe and AVAX balance of this contract to the Eternal Treasury if there is any dust leftover
+        if (usdceBal > 0) {
+            require(IERC20(USDCe).transfer(address(eternalTreasury), usdceBal), "USDCe Transfer failed");
         }
         if (avaxBal > 0) {
             (bool success,) = payable(address(eternalTreasury)).call{value: avaxBal}("");
@@ -402,11 +402,11 @@ contract EternalOffering {
         }
 
         // Send the lp tokens earned from this offering to the Eternal Treasury
-        bytes32 mimLiquidity = keccak256(abi.encodePacked("liquidityProvided", address(eternalTreasury), MIM));
+        bytes32 usdceLiquidity = keccak256(abi.encodePacked("liquidityProvided", address(eternalTreasury), USDCe));
         bytes32 avaxLiquidity = keccak256(abi.encodePacked("liquidityProvided", address(eternalTreasury), joeRouter.WAVAX()));
-        eternalStorage.setUint(treasury, mimLiquidity, totalLpMIM);
+        eternalStorage.setUint(treasury, usdceLiquidity, totalLpUSDCe);
         eternalStorage.setUint(treasury, avaxLiquidity, totalLpAVAX);
         require(IERC20(avaxPair).transfer(address(eternalTreasury), totalLpAVAX), "Failed to transfer AVAX lp");
-        require(IERC20(mimPair).transfer(address(eternalTreasury), totalLpMIM), "Failed to transfer MIM lp");
+        require(IERC20(usdcePair).transfer(address(eternalTreasury), totalLpUSDCe), "Failed to transfer USDCe lp");
     }
 }
