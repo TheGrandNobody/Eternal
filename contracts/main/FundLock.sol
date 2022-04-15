@@ -18,7 +18,7 @@ contract FundLock {
 
     // The maximum supply of the token
     uint256 public immutable maxSupply;
-    // The total amount of tokens being vested (multiplied by 10 ** 9 for decimal-precision)
+    // The total amount of tokens being vested (multiplied by 10 ** 18 for decimal-precision)
     uint256 public immutable totalAmount;
     // The factor by which to release a given number of vested tokens
     uint256 public immutable gamma;
