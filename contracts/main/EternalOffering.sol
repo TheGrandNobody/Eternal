@@ -50,7 +50,7 @@ contract EternalOffering {
 /////–––««« Variables: Constants, immutables and factors »»»––––\\\\\
 
     // The timestamp at which this contract will cease to offer
-    uint256 public offeringEnds;
+    uint256 private offeringEnds;
     // The holding time constant used in the percent change condition calculation (decided by the Eternal Fund) (x 10 ** 6)
     uint256 public constant TIME_FACTOR = 6 * (10 ** 6);
     // The average amount of time that users provide liquidity for
@@ -113,8 +113,6 @@ contract EternalOffering {
             eternalStorage.setBool(token, usdceExcluded, true);
             eternalStorage.setAddressArrayValue(excludedAddresses, 0, avaxPair);
             eternalStorage.setAddressArrayValue(excludedAddresses, 0, usdcePair);
-        }
-        if (offeringEnds == 0) {
             offeringEnds = block.timestamp + 1 days;
         }
     }
@@ -216,6 +214,25 @@ contract EternalOffering {
 /////–––««« Gage-logic functions »»»––––\\\\\
 
     /**
+     * @notice Provides liquidity to a given ETRNL/Asset pair
+     * @param asset The asset in the ETRNL/Asset pair
+     * @param amountETRNL The amount of ETRNL to add if we provide liquidity to the ETRNL/AVAX pair
+     * @param minETRNL The min amount of ETRNL to be used in this operation
+     * @param minAsset The min amount of the Asset to be used in this operation
+     */
+    function _provide(address asset, uint256 amount, uint256 amountETRNL, uint256 minETRNL, uint256 minAsset) private returns (uint256 providedETRNL, uint256 providedAsset) {
+        uint256 liquidity;
+        if (asset == joeRouter.WAVAX()) {
+            (providedETRNL, providedAsset, liquidity) = joeRouter.addLiquidityAVAX{value: msg.value}(address(eternal), amountETRNL, minETRNL, minAsset, address(this), block.timestamp);
+            totalLpAVAX += liquidity;
+        } else {
+            require(IERC20(asset).approve(address(joeRouter), amountETRNL), "Approve failed");
+            (providedETRNL, providedAsset, liquidity) = joeRouter.addLiquidity(address(eternal), asset, amountETRNL, amount, minETRNL, minAsset, address(this), block.timestamp);
+            totalLpUSDCe += liquidity;
+        }
+    }
+
+    /**
      * @notice Creates an ETRNL loyalty gage contract for a given user and amount.
      * @param amount The amount of the asset being deposited in the loyalty gage by the receiver
      * @param asset The address of the asset being deposited in the loyalty gage by the receiver
@@ -235,9 +252,6 @@ contract EternalOffering {
         require(asset == USDCe || (asset == joeRouter.WAVAX() && msg.value == amount), "Only USDCe or AVAX");
         require(!participated[msg.sender][asset], "User gage limit reached");
 
-        uint256 providedETRNL;
-        uint256 providedAsset;
-        uint256 liquidity;
         // Compute the minimum amounts needed to provide liquidity and the equivalent of the asset in ETRNL
         (uint256 minETRNL, uint256 minAsset, uint256 amountETRNL) = _computeMinAmounts(asset, address(eternal), amount, 100);
         // Calculate risk
@@ -264,14 +278,7 @@ contract EternalOffering {
 
         // Add liquidity to the ETRNL/Asset pair
         require(eternal.approve(address(joeRouter), amountETRNL), "Approve failed");
-        if (asset == joeRouter.WAVAX()) {
-            (providedETRNL, providedAsset, liquidity) = joeRouter.addLiquidityAVAX{value: msg.value}(address(eternal), amountETRNL, minETRNL, minAsset, address(this), block.timestamp);
-            totalLpAVAX += liquidity;
-        } else {
-            require(IERC20(asset).approve(address(joeRouter), amountETRNL), "Approve failed");
-            (providedETRNL, providedAsset, liquidity) = joeRouter.addLiquidity(address(eternal), asset, amountETRNL, amount, minETRNL, minAsset, address(this), block.timestamp);
-            totalLpUSDCe += liquidity;
-        }
+        (uint256 providedETRNL, uint256 providedAsset) = _provide(asset, amount, amountETRNL, minETRNL, minAsset);
         // Calculate the difference in asset given vs asset provided
         providedETRNL += (amount - providedAsset) * providedETRNL / amount;
 
@@ -335,9 +342,6 @@ contract EternalOffering {
         require(block.timestamp < offeringEnds, "Offering is over");
         require(asset == USDCe || asset == joeRouter.WAVAX(), "Only USDCe or AVAX");
 
-        uint256 providedETRNL;
-        uint256 providedAsset;
-        uint256 liquidity;
         // Compute the minimum amounts needed to provide liquidity and the equivalent of the asset in ETRNL
         (uint256 minETRNL, uint256 minAsset, uint256 amountETRNL) = _computeMinAmounts(asset, address(eternal), amount, 200);
         require(checkIndividualLimit(amountETRNL, msg.sender), "Amount exceeds the user limit");
@@ -350,13 +354,7 @@ contract EternalOffering {
 
         // Add liquidity to the ETRNL/Asset pair
         require(eternal.approve(address(joeRouter), amountETRNL), "Approve failed");
-        if (asset == joeRouter.WAVAX()) {
-            (providedETRNL, providedAsset, liquidity) = joeRouter.addLiquidityAVAX{value: amount}(address(eternal), amountETRNL, minETRNL, minAsset, address(this), block.timestamp);
-            totalLpAVAX += liquidity;
-        } else {
-            (providedETRNL, providedAsset, liquidity) = joeRouter.addLiquidity(address(eternal), asset, amountETRNL, amount, minETRNL, minAsset, address(this), block.timestamp);
-            totalLpUSDCe += liquidity;
-        }
+        (uint256 providedETRNL, uint256 providedAsset) = _provide(asset, amount, amountETRNL, minETRNL, minAsset);
 
         // Update the offering variables
         totalETRNLOffered += providedETRNL;
