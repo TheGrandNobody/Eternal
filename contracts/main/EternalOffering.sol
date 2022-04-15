@@ -50,7 +50,7 @@ contract EternalOffering {
 /////–––««« Variables: Constants, immutables and factors »»»––––\\\\\
 
     // The timestamp at which this contract will cease to offer
-    uint256 public immutable offeringEnds;
+    uint256 public offeringEnds;
     // The holding time constant used in the percent change condition calculation (decided by the Eternal Fund) (x 10 ** 6)
     uint256 public constant TIME_FACTOR = 6 * (10 ** 6);
     // The average amount of time that users provide liquidity for
@@ -100,7 +100,6 @@ contract EternalOffering {
         usdcePair = _usdcePair;
         
         eternalTreasury = IEternalTreasury(_treasury);
-        offeringEnds = block.timestamp + 1 days;
     }
 
     function initialize() external {
@@ -114,6 +113,9 @@ contract EternalOffering {
             eternalStorage.setBool(token, usdceExcluded, true);
             eternalStorage.setAddressArrayValue(excludedAddresses, 0, avaxPair);
             eternalStorage.setAddressArrayValue(excludedAddresses, 0, usdcePair);
+        }
+        if (offeringEnds == 0) {
+            offeringEnds = block.timestamp + 1 days;
         }
     }
 
